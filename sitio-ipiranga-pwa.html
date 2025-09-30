@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#16a34a">
+    <meta name="description" content="Gerenciador de Plantas do Sítio Ipiranga">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Sítio Ipiranga</title>
+    <link rel="manifest" href="#" id="manifest-placeholder">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .notification-badge { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+        .file-input { display: none; }
+        body { -webkit-tap-highlight-color: transparent; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div id="app"></div>
+
+    <script>
+        const manifestData = {
+            "name": "Sítio Ipiranga - Gerenciador",
+            "short_name": "Sítio Ipiranga",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#ffffff",
+            "theme_color": "#16a34a",
+            "description": "Gerenciador de Plantas",
+            "icons": [{
+                "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2316a34a'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🌿%3C/text%3E%3C/svg%3E",
+                "sizes": "512x512",
+                "type": "image/svg+xml"
+            }]
+        };
+        
+        const blob = new Blob([JSON.stringify(manifestData)], {type: 'application/json'});
+        document.querySelector('#manifest-placeholder').setAttribute('href', URL.createObjectURL(blob));
+    </script>
+
+    <script type="module">
+        const STORAGE_KEYS = {
+            PLANTAS: 'sitio_plantas_v2',
+            REGRAS: 'sitio_regras_v2',
+            CONFIG: 'sitio_config_v2'
+        };
+
+        class DataManager {
+            static salvarPlantas(plantas) {
+                sessionStorage.setItem(STORAGE_KEYS.PLANTAS, JSON.stringify({
+                    plantas,
+                    lastUpdate: new Date().toISOString()
+                }));
+            }
+
+            static carregarPlantas() {
+                const data = sessionStorage.getItem(STORAGE_KEYS.PLANTAS);
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    return parsed.plantas || [];
+                }
+                return this.getDadosDemo();
+            }
+
+            static salvarRegras(regras) {
+                sessionStorage.setItem(STORAGE_KEYS.REGRAS, JSON.stringify(regras));
+            }
+
+            static carregarRegras() {
+                const data = sessionStorage.getItem(STORAGE_KEYS.REGRAS);
+                return data ? JSON.parse(data) : this.getRegrasDefault();
+            }
+
+            static getDadosDemo() {
+                return [
+                    {
+                        id: 1,
+                        nome: 'Cacau 01',
+                        tipo: 'Cacau',
+                        dataPlantio: '2025-06-09',
+                        dataUltimaRega: null,
+                        dataUltimaPoda: null,
+                        dataUltimaColheita: null,
+                        localizacao: 'Setor A'
+                    },
+                    {
+                        id: 2,
+                        nome: 'Mangabeira 01',
+                        tipo: 'Mangabeira',
+                        dataPlantio: '2025-06-09',
+                        dataUltimaRega: null,
+                        dataUltimaPoda: null,
+                        dataUltimaColheita: null,
+                        localizacao: 'Setor B'
+                    },
+                    {
+                        id: 3,
+                        nome: 'Cajueiro 01',
+                        tipo: 'Cajueiro',
+                        dataPlantio: '2025-06-09',
+                        dataUltimaRega: null,
+                        dataUltimaPoda: null,
+                        dataUltimaColheita: null,
+                        localizacao: 'Setor A'
+                    }
+                ];
+            }
+
+            static getRegrasDefault() {
+                return {
+                    'Cacau': { intervaloRega: 3, intervaloPoda: 90, intervaloColheita: 150, cor: '#8B4513' },
+                    'Mangabeira': { intervaloRega: 5, intervaloPoda: 120, intervaloColheita: 60, cor: '#9333EA' },
+                    'Cajueiro': { intervaloRega: 4, intervaloPoda: 120, intervaloColheita: 180, cor: '#EAB308' },
+                    'Coqueiro': { intervaloRega: 7, intervaloPoda: 180, intervaloColheita: 90, cor: '#16A34A' }
+                };
+            }
+
+            static importarGeoJSON(fileContent) {
+                try {
+                    const geojson = JSON.parse(fileContent);
+                    const plantas = geojson.features.map((feature, index) => {
+                        const props = feature.properties;
+                        
+                        // Função para normalizar datas
+                        const normalizarData = (data) => {
+                            if (!data || data === 'NULL' || data === null) return null;
+                            
+                            // Se já está no formato ISO
+                            if (/^\d{4}-\d{2}-\d{2}/.test(data)) return data.split('T')[0];
+                            
+                            // Formato DD/MM/YYYY
+                            if (/^\d{2}\/\d{2}\/\d{4}/.test(data)) {
+                                const [dia, mes, ano] = data.split('/');
+                                return `${ano}-${mes}-${dia}`;
+                            }
+                            
+                            return null;
+                        };
+                        
+                        return {
+                            id: props.id || props.fid || props.ID || index + 1,
+                            nome: props.nome || props.NOME_POPULAR || `Planta ${index + 1}`,
+                            tipo: props.tipo || props.NOME_POPULAR || 'Desconhecido',
+                            dataPlantio: normalizarData(props.data_plantio || props.DATA_PLANTIO),
+                            dataUltimaRega: normalizarData(props.data_ultima_rega),
+                            dataUltimaPoda: normalizarData(props.data_ultima_poda),
+                            dataUltimaColheita: normalizarData(props.data_ultima_colheita),
+                            localizacao: props.localizacao || props.LOCALIZACAO || 'Não especificado'
+                        };
+                    });
+                    return plantas;
+                } catch (error) {
+                    console.error('Erro ao importar GeoJSON:', error);
+                    return null;
+                }
+            }
+        }
+
+        class SitioApp {
+            constructor() {
+                this.plantas = DataManager.carregarPlantas();
+                this.regrasManejo = DataManager.carregarRegras();
+                this.notifications = [];
+                this.activeTab = 'notificacoes';
+                this.filtroTipo = 'todos';
+                this.render();
+                this.calcularNotificacoes();
+            }
+
+            calcularNotificacoes() {
+                const hoje = new Date();
+                hoje.setHours(0, 0, 0, 0);
+                const novasNotificacoes = [];
+
+                this.plantas.forEach(planta => {
+                    const regras = this.regrasManejo[planta.tipo];
+                    if (!regras) return;
+
+                    // Referência de data para cálculos
+                    const dataRef = planta.dataPlantio || planta.dataUltimaRega || planta.dataUltimaPoda;
+                    if (!dataRef) return;
+
+                    // Verificar rega
+                    const dataRega = planta.dataUltimaRega || planta.dataPlantio;
+                    if (dataRega) {
+                        const ultimaRega = new Date(dataRega + 'T00:00:00');
+                        const diasDesdeRega = Math.floor((hoje - ultimaRega) / (1000 * 60 * 60 * 24));
+                        
+                        if (diasDesdeRega >= regras.intervaloRega) {
+                            novasNotificacoes.push({
+                                id: `rega-${planta.id}`,
+                                tipo: 'rega',
+                                icone: '💧',
+                                planta: planta.nome,
+                                mensagem: `Precisa ser regado! ${diasDesdeRega >= regras.intervaloRega + 3 ? 'URGENTE!' : `Há ${diasDesdeRega} dias`}`,
+                                urgencia: diasDesdeRega > regras.intervaloRega + 3 ? 'alta' : 'normal',
+                                localizacao: planta.localizacao,
+                                plantaId: planta.id
+                            });
+                        }
+                    }
+
+                    // Verificar poda
+                    const dataPoda = planta.dataUltimaPoda || planta.dataPlantio;
+                    if (dataPoda) {
+                        const ultimaPoda = new Date(dataPoda + 'T00:00:00');
+                        const diasDesdePoda = Math.floor((hoje - ultimaPoda) / (1000 * 60 * 60 * 24));
+                        
+                        if (diasDesdePoda >= regras.intervaloPoda) {
+                            novasNotificacoes.push({
+                                id: `poda-${planta.id}`,
+                                tipo: 'poda',
+                                icone: '✂️',
+                                planta: planta.nome,
+                                mensagem: `Precisa de poda! Há ${diasDesdePoda} dias.`,
+                                urgencia: 'normal',
+                                localizacao: planta.localizacao,
+                                plantaId: planta.id
+                            });
+                        }
+                    }
+
+                    // Verificar colheita
+                    const dataColheita = planta.dataUltimaColheita || planta.dataPlantio;
+                    if (dataColheita) {
+                        const ultimaColheita = new Date(dataColheita + 'T00:00:00');
+                        const diasDesdeColheita = Math.floor((hoje - ultimaColheita) / (1000 * 60 * 60 * 24));
+                        
+                        if (diasDesdeColheita >= regras.intervaloColheita - 7) {
+                            novasNotificacoes.push({
+                                id: `colheita-${planta.id}`,
+                                tipo: 'colheita',
+                                icone: '🌿',
+                                planta: planta.nome,
+                                mensagem: diasDesdeColheita >= regras.intervaloColheita 
+                                    ? 'Pronto para colheita!' 
+                                    : `Próximo da colheita (em ~${regras.intervaloColheita - diasDesdeColheita} dias)`,
+                                urgencia: diasDesdeColheita >= regras.intervaloColheita ? 'alta' : 'normal',
+                                localizacao: planta.localizacao,
+                                plantaId: planta.id
+                            });
+                        }
+                    }
+                });
+
+                this.notifications = novasNotificacoes;
+                this.render();
+            }
+
+            marcarComoConcluido(notificationId, tipo, plantaId) {
+                const planta = this.plantas.find(p => p.id === plantaId);
+                if (planta) {
+                    const hoje = new Date().toISOString().split('T')[0];
+                    if (tipo === 'rega') planta.dataUltimaRega = hoje;
+                    if (tipo === 'poda') planta.dataUltimaPoda = hoje;
+                    if (tipo === 'colheita') planta.dataUltimaColheita = hoje;
+                    DataManager.salvarPlantas(this.plantas);
+                }
+                this.calcularNotificacoes();
+            }
+
+            atualizarRegras(tipo, campo, valor) {
+                this.regrasManejo[tipo][campo] = parseInt(valor);
+                DataManager.salvarRegras(this.regrasManejo);
+                this.calcularNotificacoes();
+            }
+
+            importarArquivo(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const plantas = DataManager.importarGeoJSON(e.target.result);
+                    if (plantas && plantas.length > 0) {
+                        this.plantas = plantas;
+                        DataManager.salvarPlantas(this.plantas);
+                        this.calcularNotificacoes();
+                        alert(`✅ ${plantas.length} plantas importadas com sucesso do QField!`);
+                    } else {
+                        alert('❌ Erro ao importar. Verifique se é um arquivo GeoJSON válido.');
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            limparDados() {
+                if (confirm('⚠️ Isso vai apagar TODOS os dados. Tem certeza?')) {
+                    sessionStorage.clear();
+                    location.reload();
+                }
+            }
+
+            render() {
+                const app = document.getElementById('app');
+                const plantasFiltradas = this.filtroTipo === 'todos' 
+                    ? this.plantas 
+                    : this.plantas.filter(p => p.tipo === this.filtroTipo);
+
+                app.innerHTML = `
+                    <div class="bg-green-600 text-white p-4 shadow-lg sticky top-0 z-20">
+                        <div class="max-w-4xl mx-auto">
+                            <h1 class="text-2xl font-bold flex items-center gap-2">
+                                🌿 Sítio Ipiranga
+                            </h1>
+                            <p class="text-green-100 text-sm mt-1">
+                                ${this.plantas.length} plantas • ${this.notifications.length} pendências
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white shadow-md sticky top-16 z-10">
+                        <div class="max-w-4xl mx-auto flex">
+                            <button onclick="app.activeTab = 'notificacoes'; app.render()" 
+                                class="flex-1 py-4 px-4 font-semibold flex items-center justify-center gap-2 transition-colors ${
+                                    this.activeTab === 'notificacoes' 
+                                        ? 'bg-green-50 text-green-700 border-b-2 border-green-600' 
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                }">
+                                🔔 Ações
+                                ${this.notifications.length > 0 ? `<span class="notification-badge bg-red-500 text-white text-xs rounded-full px-2 py-0.5">${this.notifications.length}</span>` : ''}
+                            </button>
+                            <button onclick="app.activeTab = 'plantas'; app.render()" 
+                                class="flex-1 py-4 px-4 font-semibold flex items-center justify-center gap-2 transition-colors ${
+                                    this.activeTab === 'plantas' 
+                                        ? 'bg-green-50 text-green-700 border-b-2 border-green-600' 
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                }">
+                                🌱 Plantas
+                            </button>
+                            <button onclick="app.activeTab = 'config'; app.render()" 
+                                class="flex-1 py-4 px-4 font-semibold flex items-center justify-center gap-2 transition-colors ${
+                                    this.activeTab === 'config' 
+                                        ? 'bg-green-50 text-green-700 border-b-2 border-green-600' 
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                }">
+                                ⚙️ Config
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="max-w-4xl mx-auto p-4 pb-20">
+                        ${this.renderContent()}
+                    </div>
+                `;
+            }
+
+            renderContent() {
+                if (this.activeTab === 'notificacoes') return this.renderNotificacoes();
+                if (this.activeTab === 'plantas') return this.renderPlantas();
+                return this.renderConfig();
+            }
+
+            renderNotificacoes() {
+                if (this.notifications.length === 0) {
+                    return `
+                        <div class="bg-white rounded-lg shadow p-8 text-center">
+                            <div class="text-6xl mb-4">🎉</div>
+                            <h2 class="text-xl font-bold text-gray-800 mb-2">Tudo em dia!</h2>
+                            <p class="text-gray-600">Nenhuma ação necessária no momento.</p>
+                            <p class="text-sm text-gray-500 mt-2">Volte amanhã para verificar novamente.</p>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="bg-white rounded-lg shadow p-4 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 mb-1">Ações Necessárias Hoje</h2>
+                        <p class="text-sm text-gray-600">${this.notifications.length} ação(ões) pendente(s)</p>
+                    </div>
+
+                    ${this.notifications.map(notif => `
+                        <div class="bg-white rounded-lg shadow-md p-4 mb-4 border-l-4 ${
+                            notif.urgencia === 'alta' ? 'border-red-500' : 'border-yellow-500'
+                        }">
+                            <div class="flex items-start gap-3">
+                                <div class="text-3xl flex-shrink-0">${notif.icone}</div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                        <h3 class="font-bold text-gray-800">${notif.planta}</h3>
+                                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
+                                            ${notif.localizacao}
+                                        </span>
+                                        ${notif.urgencia === 'alta' ? '<span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded font-semibold">URGENTE</span>' : ''}
+                                    </div>
+                                    <p class="text-gray-700 mb-3">${notif.mensagem}</p>
+                                    <button 
+                                        onclick="app.marcarComoConcluido('${notif.id}', '${notif.tipo}', ${notif.plantaId})"
+                                        class="text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 active:bg-green-800 shadow-sm">
+                                        ✓ Marcar como feito
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                `;
+            }
+
+            renderPlantas() {
+                const tipos = ['todos', ...new Set(this.plantas.map(p => p.tipo))];
+                const plantasFiltradas = this.filtroTipo === 'todos' 
+                    ? this.plantas 
+                    : this.plantas.filter(p => p.tipo === this.filtroTipo);
+
+                return `
+                    <div class="bg-white rounded-lg shadow p-4 mb-4">
+                        <div class="flex justify-between items-start mb-3 gap-4">
+                            <div class="flex-1">
+                                <h2 class="text-lg font-bold text-gray-800">Suas Plantas</h2>
+                                <p class="text-sm text-gray-600">
+                                    ${plantasFiltradas.length} ${this.filtroTipo === 'todos' ? '' : this.filtroTipo} encontrada(s)
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="text-sm font-semibold text-gray-700 block mb-2">Filtrar por tipo:</label>
+                            <div class="flex gap-2 flex-wrap">
+                                ${tipos.map(tipo => `
+                                    <button 
+                                        onclick="app.filtroTipo = '${tipo}'; app.render()"
+                                        class="px-3 py-2 text-sm rounded-lg transition-colors ${
+                                            this.filtroTipo === tipo 
+                                                ? 'bg-green-600 text-white shadow-sm' 
+                                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        }">
+                                        ${tipo === 'todos' ? '📋 Todos' : tipo}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <label class="block cursor-pointer">
+                            <input type="file" accept=".geojson,.json" onchange="app.importarArquivo(event)" class="file-input">
+                            <div class="flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-sm">
+                                <span class="text-xl">📥</span>
+                                <span class="font-semibold">Importar do QField</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    ${plantasFiltradas.length === 0 ? `
+                        <div class="bg-white rounded-lg shadow p-8 text-center">
+                            <div class="text-4xl mb-3">🔍</div>
+                            <p class="text-gray-600">Nenhuma planta encontrada com este filtro.</p>
+                        </div>
+                    ` : plantasFiltradas.map(planta => {
+                        const regras = this.regrasManejo[planta.tipo] || {};
+                        return `
+                            <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl flex-shrink-0"
+                                        style="background-color: ${regras.cor || '#666'}">
+                                        ${planta.nome.charAt(0)}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <h3 class="font-bold text-gray-800 truncate">${planta.nome}</h3>
+                                        <p class="text-sm text-gray-600">${planta.tipo} • ${planta.localizacao}</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-3 text-sm">
+                                    <div class="bg-blue-50 p-3 rounded-lg">
+                                        <div class="font-semibold text-blue-700 mb-1">💧 Última Rega</div>
+                                        <p class="text-gray-700">${planta.dataUltimaRega || 'Nunca'}</p>
+                                    </div>
+                                    <div class="bg-purple-50 p-3 rounded-lg">
+                                        <div class="font-semibold text-purple-700 mb-1">✂️ Última Poda</div>
+                                        <p class="text-gray-700">${planta.dataUltimaPoda || 'Nunca'}</p>
+                                    </div>
+                                    <div class="bg-green-50 p-3 rounded-lg">
+                                        <div class="font-semibold text-green-700 mb-1">🌿 Última Colheita</div>
+                                        <p class="text-gray-700">${planta.dataUltimaColheita || 'Nunca'}</p>
+                                    </div>
+                                    <div class="bg-orange-50 p-3 rounded-lg">
+                                        <div class="font-semibold text-orange-700 mb-1">📅 Plantio</div>
+                                        <p class="text-gray-700">${planta.dataPlantio || 'Não registrado'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                `;
+            }
+
+            renderConfig() {
+                return `
+                    <div class="bg-white rounded-lg shadow p-4 mb-4">
+                        <h2 class="text-lg font-bold text-gray-800 mb-2">Configurações</h2>
+                        <p class="text-sm text-gray-600">Ajuste os intervalos de cuidado para cada tipo de planta</p>
+                    </div>
+
+                    ${Object.entries(this.regrasManejo).map(([tipo, regras]) => `
+                        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold"
+                                    style="background-color: ${regras.cor}">
+                                    ${tipo.charAt(0)}
+                                </div>
+                                <h3 class="font-bold text-gray-800">${tipo}</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="text-sm font-semibold text-gray-700 block mb-1">
+                                        💧 Regar a cada quantos dias?
+                                    </label>
+                                    <input type="number" value="${regras.intervaloRega}" min="1" max="30"
+                                        onchange="app.atualizarRegras('${tipo}', 'intervaloRega', this.value)"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-sm font-semibold text-gray-700 block mb-1">
+                                        ✂️ Podar a cada quantos dias?
+                                    </label>
+                                    <input type="number" value="${regras.intervaloPoda}" min="30" max="365"
+                                        onchange="app.atualizarRegras('${tipo}', 'intervaloPoda', this.value)"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                </div>
+                                
+                                <div>
+                                    <label class="text-sm font-semibold text-gray-700 block mb-1">
+                                        🌿 Colher a cada quantos dias?
+                                    </label>
+                                    <input type="number" value="${regras.intervaloColheita}" min="30" max="365"
+                                        onchange="app.atualizarRegras('${tipo}', 'intervaloColheita', this.value)"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none">
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                        <div class="flex gap-2">
+                            <span class="text-2xl">💡</span>
+                            <div class="text-sm text-green-800">
+                                <p class="font-semibold mb-1">Como funciona:</p>
+                                <p>O app calcula automaticamente quando cada planta precisa de cuidados, baseado nos intervalos configurados aqui e nas datas que você registra.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="font-bold text-gray-800 mb-3">Dados</h3>
+                        <div class="space-y-2">
+                            <button 
+                                onclick="app.limparDados()"
+                                class="w-full bg-red-50 text-red-700 px-4 py-3 rounded-lg hover:bg-red-100 active:bg-red-200 transition-colors border border-red-200">
+                                🗑️ Limpar todos os dados
+                            </button>
+                            <p class="text-xs text-gray-500 text-center">
+                                Total de ${this.plantas.length} plantas no sistema
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        const app = new SitioApp();
+        window.app = app;
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = `
+                    self.addEventListener('install', (e) => { self.skipWaiting(); });
+                    self.addEventListener('activate', (e) => { e.waitUntil(clients.claim()); });
+                    self.addEventListener('fetch', (e) => { e.respondWith(fetch(e.request)); });
+                `;
+                const blob = new Blob([swCode], {type: 'text/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob));
+            });
+        }
+    </script>
+</body>
+</html>
