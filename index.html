@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
+  <meta name="theme-color" content="#10b981">
+  <title>Sítio Ipiranga</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Sítio Ipiranga">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f3f4f6;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header h1 {
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .header-stats {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      opacity: 0.95;
+    }
+    
+    .tabs {
+      display: flex;
+      background: white;
+      border-bottom: 2px solid #e5e7eb;
+      overflow-x: auto;
+      position: sticky;
+      top: 80px;
+      z-index: 99;
+    }
+    
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      border: none;
+      background: white;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+      border-bottom: 3px solid transparent;
+    }
+    
+    .tab.active {
+      border-bottom-color: #10b981;
+      color: #10b981;
+      font-weight: 600;
+    }
+    
+    .tab-content {
+      display: none;
+      padding: 1rem;
+      animation: fadeIn 0.3s;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .section {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    .action-item {
+      padding: 1rem;
+      border-left: 4px solid #10b981;
+      background: #f0fdf4;
+      border-radius: 8px;
+      margin-bottom: 0.75rem;
+    }
+    
+    .action-item.urgent {
+      border-left-color: #ef4444;
+      background: #fef2f2;
+    }
+    
+    .action-item.warning {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+    
+    .action-title {
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .badge.urgent {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+    
+    .badge.warning {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    
+    .action-desc {
+      color: #4b5563;
+      font-size: 0.9rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #10b981;
+      color: white;
+    }
+    
+    .btn-primary:active {
+      background: #059669;
+    }
+
+    .btn-secondary {
+      background: white;
+      color: #10b981;
+      border: 2px solid #10b981;
+    }
+    
+    .plant-card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .plant-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    
+    .plant-name {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    
+    .plant-info {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+    
+    .stat-card {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 1.25rem;
+      border-radius: 12px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+      font-size: 0.85rem;
+      opacity: 0.9;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #9ca3af;
+    }
+    
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    input[type="file"] {
+      display: none;
+    }
+    
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    
+    .filter-btn.active {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .species-card {
+      background: #f8f9fa;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+
+    .species-header {
+      margin: 0 0 1rem 0;
+      color: #2d5f3f;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .species-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group label {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 0.25rem;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    .config-item {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .config-label {
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .config-input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+
+    .info-box {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #0c4a6e;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🌿 Sítio Ipiranga</h1>
+    <div class="header-stats">
+      <span id="plantCount">Carregando...</span> • 
+      <span id="actionCount">0 pendências</span>
+    </div>
+  </div>
+  
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(event, 'acoes')">🔔 Ações</button>
+    <button class="tab" onclick="switchTab(event, 'plantas')">🌱 Plantas</button>
+    <button class="tab" onclick="switchTab(event, 'stats')">📊 Stats</button>
+    <button class="tab" onclick="switchTab(event, 'config')">⚙️ Config</button>
+  </div>
+  
+  <div id="acoes" class="tab-content active">
+    <div class="section">
+      <div class="section-title">Ações Necessárias Hoje</div>
+      <div id="acoesHoje">
+        <div class="loading">Carregando dados...</div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="plantas" class="tab-content">
+    <div class="section">
+      <div class="info-box">
+        Os dados são carregados automaticamente do sistema. Você também pode atualizar importando do QField.
+      </div>
+      
+      <button class="btn btn-primary" onclick="carregarDadosNativos()">
+        🔄 Recarregar Dados do Sistema
+      </button>
+      
+      <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+        📥 Importar Atualização do QField
+      </button>
+      <input type="file" id="fileInput" accept=".geojson,.json,application/json,application/geo+json" onchange="importGeoJSON(event)">
+      
+      <div class="filter-group" id="filterGroup" style="display: none;"></div>
+      <div style="margin-top: 1rem;" id="plantasList"></div>
+    </div>
+  </div>
+  
+  <div id="stats" class="tab-content">
+    <div class="section">
+      <div class="section-title">Estatísticas Gerais</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Plantas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPend">0</div>
+          <div class="stat-label">Pendências</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUrg">0</div>
+          <div class="stat-label">Urgentes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statEsp">0</div>
+          <div class="stat-label">Espécies</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="config" class="tab-content">
+    <div class="section">
+      <div class="section-title">📋 Intervalos por Espécie</div>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Ajuste os intervalos (em dias) para cada tipo de planta
+      </p>
+
+      <div class="species-card">
+        <h3 class="species-header">🥭 Mangabeira</h3>
+        <div class="species-inputs">
+          <div class="input-group">
+            <label>💧 Rega</label>
+            <input type="number" id="mang_rega" min="1" max="365" value="7">
+          </div>
+          <div class="input-group">
+            <label>✂️ Poda</label>
+            <input type="number" id="mang_poda" min="1" max="730" value="180">
+          </div>
+          <div class="input-group">
+            <label>🍊 Colheita</label>
+            <input type="number" id="mang_colh" min="1" max="365" value="90">
+          </div>
+        </div>
+      </div>
+
+      <div class="species-card">
+        <h3 class="species-header">🌰 Cajueiro</h3>
+        <div class="species-inputs">
+          <div class="input-group">
+            <label>💧 Rega</label>
+            <input type="number" id="caju_rega" min="1" max="365" value="10">
+          </div>
+          <div class="input-group">
+            <label>✂️ Poda</label>
+            <input type="number" id="caju_poda" min="1" max="730" value="365">
+          </div>
+          <div class="input-group">
+            <label>🍊 Colheita</label>
+            <input type="number" id="caju_colh" min="1" max="365" value="60">
+          </div>
+        </div>
+      </div>
+
+      <div class="species-card">
+        <h3 class="species-header">🥥 Coqueiro</h3>
+        <div class="species-inputs">
+          <div class="input-group">
+            <label>💧 Rega</label>
+            <input type="number" id="coq_rega" min="1" max="365" value="5">
+          </div>
+          <div class="input-group">
+            <label>✂️ Poda</label>
+            <input type="number" id="coq_poda" min="1" max="730" value="730">
+          </div>
+          <div class="input-group">
+            <label>🍊 Colheita</label>
+            <input type="number" id="coq_colh" min="1" max="365" value="30">
+          </div>
+        </div>
+      </div>
+
+      <div class="species-card">
+        <h3 class="species-header">🍫 Cacau</h3>
+        <div class="species-inputs">
+          <div class="input-group">
+            <label>💧 Rega</label>
+            <input type="number" id="cac_rega" min="1" max="365" value="3">
+          </div>
+          <div class="input-group">
+            <label>✂️ Poda</label>
+            <input type="number" id="cac_poda" min="1" max="730" value="180">
+          </div>
+          <div class="input-group">
+            <label>🍊 Colheita</label>
+            <input type="number" id="cac_colh" min="1" max="365" value="120">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveConfig()">
+        💾 Salvar Todas as Configurações
+      </button>
+    </div>
+
+    <div class="section" style="margin-top: 1.5rem;">
+      <div class="section-title">⚙️ Valores Padrão</div>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+        Usados para espécies não configuradas acima
+      </p>
+      
+      <div class="config-item">
+        <label class="config-label">💧 Rega (dias)</label>
+        <input type="number" class="config-input" id="def_rega" value="7" min="1">
+      </div>
+      
+      <div class="config-item">
+        <label class="config-label">✂️ Poda (dias)</label>
+        <input type="number" class="config-input" id="def_poda" value="180" min="1">
+      </div>
+      
+      <div class="config-item">
+        <label class="config-label">🍎 Colheita (dias)</label>
+        <input type="number" class="config-input" id="def_colh" value="90" min="1">
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
+          .then(reg => console.log('Service Worker registrado!', reg))
+          .catch(err => console.error('Erro SW:', err));
+      });
+    }
+
+    let plantas = [];
+    let filtroAtual = 'todos';
+    
+    let config = {
+      default: { rega: 7, poda: 180, colheita: 90 },
+      Mangabeira: { rega: 7, poda: 180, colheita: 90 },
+      Cajueiro: { rega: 10, poda: 365, colheita: 60 },
+      Coqueiro: { rega: 5, poda: 730, colheita: 30 },
+      Cacau: { rega: 3, poda: 180, colheita: 120 }
+    };
+
+    // CARREGAR DADOS NATIVOS DO GEOJSON
+    async function carregarDadosNativos() {
+      try {
+        const response = await fetch('/S-tio_Ipiranga/dados.geojson');
+        if (!response.ok) throw new Error('Arquivo não encontrado');
+        
+        const geojson = await response.json();
+        processarGeoJSON(geojson);
+        alert('Dados do sistema carregados!');
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        alert('Não foi possível carregar os dados do sistema. Importe do QField.');
+      }
+    }
+
+    function processarGeoJSON(geojson) {
+      plantas = geojson.features.map(f => {
+        const p = f.properties;
+        return {
+          id: p.fid || p.ID || p.id || Math.random(),
+          nome: p.NOME_POPULAR || p.nome_popular || p.especie || p.nome || 'Sem ID',
+          nomeId: p.ID || p.fid || 'S/N',
+          ultRega: p.ULTIMA_REGA || p.ultima_rega || null,
+          ultPoda: p.ULTIMA_PODA || p.ultima_poda || null,
+          ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null
+        };
+      });
+      
+      sessionStorage.setItem('plantas', JSON.stringify(plantas));
+      criarFiltros();
+      renderAll();
+    }
+
+    function importGeoJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const geojson = JSON.parse(e.target.result);
+          processarGeoJSON(geojson);
+          alert(`${plantas.length} plantas atualizadas do QField!`);
+        } catch (err) {
+          alert('Erro ao ler arquivo: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function loadConfig() {
+      const saved = sessionStorage.getItem('config');
+      if (saved) {
+        config = JSON.parse(saved);
+      }
+      
+      document.getElementById('mang_rega').value = config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      
+      document.getElementById('caju_rega').value = config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      
+      document.getElementById('coq_rega').value = config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
+      
+      document.getElementById('cac_rega').value = config.Cacau.rega;
+      document.getElementById('cac_poda').value = config.Cacau.poda;
+      document.getElementById('cac_colh').value = config.Cacau.colheita;
+      
+      document.getElementById('def_rega').value = config.default.rega;
+      document.getElementById('def_poda').value = config.default.poda;
+      document.getElementById('def_colh').value = config.default.colheita;
+    }
+
+    function saveConfig() {
+      config.Mangabeira = {
+        rega: parseInt(document.getElementById('mang_rega').value),
+        poda: parseInt(document.getElementById('mang_poda').value),
+        colheita: parseInt(document.getElementById('mang_colh').value)
+      };
+      
+      config.Cajueiro = {
+        rega: parseInt(document.getElementById('caju_rega').value),
+        poda: parseInt(document.getElementById('caju_poda').value),
+        colheita: parseInt(document.getElementById('caju_colh').value)
+      };
+      
+      config.Coqueiro = {
+        rega: parseInt(document.getElementById('coq_rega').value),
+        poda: parseInt(document.getElementById('coq_poda').value),
+        colheita: parseInt(document.getElementById('coq_colh').value)
+      };
+      
+      config.Cacau = {
+        rega: parseInt(document.getElementById('cac_rega').value),
+        poda: parseInt(document.getElementById('cac_poda').value),
+        colheita: parseInt(document.getElementById('cac_colh').value)
+      };
+      
+      config.default = {
+        rega: parseInt(document.getElementById('def_rega').value),
+        poda: parseInt(document.getElementById('def_poda').value),
+        colheita: parseInt(document.getElementById('def_colh').value)
+      };
+
+      sessionStorage.setItem('config', JSON.stringify(config));
+      alert('Configurações salvas!');
+      renderAll();
+    }
+
+    function getIntervalos(nome) {
+      const n = nome.toLowerCase();
+      if (n.includes('mangabeira')) return config.Mangabeira;
+      if (n.includes('caju')) return config.Cajueiro;
+      if (n.includes('coq')) return config.Coqueiro;
+      if (n.includes('cacau')) return config.Cacau;
+      return config.default;
+    }
+
+    function switchTab(event, tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
+    }
+
+    function criarFiltros() {
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      const fg = document.getElementById('filterGroup');
+      
+      if (esp.length > 1) {
+        fg.style.display = 'flex';
+        fg.innerHTML = `
+          <button class="filter-btn active" onclick="filterPlantas(event, 'todos')">Todas (${plantas.length})</button>
+          ${esp.map(e => `
+            <button class="filter-btn" onclick="filterPlantas(event, '${e}')">${e} (${plantas.filter(p => p.nome === e).length})</button>
+          `).join('')}
+        `;
+      }
+    }
+
+    function filterPlantas(event, tipo) {
+      filtroAtual = tipo;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderPlantas();
+    }
+
+    function diasDesde(dataStr) {
+      if (!dataStr) return null;
+      const d = new Date(dataStr);
+      const h = new Date();
+      return Math.floor((h - d) / (1000 * 60 * 60 * 24));
+    }
+
+    function renderAcoes() {
+      const container = document.getElementById('acoesHoje');
+      const acoes = [];
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        
+        const dR = diasDesde(p.ultRega);
+        if (dR === null || dR >= int.rega) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'rega',
+            icon: '💧',
+            urg: dR === null ? 'warning' : dR >= int.rega + 2 ? 'urgent' : 'normal',
+            msg: dR === null ? 'Nunca foi regada' : dR >= int.rega + 2 ? `Atrasada ${dR - int.rega} dias!` : 'Hora de regar',
+            pid: p.id
+          });
+        }
+        
+        const dP = diasDesde(p.ultPoda);
+        if (dP === null || dP >= int.poda) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'poda',
+            icon: '✂️',
+            urg: dP === null ? 'normal' : dP > int.poda + 30 ? 'warning' : 'normal',
+            msg: dP === null ? 'Nunca foi podada' : `Há ${dP} dias sem poda`,
+            pid: p.id
+          });
+        }
+        
+        const dC = diasDesde(p.ultColh);
+        if (dC === null || dC >= int.colheita) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'colheita',
+            icon: '🍎',
+            urg: 'normal',
+            msg: dC === null ? 'Verificar frutos' : `Última colheita há ${dC} dias`,
+            pid: p.id
+          });
+        }
+      });
+      
+      if (acoes.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!<br>Todas as plantas estão em dia!</p></div>';
+        document.getElementById('actionCount').textContent = '0 pendências';
+        return;
+      }
+      
+      acoes.sort((a, b) => {
+        const ord = { urgent: 0, warning: 1, normal: 2 };
+        return ord[a.urg] - ord[b.urg];
+      });
+      
+      container.innerHTML = acoes.map(a => `
+        <div class="action-item ${a.urg}">
+          <div class="action-title">
+            ${a.icon} ${a.planta}
+            ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
+          </div>
+          <div class="action-desc">${a.msg}</div>
+          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
+            ✓ Marcar como feito
+          </button>
+        </div>
+      `).join('');
+      
+      document.getElementById('actionCount').textContent = `${acoes.length} pendências`;
+    }
+
+    function marcarFeito(pid, tipo) {
+      const p = plantas.find(pl => pl.id === pid);
+      if (!p) return;
+      
+      const hoje = new Date().toISOString().split('T')[0];
+      
+      if (tipo === 'rega') p.ultRega = hoje;
+      if (tipo === 'poda') p.ultPoda = hoje;
+      if (tipo === 'colheita') p.ultColh = hoje;
+      
+      sessionStorage.setItem('plantas', JSON.stringify(plantas));
+      renderAll();
+      alert('Ação registrada!');
+    }
+
+    function renderPlantas() {
+      const container = document.getElementById('plantasList');
+      
+      if (plantas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada.<br>Carregue os dados do sistema ou importe do QField!</p></div>';
+        return;
+      }
+      
+      const pFilt = filtroAtual === 'todos' ? plantas : plantas.filter(p => p.nome === filtroAtual);
+      
+      container.innerHTML = pFilt.map(p => `
+        <div class="plant-card">
+          <div class="plant-header">
+            <div class="plant-name">🌿 ${p.nome}</div>
+            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
+          </div>
+          <div class="plant-info">
+            <div>💧 Última rega: ${p.ultRega || 'Não registrada'}</div>
+            <div>✂️ Última poda: ${p.ultPoda || 'Não registrada'}</div>
+            <div>🍎 Última colheita: ${p.ultColh || 'Não registrada'}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderStats() {
+      document.getElementById('statTotal').textContent = plantas.length;
+      
+      let pend = 0;
+      let urg = 0;
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        const dP = diasDesde(p.ultPoda);
+        const dC = diasDesde(p.ultColh);
+        
+        if (dR === null || dR >= int.rega) {
+          pend++;
+          if (dR !== null && dR >= int.rega + 2) urg++;
+        }
+        if (dP === null || dP >= int.poda) pend++;
+        if (dC === null || dC >= int.colheita) pend++;
+      });
+      
+      document.getElementById('statPend').textContent = pend;
+      document.getElementById('statUrg').textContent = urg;
+      
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      document.getElementById('statEsp').textContent = esp.length;
+    }
+
+    function renderAll() {
+      renderAcoes();
+      renderPlantas();
+      renderStats();
+      document.getElementById('plantCount').textContent = `${plantas.length} plantas`;
+    }
+
+    // INICIALIZAÇÃO
+    window.addEventListener('load', async () => {
+      loadConfig();
+      
+      // Tentar carregar dados salvos primeiro
+      const saved = sessionStorage.getItem('plantas');
+      if (saved) {
+        plantas = JSON.parse(saved);
+        criarFiltros();
+        renderAll();
+      } else {
+        // Se não tem dados salvos, carregar do sistema
+        await carregarDadosNativos();
+      }
+    });
+  </script>
+</body>
+</html>
