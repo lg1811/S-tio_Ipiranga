@@ -40,9 +40,12 @@ jobs:
           sudo apt-get install -y jq
           
           # Data atual
-          HOJE=$(date +%Y-%m-%d)
-          HORA=$(date +%H:%M)
-          DATA_BR=$(date +'%d/%m/%Y')
+          HOJE=$(date +"%Y-%m-%d")
+          HORA=$(date +"%H:%M")
+          DIA=$(date +"%d")
+          MES=$(date +"%m")
+          ANO=$(date +"%Y")
+          DATA_BR="${DIA}/${MES}/${ANO}"
           
           # Definir intervalos por espécie (em dias)
           INTERVALO_REGA_MANGABEIRA=7
