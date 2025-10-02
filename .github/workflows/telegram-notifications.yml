@@ -1,0 +1,172 @@
+name: Telegram Notifications
+
+on:
+  schedule:
+    # 7h (10:00 UTC = 7h BRT)
+    - cron: '0 10 * * *'
+    # 12h (15:00 UTC = 12h BRT)
+    - cron: '0 15 * * *'
+    # 15h (18:00 UTC = 15h BRT)
+    - cron: '0 18 * * *'
+    # 18h (21:00 UTC = 18h BRT)
+    - cron: '0 21 * * *'
+  workflow_dispatch: # Permite rodar manualmente
+
+jobs:
+  send-notification:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Process GeoJSON and send notification
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        CHAT_ID: ${{ secrets.CHAT_ID }}
+      run: |
+        node <<'EOF'
+        const fs = require('fs');
+        const https = require('https');
+        
+        // Ler o arquivo GeoJSON
+        const geojson = JSON.parse(fs.readFileSync('dados.geojson', 'utf8'));
+        
+        // Configurações de intervalos por espécie
+        const config = {
+          Mangabeira: { rega: 7, poda: 180, colheita: 90 },
+          Cajueiro: { rega: 10, poda: 365, colheita: 60 },
+          Coqueiro: { rega: 5, poda: 730, colheita: 30 },
+          Cacau: { rega: 3, poda: 180, colheita: 120 },
+          default: { rega: 7, poda: 180, colheita: 90 }
+        };
+        
+        function getIntervalos(nome) {
+          const n = nome.toLowerCase();
+          if (n.includes('mangabeira')) return config.Mangabeira;
+          if (n.includes('caju')) return config.Cajueiro;
+          if (n.includes('coq')) return config.Coqueiro;
+          if (n.includes('cacau')) return config.Cacau;
+          return config.default;
+        }
+        
+        function diasDesde(dataStr) {
+          if (!dataStr) return null;
+          const d = new Date(dataStr);
+          const h = new Date();
+          return Math.floor((h - d) / (1000 * 60 * 60 * 24));
+        }
+        
+        // Processar plantas
+        let regaCount = 0;
+        let podaCount = 0;
+        let colheitaCount = 0;
+        let urgentes = 0;
+        
+        geojson.features.forEach(f => {
+          const p = f.properties;
+          const nome = p.NOME_POPULAR || p.nome_popular || p.especie || '';
+          const int = getIntervalos(nome);
+          
+          const dR = diasDesde(p.ULTIMA_REGA || p.ultima_rega);
+          const dP = diasDesde(p.ULTIMA_PODA || p.ultima_poda);
+          const dC = diasDesde(p.ULTIMA_COLHEITA || p.ultima_colheita);
+          
+          if (dR === null || dR >= int.rega) {
+            regaCount++;
+            if (dR !== null && dR >= int.rega + 2) urgentes++;
+          }
+          if (dP === null || dP >= int.poda) podaCount++;
+          if (dC === null || dC >= int.colheita) colheitaCount++;
+        });
+        
+        const total = regaCount + podaCount + colheitaCount;
+        
+        // Determinar emoji e saudação por horário
+        const hora = new Date().getHours();
+        let saudacao, emoji;
+        
+        if (hora >= 5 && hora < 12) {
+          saudacao = 'Bom dia';
+          emoji = '🌅';
+        } else if (hora >= 12 && hora < 18) {
+          saudacao = 'Boa tarde';
+          emoji = '☀️';
+        } else {
+          saudacao = 'Boa noite';
+          emoji = '🌙';
+        }
+        
+        // Montar mensagem
+        let mensagem = `${emoji} ${saudacao}!\n\n`;
+        mensagem += `🌿 *Sítio Ipiranga*\n`;
+        mensagem += `━━━━━━━━━━━━━━━━\n\n`;
+        
+        if (total === 0) {
+          mensagem += `✅ *Tudo em dia!*\n\n`;
+          mensagem += `Todas as plantas estão bem cuidadas.\n`;
+          mensagem += `Aproveite para descansar! 😊`;
+        } else {
+          mensagem += `📋 *Tarefas pendentes:*\n\n`;
+          
+          if (regaCount > 0) {
+            mensagem += `💧 ${regaCount} planta${regaCount > 1 ? 's' : ''} precisa${regaCount > 1 ? 'm' : ''} de rega\n`;
+          }
+          if (podaCount > 0) {
+            mensagem += `✂️ ${podaCount} planta${podaCount > 1 ? 's' : ''} precisa${podaCount > 1 ? 'm' : ''} de poda\n`;
+          }
+          if (colheitaCount > 0) {
+            mensagem += `🍎 ${colheitaCount} planta${colheitaCount > 1 ? 's' : ''} pronta${colheitaCount > 1 ? 's' : ''} para colheita\n`;
+          }
+          
+          mensagem += `\n━━━━━━━━━━━━━━━━\n`;
+          mensagem += `📊 Total: *${total} ações*\n`;
+          
+          if (urgentes > 0) {
+            mensagem += `⚠️ *${urgentes} URGENTE${urgentes > 1 ? 'S' : ''}*\n`;
+          }
+          
+          mensagem += `\n[Abrir App](https://lg1811.github.io/S-tio_Ipiranga/)`;
+        }
+        
+        // Enviar via Telegram
+        const token = process.env.TELEGRAM_TOKEN;
+        const chatId = process.env.CHAT_ID;
+        
+        const data = JSON.stringify({
+          chat_id: chatId,
+          text: mensagem,
+          parse_mode: 'Markdown',
+          disable_web_page_preview: true
+        });
+        
+        const options = {
+          hostname: 'api.telegram.org',
+          port: 443,
+          path: `/bot${token}/sendMessage`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': data.length
+          }
+        };
+        
+        const req = https.request(options, (res) => {
+          console.log(`Status: ${res.statusCode}`);
+          res.on('data', (d) => {
+            process.stdout.write(d);
+          });
+        });
+        
+        req.on('error', (error) => {
+          console.error(error);
+        });
+        
+        req.write(data);
+        req.end();
+        EOF
