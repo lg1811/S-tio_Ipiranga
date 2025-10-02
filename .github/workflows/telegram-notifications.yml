@@ -172,50 +172,52 @@ jobs:
           fi
           
           if [ "$TOTAL_ACOES" -eq 0 ]; then
-            MESSAGE="${MESSAGE}Tudo em dia!%0A%0A"
-            MESSAGE="${MESSAGE}Nenhuma ação necessária.%0A"
-            MESSAGE="${MESSAGE}Todas as plantas estão em dia!"
+            MESSAGE="${MESSAGE}Tudo em dia!%0A"
+            MESSAGE="${MESSAGE}Nenhuma ação necessária."
           else
-            MESSAGE="${MESSAGE}Ações Necessárias: ${TOTAL_ACOES}%0A%0A"
+            MESSAGE="${MESSAGE}Ações: ${TOTAL_ACOES}%0A%0A"
             
-            # Adicionar ações urgentes
-            if grep -q "^REGA_URG:" /tmp/acoes.txt 2>/dev/null; then
-              MESSAGE="${MESSAGE}URGENTE - Rega Atrasada:%0A"
+            # Contar por tipo
+            URG_COUNT=$(grep -c "^REGA_URG:" /tmp/acoes.txt 2>/dev/null || echo 0)
+            NORM_COUNT=$(grep -c "^REGA_NORM:" /tmp/acoes.txt 2>/dev/null || echo 0)
+            PODA_COUNT=$(grep -c "^PODA:" /tmp/acoes.txt 2>/dev/null || echo 0)
+            COLH_COUNT=$(grep -c "^COLHEITA:" /tmp/acoes.txt 2>/dev/null || echo 0)
+            
+            # Mostrar apenas resumo se muitas ações
+            if [ "$TOTAL_ACOES" -gt 15 ]; then
+              [ "$URG_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}URGENTE: ${URG_COUNT} rega(s) atrasada(s)%0A"
+              [ "$NORM_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Rega: ${NORM_COUNT} planta(s)%0A"
+              [ "$PODA_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Poda: ${PODA_COUNT} planta(s)%0A"
+              [ "$COLH_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Colheita: ${COLH_COUNT} planta(s)%0A"
+              MESSAGE="${MESSAGE}%0AVeja detalhes no app"
+            else
+              # Mostrar detalhes (máximo 15 ações)
+              CONTADOR=0
+              
+              # Urgentes primeiro
+              if [ "$URG_COUNT" -gt 0 ]; then
+                MESSAGE="${MESSAGE}URGENTE:%0A"
+                while IFS=: read -r tipo texto; do
+                  if [ "$tipo" = "REGA_URG" ]; then
+                    MESSAGE="${MESSAGE}${texto}%0A"
+                    CONTADOR=$((CONTADOR + 1))
+                  fi
+                done < /tmp/acoes.txt
+                MESSAGE="${MESSAGE}%0A"
+              fi
+              
+              # Outras ações
               while IFS=: read -r tipo texto; do
-                [ "$tipo" = "REGA_URG" ] && MESSAGE="${MESSAGE}• ${texto}%0A"
+                if [ "$CONTADOR" -lt 15 ] && [ "$tipo" != "REGA_URG" ]; then
+                  case "$tipo" in
+                    "REGA_NORM") MESSAGE="${MESSAGE}${texto}%0A" ;;
+                    "PODA") MESSAGE="${MESSAGE}${texto}%0A" ;;
+                    "COLHEITA") MESSAGE="${MESSAGE}${texto}%0A" ;;
+                  esac
+                  CONTADOR=$((CONTADOR + 1))
+                fi
               done < /tmp/acoes.txt
-              MESSAGE="${MESSAGE}%0A"
             fi
-            
-            # Adicionar rega normal
-            if grep -q "^REGA_NORM:" /tmp/acoes.txt 2>/dev/null; then
-              MESSAGE="${MESSAGE}Rega:%0A"
-              while IFS=: read -r tipo texto; do
-                [ "$tipo" = "REGA_NORM" ] && MESSAGE="${MESSAGE}• ${texto}%0A"
-              done < /tmp/acoes.txt
-              MESSAGE="${MESSAGE}%0A"
-            fi
-            
-            # Adicionar poda
-            if grep -q "^PODA:" /tmp/acoes.txt 2>/dev/null; then
-              MESSAGE="${MESSAGE}Poda:%0A"
-              while IFS=: read -r tipo texto; do
-                [ "$tipo" = "PODA" ] && MESSAGE="${MESSAGE}• ${texto}%0A"
-              done < /tmp/acoes.txt
-              MESSAGE="${MESSAGE}%0A"
-            fi
-            
-            # Adicionar colheita
-            if grep -q "^COLHEITA:" /tmp/acoes.txt 2>/dev/null; then
-              MESSAGE="${MESSAGE}Colheita:%0A"
-              while IFS=: read -r tipo texto; do
-                [ "$tipo" = "COLHEITA" ] && MESSAGE="${MESSAGE}• ${texto}%0A"
-              done < /tmp/acoes.txt
-              MESSAGE="${MESSAGE}%0A"
-            fi
-            
-            MESSAGE="${MESSAGE}----%0A"
-            MESSAGE="${MESSAGE}Acesse o app para marcar como concluído"
           fi
           
           # Limpar arquivo temporário
