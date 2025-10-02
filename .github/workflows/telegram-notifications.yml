@@ -1,68 +1,111 @@
-name: notify-telegram
+name: Telegram Notifications - Árvores Frutíferas
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'dados.geojson'
   schedule:
-    - cron: "0 12 * * *" # Executa todo dia às 12h UTC (9h no Brasil)
+    # Executa diariamente às 8h (horário UTC)
+    - cron: '0 8 * * *'
+  workflow_dispatch:
 
 jobs:
   notify-telegram:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
       - name: Processar dados e enviar notificação
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          DATA=$(date +"%d/%m/%Y %H:%M")
-
+          # Instalar jq para processar JSON
+          sudo apt-get update
+          sudo apt-get install -y jq
+          
+          # Contar árvores por tipo
           TOTAL=$(jq '.features | length' dados.geojson)
           COQUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Coqueiro")] | length' dados.geojson)
           CAJUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cajueiro")] | length' dados.geojson)
-          CACAUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cacaueiro")] | length' dados.geojson)
-          MANGABEIRAS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Mangabeira")] | length' dados.geojson)
-
-          # Listar árvores que precisam de irrigação
-          LISTA_IRRIGACAO=$(jq -r '[.features[] 
-              | select(.properties.IRRIGACAO_ORDINARIA != null and .properties.DATA_IRRIGACAO_ORDINARIA == null) 
-              | .properties.NOME_POPULAR] 
-              | join(", ")' dados.geojson)
-
-          # Listar árvores com poda programada
-          LISTA_PODA=$(jq -r '[.features[] 
-              | select(.properties.DATA_PODA_FORMACAO_1 != null or .properties.DATA_PODA_FORMACAO_2 != null or .properties.DATA_PODA_FORMACAO_3 != null) 
-              | .properties.NOME_POPULAR] 
-              | join(", ")' dados.geojson)
-
-          # Definir limite de 30 dias para plantios recentes
-          DATA_LIMITE=$(date -d "30 days ago" +"%Y-%m-%d")
-
-          LISTA_PLANTIOS=$(jq -r --arg date "$DATA_LIMITE" '[.features[] 
-              | select(.properties.DATA_PLANTIO != null and .properties.DATA_PLANTIO > $date) 
-              | "\(.properties.NOME_POPULAR) (\(.properties.DATA_PLANTIO))"] 
-              | join(", ")' dados.geojson)
-
-          # Montar mensagem
+          CACAU=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cacau")] | length' dados.geojson)
+          MANGABEIRA=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Mangabeira")] | length' dados.geojson)
+          
+          # Árvores com plantio recente (últimos 30 dias)
+          DATA_LIMITE=$(date -d "30 days ago" +%Y-%m-%d)
+          PLANTIOS_RECENTES=$(jq --arg date "$DATA_LIMITE" '[.features[] | select(.properties.DATA_PLANTIO != null and .properties.DATA_PLANTIO > $date)] | length' dados.geojson)
+          
+          # Árvores que precisam de irrigação ordinária
+          NECESSITAM_IRRIGACAO=$(jq '[.features[] | select(.properties.IRRIGACAO_ORDINARIA != null and .properties.DATA_IRRIGACAO_ORDINARIA == null)] | length' dados.geojson)
+          
+          # Árvores com poda programada
+          COM_PODA=$(jq '[.features[] | select(.properties.DATA_PODA_FORMACAO_1 != null or .properties.DATA_PODA_FORMACAO_2 != null or .properties.DATA_PODA_FORMACAO_3 != null)] | length' dados.geojson)
+          
+          # Construir mensagem
           MESSAGE="🌳 *Relatório Diário - Árvores Frutíferas*%0A%0A"
-          MESSAGE="${MESSAGE}📊 *Resumo Geral:*%0A• Total de árvores: ${TOTAL}%0A• 🥥 Coqueiros: ${COQUEIROS}%0A• 🥜 Cajueiros: ${CAJUEIROS}%0A• 🍫 Cacaueiros: ${CACAUEIROS}%0A• 🍈 Mangabeiras: ${MANGABEIRAS}%0A%0A"
-
-          if [ "$LISTA_IRRIGACAO" != "" ]; then
-            MESSAGE="${MESSAGE}💧 *Precisam de irrigação:* ${LISTA_IRRIGACAO}%0A%0A"
+          MESSAGE="${MESSAGE}📊 *Resumo Geral:*%0A"
+          MESSAGE="${MESSAGE}• Total de árvores: ${TOTAL}%0A"
+          MESSAGE="${MESSAGE}• 🥥 Coqueiros: ${COQUEIROS}%0A"
+          MESSAGE="${MESSAGE}• 🥜 Cajueiros: ${CAJUEIROS}%0A"
+          MESSAGE="${MESSAGE}• 🍫 Cacau: ${CACAU}%0A"
+          MESSAGE="${MESSAGE}• 🍈 Mangabeira: ${MANGABEIRA}%0A%0A"
+          
+          if [ "$PLANTIOS_RECENTES" -gt 0 ]; then
+            MESSAGE="${MESSAGE}🌱 *Plantios Recentes:* ${PLANTIOS_RECENTES} árvore(s) nos últimos 30 dias%0A%0A"
           fi
-
-          if [ "$LISTA_PODA" != "" ]; then
-            MESSAGE="${MESSAGE}✂️ *Com poda programada:* ${LISTA_PODA}%0A%0A"
+          
+          if [ "$NECESSITAM_IRRIGACAO" -gt 0 ]; then
+            MESSAGE="${MESSAGE}💧 *Atenção:* ${NECESSITAM_IRRIGACAO} árvore(s) necessitam irrigação ordinária%0A%0A"
           fi
-
-          if [ "$LISTA_PLANTIOS" != "" ]; then
-            MESSAGE="${MESSAGE}🌱 *Plantios recentes:* ${LISTA_PLANTIOS}%0A%0A"
+          
+          if [ "$COM_PODA" -gt 0 ]; then
+            MESSAGE="${MESSAGE}✂️ *Manutenção:* ${COM_PODA} árvore(s) com poda programada%0A%0A"
           fi
-
-          MESSAGE="${MESSAGE}📅 Data: ${DATA}%0A🔄 Atualização automática via GitHub Actions"
-
+          
+          MESSAGE="${MESSAGE}📅 Data: $(date +'%d/%m/%Y %H:%M')%0A"
+          MESSAGE="${MESSAGE}🔄 Atualização automática via GitHub Actions"
+          
           # Enviar para Telegram
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-          -d chat_id=${{ secrets.CHAT_ID }} \
-          -d text="$MESSAGE" \
-          -d parse_mode="Markdown"
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown"
+          
+          echo "✅ Notificação enviada com sucesso!"
+          
+      - name: Verificar árvores que precisam de atenção urgente
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # Verificar árvores sem dados básicos
+          SEM_COORDENADAS=$(jq '[.features[] | select(.properties.Latitude == null or .properties.Longitude == null)] | length' dados.geojson)
+          SEM_NOME=$(jq '[.features[] | select(.properties.NOME_POPULAR == null)] | length' dados.geojson)
+          
+          if [ "$SEM_COORDENADAS" -gt 0 ] || [ "$SEM_NOME" -gt 0 ]; then
+            ALERT="⚠️ *ATENÇÃO - Dados Incompletos*%0A%0A"
+            
+            if [ "$SEM_COORDENADAS" -gt 0 ]; then
+              ALERT="${ALERT}📍 ${SEM_COORDENADAS} árvore(s) sem coordenadas%0A"
+            fi
+            
+            if [ "$SEM_NOME" -gt 0 ]; then
+              ALERT="${ALERT}🏷️ ${SEM_NOME} árvore(s) sem identificação%0A"
+            fi
+            
+            ALERT="${ALERT}%0A❗ Favor revisar o arquivo dados.geojson"
+            
+            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+              -d chat_id="${TELEGRAM_CHAT_ID}" \
+              -d text="${ALERT}" \
+              -d parse_mode="Markdown"
+          fi
