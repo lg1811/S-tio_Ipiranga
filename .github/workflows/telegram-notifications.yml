@@ -1,14 +1,20 @@
-name: Telegram Notifications - Árvores Frutíferas
+name: Notificações Telegram - Ações Diárias
 
 on:
+  schedule:
+    # 06:00 (3h UTC = 6h BR considerando UTC-3)
+    - cron: '0 9 * * *'
+    # 12:00 (9h UTC = 12h BR)
+    - cron: '0 15 * * *'
+    # 15:00 (12h UTC = 15h BR)
+    - cron: '0 18 * * *'
+  
   push:
     branches:
       - main
     paths:
       - 'dados.geojson'
-  schedule:
-    # Executa diariamente às 8h (horário UTC)
-    - cron: '0 8 * * *'
+  
   workflow_dispatch:
 
 jobs:
@@ -24,7 +30,7 @@ jobs:
         with:
           node-version: '20'
           
-      - name: Processar dados e enviar notificação
+      - name: Processar ações necessárias
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -33,79 +39,197 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
           
-          # Contar árvores por tipo
+          # Data atual
+          HOJE=$(date +%Y-%m-%d)
+          HORA=$(date +%H:%M)
+          DATA_BR=$(date +'%d/%m/%Y')
+          
+          # Definir intervalos por espécie (em dias)
+          INTERVALO_REGA_MANGABEIRA=7
+          INTERVALO_REGA_CAJUEIRO=10
+          INTERVALO_REGA_COQUEIRO=5
+          INTERVALO_REGA_CACAU=3
+          INTERVALO_REGA_PADRAO=7
+          
+          INTERVALO_PODA_MANGABEIRA=180
+          INTERVALO_PODA_CAJUEIRO=365
+          INTERVALO_PODA_COQUEIRO=730
+          INTERVALO_PODA_CACAU=180
+          INTERVALO_PODA_PADRAO=180
+          
+          INTERVALO_COLHEITA_MANGABEIRA=90
+          INTERVALO_COLHEITA_CAJUEIRO=60
+          INTERVALO_COLHEITA_COQUEIRO=30
+          INTERVALO_COLHEITA_CACAU=120
+          INTERVALO_COLHEITA_PADRAO=90
+          
+          # Função para calcular dias desde última data
+          calcular_dias() {
+            if [ -z "$1" ] || [ "$1" == "null" ]; then
+              echo "999"
+            else
+              DIAS=$(( ($(date -d "$HOJE" +%s) - $(date -d "$1" +%s)) / 86400 ))
+              echo "$DIAS"
+            fi
+          }
+          
+          # Arrays para armazenar ações
+          ACOES_REGA_URGENTE=""
+          ACOES_REGA_NORMAL=""
+          ACOES_PODA=""
+          ACOES_COLHEITA=""
+          
+          # Processar cada planta
+          while IFS= read -r feature; do
+            ID=$(echo "$feature" | jq -r '.properties.ID // .properties.fid // "S/N"')
+            NOME=$(echo "$feature" | jq -r '.properties.NOME_POPULAR // .properties.nome_popular // "Planta"')
+            ULT_REGA=$(echo "$feature" | jq -r '.properties.ULTIMA_REGA // .properties.ultima_rega // "null"')
+            ULT_PODA=$(echo "$feature" | jq -r '.properties.ULTIMA_PODA // .properties.ultima_poda // "null"')
+            ULT_COLHEITA=$(echo "$feature" | jq -r '.properties.ULTIMA_COLHEITA // .properties.ultima_colheita // "null"')
+            
+            # Determinar intervalos baseado na espécie
+            NOME_LOWER=$(echo "$NOME" | tr '[:upper:]' '[:lower:]')
+            
+            if [[ "$NOME_LOWER" == *"mangabeira"* ]]; then
+              INT_REGA=$INTERVALO_REGA_MANGABEIRA
+              INT_PODA=$INTERVALO_PODA_MANGABEIRA
+              INT_COLHEITA=$INTERVALO_COLHEITA_MANGABEIRA
+            elif [[ "$NOME_LOWER" == *"caju"* ]]; then
+              INT_REGA=$INTERVALO_REGA_CAJUEIRO
+              INT_PODA=$INTERVALO_PODA_CAJUEIRO
+              INT_COLHEITA=$INTERVALO_COLHEITA_CAJUEIRO
+            elif [[ "$NOME_LOWER" == *"coq"* ]]; then
+              INT_REGA=$INTERVALO_REGA_COQUEIRO
+              INT_PODA=$INTERVALO_PODA_COQUEIRO
+              INT_COLHEITA=$INTERVALO_COLHEITA_COQUEIRO
+            elif [[ "$NOME_LOWER" == *"cacau"* ]]; then
+              INT_REGA=$INTERVALO_REGA_CACAU
+              INT_PODA=$INTERVALO_PODA_CACAU
+              INT_COLHEITA=$INTERVALO_COLHEITA_CACAU
+            else
+              INT_REGA=$INTERVALO_REGA_PADRAO
+              INT_PODA=$INTERVALO_PODA_PADRAO
+              INT_COLHEITA=$INTERVALO_COLHEITA_PADRAO
+            fi
+            
+            # Verificar REGA
+            DIAS_REGA=$(calcular_dias "$ULT_REGA")
+            if [ "$DIAS_REGA" -ge $((INT_REGA + 2)) ]; then
+              ACOES_REGA_URGENTE="${ACOES_REGA_URGENTE}â€¢ ðŸš¨ *${NOME} #${ID}* - Atrasada ${DIAS_REGA} dias!%0A"
+            elif [ "$DIAS_REGA" -ge "$INT_REGA" ] || [ "$ULT_REGA" == "null" ]; then
+              if [ "$ULT_REGA" == "null" ]; then
+                ACOES_REGA_NORMAL="${ACOES_REGA_NORMAL}â€¢ ðŸ'§ *${NOME} #${ID}* - Nunca foi regada%0A"
+              else
+                ACOES_REGA_NORMAL="${ACOES_REGA_NORMAL}â€¢ ðŸ'§ *${NOME} #${ID}* - HÃ¡ ${DIAS_REGA} dias sem regar%0A"
+              fi
+            fi
+            
+            # Verificar PODA
+            DIAS_PODA=$(calcular_dias "$ULT_PODA")
+            if [ "$DIAS_PODA" -ge "$INT_PODA" ] || [ "$ULT_PODA" == "null" ]; then
+              if [ "$ULT_PODA" == "null" ]; then
+                ACOES_PODA="${ACOES_PODA}â€¢ âœ‚ï¸ *${NOME} #${ID}* - Nunca foi podada%0A"
+              else
+                ACOES_PODA="${ACOES_PODA}â€¢ âœ‚ï¸ *${NOME} #${ID}* - HÃ¡ ${DIAS_PODA} dias sem poda%0A"
+              fi
+            fi
+            
+            # Verificar COLHEITA
+            DIAS_COLHEITA=$(calcular_dias "$ULT_COLHEITA")
+            if [ "$DIAS_COLHEITA" -ge "$INT_COLHEITA" ] || [ "$ULT_COLHEITA" == "null" ]; then
+              if [ "$ULT_COLHEITA" == "null" ]; then
+                ACOES_COLHEITA="${ACOES_COLHEITA}â€¢ ðŸŠ *${NOME} #${ID}* - Verificar frutos%0A"
+              else
+                ACOES_COLHEITA="${ACOES_COLHEITA}â€¢ ðŸŠ *${NOME} #${ID}* - HÃ¡ ${DIAS_COLHEITA} dias sem colheita%0A"
+              fi
+            fi
+            
+          done < <(jq -c '.features[]' dados.geojson)
+          
+          # Construir mensagem baseada no horário
+          if [ "$HORA" \< "10:00" ]; then
+            SAUDACAO="â˜€ï¸ Bom dia!"
+            PERIODO="manhÃ£"
+          elif [ "$HORA" \< "16:00" ]; then
+            SAUDACAO="â›…ï¸ Boa tarde!"
+            PERIODO="tarde"
+          else
+            SAUDACAO="ðŸŒ™ Boa noite!"
+            PERIODO="noite"
+          fi
+          
+          # Montar mensagem
+          MESSAGE="${SAUDACAO}%0A"
+          MESSAGE="${MESSAGE}ðŸ"… *${DATA_BR} - ${HORA}*%0A%0A"
+          
+          # Contar total de ações
+          TOTAL_ACOES=0
+          [ -n "$ACOES_REGA_URGENTE" ] && TOTAL_ACOES=$((TOTAL_ACOES + $(echo -e "$ACOES_REGA_URGENTE" | grep -c "•")))
+          [ -n "$ACOES_REGA_NORMAL" ] && TOTAL_ACOES=$((TOTAL_ACOES + $(echo -e "$ACOES_REGA_NORMAL" | grep -c "•")))
+          [ -n "$ACOES_PODA" ] && TOTAL_ACOES=$((TOTAL_ACOES + $(echo -e "$ACOES_PODA" | grep -c "•")))
+          [ -n "$ACOES_COLHEITA" ] && TOTAL_ACOES=$((TOTAL_ACOES + $(echo -e "$ACOES_COLHEITA" | grep -c "•")))
+          
+          if [ "$TOTAL_ACOES" -eq 0 ]; then
+            MESSAGE="${MESSAGE}âœ… *Tudo em dia!*%0A%0A"
+            MESSAGE="${MESSAGE}Nenhuma aÃ§Ã£o necessÃ¡ria no momento.%0A"
+            MESSAGE="${MESSAGE}Todas as plantas estÃ£o com manutenÃ§Ã£o em dia! ðŸŒ¿"
+          else
+            MESSAGE="${MESSAGE}ðŸ"‹ *AÃ§Ãµes NecessÃ¡rias: ${TOTAL_ACOES}*%0A%0A"
+            
+            # Ações URGENTES primeiro
+            if [ -n "$ACOES_REGA_URGENTE" ]; then
+              MESSAGE="${MESSAGE}ðŸš¨ *URGENTE - Rega Atrasada:*%0A${ACOES_REGA_URGENTE}%0A"
+            fi
+            
+            # Rega normal
+            if [ -n "$ACOES_REGA_NORMAL" ]; then
+              MESSAGE="${MESSAGE}ðŸ'§ *Rega:*%0A${ACOES_REGA_NORMAL}%0A"
+            fi
+            
+            # Poda
+            if [ -n "$ACOES_PODA" ]; then
+              MESSAGE="${MESSAGE}âœ‚ï¸ *Poda:*%0A${ACOES_PODA}%0A"
+            fi
+            
+            # Colheita
+            if [ -n "$ACOES_COLHEITA" ]; then
+              MESSAGE="${MESSAGE}ðŸŠ *Colheita:*%0A${ACOES_COLHEITA}%0A"
+            fi
+            
+            MESSAGE="${MESSAGE}----%0A"
+            MESSAGE="${MESSAGE}ðŸ'¡ Acesse o app para marcar como concluÃ­do"
+          fi
+          
+          # Enviar notificação
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="${MESSAGE}" \
+            -d parse_mode="Markdown" \
+            -d disable_web_page_preview="true"
+          
+          echo "✅ Notificação enviada com sucesso às $HORA!"
+          
+      - name: Resumo estatístico (apenas 06h)
+        if: github.event.schedule == '0 9 * * *'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          # Estatísticas gerais (só na primeira notificação do dia)
           TOTAL=$(jq '.features | length' dados.geojson)
           COQUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Coqueiro")] | length' dados.geojson)
           CAJUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cajueiro")] | length' dados.geojson)
           CACAU=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cacau")] | length' dados.geojson)
           MANGABEIRA=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Mangabeira")] | length' dados.geojson)
           
-          # Árvores com plantio recente (últimos 30 dias)
-          DATA_LIMITE=$(date -d "30 days ago" +%Y-%m-%d)
-          PLANTIOS_RECENTES=$(jq --arg date "$DATA_LIMITE" '[.features[] | select(.properties.DATA_PLANTIO != null and .properties.DATA_PLANTIO > $date)] | length' dados.geojson)
+          STATS="ðŸ"Š *Resumo do SÃ­tio:*%0A"
+          STATS="${STATS}â€¢ Total: ${TOTAL} plantas%0A"
+          [ "$COQUEIROS" -gt 0 ] && STATS="${STATS}â€¢ ðŸ¥¥ Coqueiros: ${COQUEIROS}%0A"
+          [ "$CAJUEIROS" -gt 0 ] && STATS="${STATS}â€¢ ðŸŒ° Cajueiros: ${CAJUEIROS}%0A"
+          [ "$CACAU" -gt 0 ] && STATS="${STATS}â€¢ ðŸ« Cacau: ${CACAU}%0A"
+          [ "$MANGABEIRA" -gt 0 ] && STATS="${STATS}â€¢ ðŸ¥­ Mangabeira: ${MANGABEIRA}%0A"
           
-          # Árvores que precisam de irrigação ordinária
-          NECESSITAM_IRRIGACAO=$(jq '[.features[] | select(.properties.IRRIGACAO_ORDINARIA != null and .properties.DATA_IRRIGACAO_ORDINARIA == null)] | length' dados.geojson)
-          
-          # Árvores com poda programada
-          COM_PODA=$(jq '[.features[] | select(.properties.DATA_PODA_FORMACAO_1 != null or .properties.DATA_PODA_FORMACAO_2 != null or .properties.DATA_PODA_FORMACAO_3 != null)] | length' dados.geojson)
-          
-          # Construir mensagem
-          MESSAGE="🌳 *Relatório Diário - Árvores Frutíferas*%0A%0A"
-          MESSAGE="${MESSAGE}📊 *Resumo Geral:*%0A"
-          MESSAGE="${MESSAGE}• Total de árvores: ${TOTAL}%0A"
-          MESSAGE="${MESSAGE}• 🥥 Coqueiros: ${COQUEIROS}%0A"
-          MESSAGE="${MESSAGE}• 🥜 Cajueiros: ${CAJUEIROS}%0A"
-          MESSAGE="${MESSAGE}• 🍫 Cacau: ${CACAU}%0A"
-          MESSAGE="${MESSAGE}• 🍈 Mangabeira: ${MANGABEIRA}%0A%0A"
-          
-          if [ "$PLANTIOS_RECENTES" -gt 0 ]; then
-            MESSAGE="${MESSAGE}🌱 *Plantios Recentes:* ${PLANTIOS_RECENTES} árvore(s) nos últimos 30 dias%0A%0A"
-          fi
-          
-          if [ "$NECESSITAM_IRRIGACAO" -gt 0 ]; then
-            MESSAGE="${MESSAGE}💧 *Atenção:* ${NECESSITAM_IRRIGACAO} árvore(s) necessitam irrigação ordinária%0A%0A"
-          fi
-          
-          if [ "$COM_PODA" -gt 0 ]; then
-            MESSAGE="${MESSAGE}✂️ *Manutenção:* ${COM_PODA} árvore(s) com poda programada%0A%0A"
-          fi
-          
-          MESSAGE="${MESSAGE}📅 Data: $(date +'%d/%m/%Y %H:%M')%0A"
-          MESSAGE="${MESSAGE}🔄 Atualização automática via GitHub Actions"
-          
-          # Enviar para Telegram
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="${MESSAGE}" \
+            -d text="${STATS}" \
             -d parse_mode="Markdown"
-          
-          echo "✅ Notificação enviada com sucesso!"
-          
-      - name: Verificar árvores que precisam de atenção urgente
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          # Verificar árvores sem dados básicos
-          SEM_COORDENADAS=$(jq '[.features[] | select(.properties.Latitude == null or .properties.Longitude == null)] | length' dados.geojson)
-          SEM_NOME=$(jq '[.features[] | select(.properties.NOME_POPULAR == null)] | length' dados.geojson)
-          
-          if [ "$SEM_COORDENADAS" -gt 0 ] || [ "$SEM_NOME" -gt 0 ]; then
-            ALERT="⚠️ *ATENÇÃO - Dados Incompletos*%0A%0A"
-            
-            if [ "$SEM_COORDENADAS" -gt 0 ]; then
-              ALERT="${ALERT}📍 ${SEM_COORDENADAS} árvore(s) sem coordenadas%0A"
-            fi
-            
-            if [ "$SEM_NOME" -gt 0 ]; then
-              ALERT="${ALERT}🏷️ ${SEM_NOME} árvore(s) sem identificação%0A"
-            fi
-            
-            ALERT="${ALERT}%0A❗ Favor revisar o arquivo dados.geojson"
-            
-            curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${ALERT}" \
-              -d parse_mode="Markdown"
-          fi
