@@ -154,15 +154,15 @@ jobs:
           # Saudação por horário
           HORA_NUM=$(date +%H)
           if [ "$HORA_NUM" -lt 12 ]; then
-            SAUDACAO="Bom dia"
+            SAUDACAO="☀️ Bom dia"
           elif [ "$HORA_NUM" -lt 18 ]; then
-            SAUDACAO="Boa tarde"
+            SAUDACAO="⛅ Boa tarde"
           else
-            SAUDACAO="Boa noite"
+            SAUDACAO="🌙 Boa noite"
           fi
           
           MESSAGE="${SAUDACAO}!%0A"
-          MESSAGE="${MESSAGE}Data: ${DATA_EXIBICAO} - ${HORA_EXIBICAO}%0A%0A"
+          MESSAGE="${MESSAGE}📅 ${DATA_EXIBICAO} às ${HORA_EXIBICAO}%0A%0A"
           
           # Contar ações
           if [ -f /tmp/acoes.txt ]; then
@@ -172,10 +172,10 @@ jobs:
           fi
           
           if [ "$TOTAL_ACOES" -eq 0 ]; then
-            MESSAGE="${MESSAGE}Tudo em dia!%0A"
-            MESSAGE="${MESSAGE}Nenhuma ação necessária."
+            MESSAGE="${MESSAGE}✅ Tudo em dia!%0A"
+            MESSAGE="${MESSAGE}Nenhuma ação necessária. 🌿"
           else
-            MESSAGE="${MESSAGE}Ações: ${TOTAL_ACOES}%0A%0A"
+            MESSAGE="${MESSAGE}📋 Ações: ${TOTAL_ACOES}%0A%0A"
             
             # Contar por tipo
             URG_COUNT=$(grep -c "^REGA_URG:" /tmp/acoes.txt 2>/dev/null || echo 0)
@@ -185,38 +185,61 @@ jobs:
             
             # Mostrar apenas resumo se muitas ações
             if [ "$TOTAL_ACOES" -gt 15 ]; then
-              [ "$URG_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}URGENTE: ${URG_COUNT} rega(s) atrasada(s)%0A"
-              [ "$NORM_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Rega: ${NORM_COUNT} planta(s)%0A"
-              [ "$PODA_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Poda: ${PODA_COUNT} planta(s)%0A"
-              [ "$COLH_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}Colheita: ${COLH_COUNT} planta(s)%0A"
-              MESSAGE="${MESSAGE}%0AVeja detalhes no app"
+              [ "$URG_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}🚨 URGENTE: ${URG_COUNT} rega(s) atrasada(s)%0A"
+              [ "$NORM_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}💧 Rega: ${NORM_COUNT} planta(s)%0A"
+              [ "$PODA_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}✂️ Poda: ${PODA_COUNT} planta(s)%0A"
+              [ "$COLH_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}🍊 Colheita: ${COLH_COUNT} planta(s)%0A"
+              MESSAGE="${MESSAGE}%0A💡 Veja detalhes no app"
             else
               # Mostrar detalhes (máximo 15 ações)
               CONTADOR=0
               
               # Urgentes primeiro
               if [ "$URG_COUNT" -gt 0 ]; then
-                MESSAGE="${MESSAGE}URGENTE:%0A"
+                MESSAGE="${MESSAGE}🚨 URGENTE:%0A"
                 while IFS=: read -r tipo texto; do
                   if [ "$tipo" = "REGA_URG" ]; then
-                    MESSAGE="${MESSAGE}${texto}%0A"
+                    MESSAGE="${MESSAGE}• ${texto}%0A"
                     CONTADOR=$((CONTADOR + 1))
                   fi
                 done < /tmp/acoes.txt
                 MESSAGE="${MESSAGE}%0A"
               fi
               
-              # Outras ações
-              while IFS=: read -r tipo texto; do
-                if [ "$CONTADOR" -lt 15 ] && [ "$tipo" != "REGA_URG" ]; then
-                  case "$tipo" in
-                    "REGA_NORM") MESSAGE="${MESSAGE}${texto}%0A" ;;
-                    "PODA") MESSAGE="${MESSAGE}${texto}%0A" ;;
-                    "COLHEITA") MESSAGE="${MESSAGE}${texto}%0A" ;;
-                  esac
-                  CONTADOR=$((CONTADOR + 1))
-                fi
-              done < /tmp/acoes.txt
+              # Rega normal
+              if [ "$NORM_COUNT" -gt 0 ] && [ "$CONTADOR" -lt 15 ]; then
+                MESSAGE="${MESSAGE}💧 Rega:%0A"
+                while IFS=: read -r tipo texto; do
+                  if [ "$tipo" = "REGA_NORM" ] && [ "$CONTADOR" -lt 15 ]; then
+                    MESSAGE="${MESSAGE}• ${texto}%0A"
+                    CONTADOR=$((CONTADOR + 1))
+                  fi
+                done < /tmp/acoes.txt
+                MESSAGE="${MESSAGE}%0A"
+              fi
+              
+              # Poda
+              if [ "$PODA_COUNT" -gt 0 ] && [ "$CONTADOR" -lt 15 ]; then
+                MESSAGE="${MESSAGE}✂️ Poda:%0A"
+                while IFS=: read -r tipo texto; do
+                  if [ "$tipo" = "PODA" ] && [ "$CONTADOR" -lt 15 ]; then
+                    MESSAGE="${MESSAGE}• ${texto}%0A"
+                    CONTADOR=$((CONTADOR + 1))
+                  fi
+                done < /tmp/acoes.txt
+                MESSAGE="${MESSAGE}%0A"
+              fi
+              
+              # Colheita
+              if [ "$COLH_COUNT" -gt 0 ] && [ "$CONTADOR" -lt 15 ]; then
+                MESSAGE="${MESSAGE}🍊 Colheita:%0A"
+                while IFS=: read -r tipo texto; do
+                  if [ "$tipo" = "COLHEITA" ] && [ "$CONTADOR" -lt 15 ]; then
+                    MESSAGE="${MESSAGE}• ${texto}%0A"
+                    CONTADOR=$((CONTADOR + 1))
+                  fi
+                done < /tmp/acoes.txt
+              fi
             fi
           fi
           
@@ -244,12 +267,12 @@ jobs:
           CACAU=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Cacau")] | length' dados.geojson)
           MANGABEIRA=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Mangabeira")] | length' dados.geojson)
           
-          STATS="Resumo do Sítio:%0A"
-          STATS="${STATS}• Total: ${TOTAL} plantas%0A"
-          [ "$COQUEIROS" -gt 0 ] && STATS="${STATS}• Coqueiros: ${COQUEIROS}%0A"
-          [ "$CAJUEIROS" -gt 0 ] && STATS="${STATS}• Cajueiros: ${CAJUEIROS}%0A"
-          [ "$CACAU" -gt 0 ] && STATS="${STATS}• Cacau: ${CACAU}%0A"
-          [ "$MANGABEIRA" -gt 0 ] && STATS="${STATS}• Mangabeira: ${MANGABEIRA}%0A"
+          STATS="📊 Resumo do Sítio:%0A"
+          STATS="${STATS}🌳 Total: ${TOTAL} plantas%0A"
+          [ "$COQUEIROS" -gt 0 ] && STATS="${STATS}🥥 Coqueiros: ${COQUEIROS}%0A"
+          [ "$CAJUEIROS" -gt 0 ] && STATS="${STATS}🌰 Cajueiros: ${CAJUEIROS}%0A"
+          [ "$CACAU" -gt 0 ] && STATS="${STATS}🍫 Cacau: ${CACAU}%0A"
+          [ "$MANGABEIRA" -gt 0 ] && STATS="${STATS}🥭 Mangabeira: ${MANGABEIRA}%0A"
           
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
