@@ -1576,36 +1576,61 @@
       
       loadConfig();
       
+      // Verificar se tem dados salvos
       const hasLocal = carregarDadosLocal();
       
       if (hasLocal && plantas.length > 0) {
+        // Tem dados salvos, usar eles
         criarFiltros();
         renderAll();
         renderHistorico();
         console.log('✅ Dados carregados do dispositivo:', plantas.length, 'plantas');
         setSyncStatus('ok', 'Dados locais');
       } else {
-        // Se não tem dados locais, SEMPRE tentar carregar do sistema
-        console.log('ℹ️ Sem dados locais, carregando do sistema...');
-        document.getElementById('acoesHoje').innerHTML = `
-          <div class="loading">
-            <div class="loading-spinner"></div>
-            <p>Buscando dados do sistema...</p>
-          </div>
-        `;
-        await carregarDadosNativos();
+        // NÃO tem dados salvos - TENTAR CARREGAR DO SERVIDOR
+        console.log('⚠️ Sem dados salvos - tentando carregar do servidor...');
         
-        // Se ainda não carregou, mostrar mensagem para importar
-        if (plantas.length === 0) {
-          document.getElementById('acoesHoje').innerHTML = `
-            <div class="empty-state">
-              <div class="empty-state-icon">📥</div>
-              <p style="margin-bottom: 1rem;">Nenhum dado encontrado</p>
-              <button class="btn btn-primary" onclick="switchToTab('plantas'); document.getElementById('fileInput').click();">
-                📥 Importar do QField
-              </button>
-            </div>
-          `;
+        try {
+          // Tentar buscar dados.geojson
+          const paths = ['./dados.geojson', 'dados.geojson', '/S-tio_Ipiranga/dados.geojson'];
+          let carregou = false;
+          
+          for (const path of paths) {
+            try {
+              console.log('Tentando:', path);
+              const response = await fetch(path);
+              if (response.ok) {
+                const geojson = await response.json();
+                console.log('✅ Arquivo encontrado em:', path);
+                processarGeoJSON(geojson);
+                salvarDadosLocal();
+                carregou = true;
+                showToast('✅ Dados carregados do sistema!');
+                break;
+              }
+            } catch (e) {
+              console.log('❌ Falhou:', path);
+            }
+          }
+          
+          if (!carregou) {
+            // Se não conseguiu carregar, mostrar mensagem
+            console.log('⚠️ Nenhum arquivo dados.geojson encontrado');
+            document.getElementById('acoesHoje').innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon">📥</div>
+                <h3 style="margin-bottom: 0.5rem;">Nenhum dado encontrado</h3>
+                <p style="margin-bottom: 1.5rem; color: #666;">Importe seus dados do QField para começar</p>
+                <button class="btn btn-primary" onclick="switchToTab('plantas'); setTimeout(() => document.getElementById('fileInput').click(), 300);">
+                  📥 Importar do QField Agora
+                </button>
+              </div>
+            `;
+            setSyncStatus('error', 'Sem dados');
+          }
+        } catch (err) {
+          console.error('Erro ao tentar carregar:', err);
+          setSyncStatus('error', 'Erro ao carregar');
         }
       }
       
