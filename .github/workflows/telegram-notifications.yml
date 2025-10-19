@@ -37,10 +37,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y jq
           
-          # Data atual
+          # Configurar fuso horário de Brasília
+          export TZ='America/Sao_Paulo'
+          
+          # Data atual no horário de Brasília
           HOJE=$(date +%Y-%m-%d)
           DATA_EXIBICAO=$(date +%d/%m/%Y)
           HORA_EXIBICAO=$(date +%H:%M)
+          HORA_NUM=$(date +%H)
           
           # Intervalos por espécie (dias)
           declare -A REGA_INT=( ["Mangabeira"]=7 ["Cajueiro"]=10 ["Coqueiro"]=5 ["Cacau"]=3 ["default"]=7 )
@@ -151,8 +155,7 @@ jobs:
           # Montar mensagem
           TOTAL=$(jq '.features | length' dados.geojson)
           
-          # Saudação por horário
-          HORA_NUM=$(date +%H)
+          # Saudação por horário (horário de Brasília)
           if [ "$HORA_NUM" -lt 12 ]; then
             SAUDACAO="☀️ Bom dia"
           elif [ "$HORA_NUM" -lt 18 ]; then
@@ -253,6 +256,7 @@ jobs:
             -d parse_mode="Markdown"
           
           echo "Notificação enviada com sucesso!"
+          echo "Horário: ${DATA_EXIBICAO} às ${HORA_EXIBICAO} (Brasília)"
           
       - name: Resumo estatístico (apenas 06h)
         if: github.event.schedule == '0 9 * * *'
@@ -260,6 +264,9 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          # Configurar fuso horário de Brasília
+          export TZ='America/Sao_Paulo'
+          
           # Estatísticas gerais
           TOTAL=$(jq '.features | length' dados.geojson)
           COQUEIROS=$(jq '[.features[] | select(.properties.NOME_POPULAR == "Coqueiro")] | length' dados.geojson)
