@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga</title>
+  <title>Sítio Ipiranga v3</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -23,7 +23,33 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f3f4f6;
       overflow-x: hidden;
-      padding-bottom: 80px;
+    }
+
+    .status-bar {
+      background: #1f2937;
+      color: white;
+      padding: 0.5rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+    }
+
+    .status-dot.offline {
+      background: #ef4444;
     }
     
     .header {
@@ -41,36 +67,30 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      margin-bottom: 0.5rem;
     }
     
     .header-stats {
-      margin-top: 0.5rem;
       font-size: 0.9rem;
       opacity: 0.95;
+      display: flex;
+      gap: 1rem;
     }
 
-    .sync-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 0.8rem;
-      padding: 0.25rem 0.5rem;
+    .profile-section {
+      background: rgba(255,255,255,0.1);
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .profile-badge {
+      display: inline-block;
       background: rgba(255,255,255,0.2);
-      border-radius: 12px;
-      margin-top: 0.5rem;
-    }
-
-    .sync-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #10b981;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-weight: 600;
     }
     
     .tabs {
@@ -79,7 +99,7 @@
       border-bottom: 2px solid #e5e7eb;
       overflow-x: auto;
       position: sticky;
-      top: 80px;
+      top: 100px;
       z-index: 99;
     }
     
@@ -93,7 +113,6 @@
       transition: all 0.2s;
       white-space: nowrap;
       border-bottom: 3px solid transparent;
-      min-width: 100px;
     }
     
     .tab.active {
@@ -130,9 +149,6 @@
       font-weight: 600;
       margin-bottom: 1rem;
       color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
     }
     
     .action-item {
@@ -141,11 +157,6 @@
       background: #f0fdf4;
       border-radius: 8px;
       margin-bottom: 0.75rem;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .action-item:active {
-      transform: scale(0.98);
     }
     
     .action-item.urgent {
@@ -157,15 +168,26 @@
       border-left-color: #f59e0b;
       background: #fffbeb;
     }
-    
+
+    .action-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 0.5rem;
+    }
+
     .action-title {
       font-weight: 600;
       font-size: 1rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      flex-wrap: wrap;
+    }
+
+    .action-meta {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
     }
     
     .badge {
@@ -191,11 +213,6 @@
       font-size: 0.9rem;
       margin-bottom: 0.5rem;
     }
-
-    .action-date {
-      color: #9ca3af;
-      font-size: 0.8rem;
-    }
     
     .btn {
       padding: 0.75rem 1.25rem;
@@ -207,31 +224,6 @@
       margin-top: 0.75rem;
       font-size: 0.9rem;
       transition: all 0.2s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .btn:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .btn.loading::after {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 20px;
-      height: 20px;
-      margin: -10px 0 0 -10px;
-      border: 3px solid rgba(255,255,255,0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
     }
     
     .btn-primary {
@@ -239,9 +231,8 @@
       color: white;
     }
     
-    .btn-primary:active:not(:disabled) {
+    .btn-primary:active {
       background: #059669;
-      transform: scale(0.98);
     }
 
     .btn-secondary {
@@ -250,33 +241,51 @@
       border: 2px solid #10b981;
     }
 
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-    }
-
-    .btn-danger:active:not(:disabled) {
-      background: #dc2626;
-    }
-
     .btn-small {
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem 1rem;
       font-size: 0.85rem;
       width: auto;
-      display: inline-block;
+      margin: 0;
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
     }
     
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    
+    .filter-btn.active {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
     .plant-card {
       background: white;
       border: 1px solid #e5e7eb;
       border-radius: 8px;
       padding: 1rem;
       margin-bottom: 0.75rem;
-      transition: box-shadow 0.2s;
-    }
-
-    .plant-card:active {
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     
     .plant-header {
@@ -289,15 +298,6 @@
     .plant-name {
       font-weight: 600;
       font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .plant-actions {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
     }
     
     .plant-info {
@@ -306,74 +306,21 @@
       gap: 0.5rem;
       font-size: 0.85rem;
       color: #6b7280;
+      margin-bottom: 0.75rem;
     }
 
-    .plant-info-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .status-indicator {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .status-ok {
-      background: #10b981;
-    }
-
-    .status-warning {
-      background: #f59e0b;
-    }
-
-    .status-urgent {
-      background: #ef4444;
-    }
-
-    .plant-photos {
-      display: flex;
-      gap: 0.5rem;
-      margin-top: 0.75rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-    }
-
-    .photo-thumb {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      object-fit: cover;
-      cursor: pointer;
-      border: 2px solid #e5e7eb;
-      transition: all 0.2s;
-    }
-
-    .photo-thumb:active {
-      transform: scale(0.95);
-      border-color: #10b981;
-    }
-
-    .add-photo-btn {
-      width: 80px;
-      height: 80px;
-      border-radius: 8px;
-      border: 2px dashed #d1d5db;
+    .history-item {
       background: #f9fafb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: #9ca3af;
-      cursor: pointer;
-      transition: all 0.2s;
-      flex-shrink: 0;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      border-left: 3px solid #d1d5db;
     }
 
-    .add-photo-btn:active {
-      background: #f3f4f6;
-      color: #10b981;
+    .history-item.today {
+      border-left-color: #10b981;
+      background: #f0fdf4;
     }
     
     .stats-grid {
@@ -388,11 +335,6 @@
       padding: 1.25rem;
       border-radius: 12px;
       text-align: center;
-      transition: transform 0.2s;
-    }
-
-    .stat-card:active {
-      transform: scale(0.95);
     }
     
     .stat-value {
@@ -419,35 +361,6 @@
     
     input[type="file"] {
       display: none;
-    }
-    
-    .filter-group {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-      overflow-x: auto;
-      padding-bottom: 0.5rem;
-    }
-    
-    .filter-btn {
-      padding: 0.5rem 1rem;
-      border: 1px solid #d1d5db;
-      background: white;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.85rem;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-    
-    .filter-btn.active {
-      background: #10b981;
-      color: white;
-      border-color: #10b981;
-    }
-
-    .filter-btn:active {
-      transform: scale(0.95);
     }
 
     .species-card {
@@ -479,7 +392,6 @@
       font-size: 0.75rem;
       color: #666;
       margin-bottom: 0.25rem;
-      font-weight: 500;
     }
 
     .input-group input {
@@ -488,62 +400,29 @@
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 0.9rem;
-      transition: border-color 0.2s;
     }
 
-    .input-group input:focus {
-      outline: none;
-      border-color: #10b981;
-    }
-
-    .history-item {
-      padding: 1rem;
-      border-left: 3px solid #10b981;
-      background: #f9fafb;
-      border-radius: 6px;
-      margin-bottom: 0.75rem;
-    }
-
-    .history-header {
+    .profile-select {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 0.5rem;
-    }
-
-    .history-title {
-      font-weight: 600;
-      color: #1f2937;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .history-date {
-      font-size: 0.8rem;
-      color: #9ca3af;
-    }
-
-    .history-desc {
-      font-size: 0.9rem;
-      color: #6b7280;
-    }
-
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: #6b7280;
-    }
-
-    .loading-spinner {
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      border: 4px solid #e5e7eb;
-      border-top-color: #10b981;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
+      gap: 0.75rem;
       margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-option {
+      padding: 0.75rem 1rem;
+      border: 2px solid #d1d5db;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .profile-option.active {
+      border-color: #10b981;
+      background: #f0fdf4;
+      color: #10b981;
     }
 
     .info-box {
@@ -556,180 +435,88 @@
       color: #0c4a6e;
     }
 
-    .success-box {
-      background: #f0fdf4;
-      border: 1px solid #bbf7d0;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      color: #14532d;
-    }
-
-    .warning-box {
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 8px;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-      color: #78350f;
-    }
-
-    .toast {
-      position: fixed;
-      bottom: 90px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #1f2937;
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 1000;
-      opacity: 0;
-      transition: all 0.3s;
-      max-width: 90%;
-      text-align: center;
-    }
-
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-
-    .quick-actions {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      border-top: 1px solid #e5e7eb;
-      padding: 1rem;
-      display: flex;
-      gap: 0.5rem;
-      z-index: 98;
-      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-    }
-
-    .quick-btn {
-      flex: 1;
-      padding: 0.75rem;
-      border: none;
-      background: #f3f4f6;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.25rem;
-    }
-
-    .quick-btn:active {
-      background: #e5e7eb;
-      transform: scale(0.95);
-    }
-
-    .quick-btn-icon {
-      font-size: 1.2rem;
-    }
-
-    .modal-overlay {
+    .modal {
       display: none;
       position: fixed;
       top: 0;
       left: 0;
-      right: 0;
-      bottom: 0;
+      width: 100%;
+      height: 100%;
       background: rgba(0,0,0,0.5);
-      z-index: 999;
-      animation: fadeIn 0.2s;
-    }
-
-    .modal-overlay.show {
-      display: flex;
+      z-index: 1000;
       align-items: center;
       justify-content: center;
-      padding: 1rem;
     }
 
-    .modal {
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
       background: white;
+      padding: 2rem;
       border-radius: 12px;
-      padding: 1.5rem;
-      max-width: 500px;
-      width: 100%;
-      max-height: 80vh;
+      max-width: 90%;
+      max-height: 90vh;
       overflow-y: auto;
-      box-shadow: 0 20px 25px rgba(0,0,0,0.3);
     }
 
     .modal-title {
-      font-size: 1.2rem;
-      font-weight: 600;
+      font-size: 1.25rem;
+      font-weight: 700;
       margin-bottom: 1rem;
-      color: #1f2937;
     }
 
-    .modal-buttons {
-      display: flex;
-      gap: 0.5rem;
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #6b7280;
+    }
+
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
       margin-top: 1rem;
     }
 
-    .photo-modal {
-      max-width: 90vw;
-      max-height: 90vh;
-      padding: 0;
-    }
-
-    .photo-modal img {
-      width: 100%;
-      height: auto;
-      border-radius: 12px;
-    }
-
-    .photo-modal-close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      border: none;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      font-size: 1.5rem;
+    .btn-export {
+      padding: 0.75rem;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 600;
     }
 
-    @media (max-width: 640px) {
-      .species-inputs {
-        grid-template-columns: 1fr;
-      }
-      
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
+    .btn-export:active {
+      background: #e5e7eb;
+    }
+
+    .footer-space {
+      height: 2rem;
     }
   </style>
 </head>
 <body>
+  <div class="status-bar">
+    <div class="status-indicator">
+      <span class="status-dot" id="statusDot"></span>
+      <span id="statusText">Online</span>
+    </div>
+    <div id="syncStatus" style="font-size: 0.75rem;">Sincronizado</div>
+  </div>
+
   <div class="header">
-    <h1>🌿 Sítio Ipiranga</h1>
+    <h1>🌿 Sítio Ipiranga v3</h1>
+    <div class="profile-section">
+      <span>Usuário:</span>
+      <span class="profile-badge" id="currentProfile">Selecionar</span>
+    </div>
     <div class="header-stats">
       <span id="plantCount">Carregando...</span> • 
       <span id="actionCount">0 pendências</span>
-    </div>
-    <div class="sync-status">
-      <span class="sync-dot"></span>
-      <span id="syncStatus">Sincronizado</span>
     </div>
   </div>
   
@@ -743,941 +530,16 @@
   
   <div id="acoes" class="tab-content active">
     <div class="section">
-      <div class="input-group" style="margin-bottom: 1rem;">
-        <label>🎃 Colheita (dias)</label>
-        <input type="number" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;" id="def_colh" value="90" min="1">
-      </div>
-    </div>
-
-    <div class="section" style="margin-top: 1.5rem;">
-      <div class="section-title">🗑️ Zona de Perigo</div>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
-        Atenção: Esta ação não pode ser desfeita!
-      </p>
-      <button class="btn btn-danger" onclick="confirmarLimparDados()">
-        🗑️ Limpar Todos os Dados
-      </button>
-    </div>
-  </div>
-
-  <div class="quick-actions">
-    <button class="quick-btn" onclick="switchToTab('acoes')">
-      <span class="quick-btn-icon">🔔</span>
-      <span>Ações</span>
-    </button>
-    <button class="quick-btn" onclick="switchToTab('plantas')">
-      <span class="quick-btn-icon">🌱</span>
-      <span>Plantas</span>
-    </button>
-    <button class="quick-btn" onclick="carregarDadosNativos()">
-      <span class="quick-btn-icon">🔄</span>
-      <span>Atualizar</span>
-    </button>
-  </div>
-
-  <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
-    <div class="modal" id="modalContent" onclick="event.stopPropagation()">
-      <div class="modal-title" id="modalTitle">Título</div>
-      <div id="modalBody">Conteúdo</div>
-      <div class="modal-buttons" id="modalButtons">
-        <button class="btn btn-secondary" onclick="closeModal()" style="flex: 1;">Cancelar</button>
-        <button class="btn btn-danger" id="modalConfirm" style="flex: 1;">Confirmar</button>
-      </div>
-    </div>
-  </div>
-
-  <input type="file" id="photoInput" accept="image/*" capture="environment" style="display: none;">
-
-  <div class="toast" id="toast"></div>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
-          .then(reg => console.log('Service Worker registrado!', reg))
-          .catch(err => console.error('Erro SW:', err));
-      });
-    }
-
-    let plantas = [];
-    let historico = [];
-    let filtroAtual = 'todos';
-    let plantaFotoAtual = null;
-    
-    let config = {
-      default: { rega: 7, poda: 180, colheita: 90 },
-      Mangabeira: { rega: 7, poda: 180, colheita: 90 },
-      Cajueiro: { rega: 10, poda: 365, colheita: 60 },
-      Coqueiro: { rega: 5, poda: 730, colheita: 30 },
-      Cacau: { rega: 3, poda: 180, colheita: 120 }
-    };
-
-    // FUNÇÕES DE UI
-    function showToast(message, duration = 3000) {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, duration);
-    }
-
-    function showModal(title, content, confirmCallback, showButtons = true) {
-      document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalBody').innerHTML = content;
-      
-      const buttonsDiv = document.getElementById('modalButtons');
-      if (showButtons) {
-        buttonsDiv.style.display = 'flex';
-        document.getElementById('modalConfirm').onclick = confirmCallback;
-      } else {
-        buttonsDiv.style.display = 'none';
-      }
-      
-      document.getElementById('modalOverlay').classList.add('show');
-    }
-
-    function closeModal() {
-      document.getElementById('modalOverlay').classList.remove('show');
-    }
-
-    function setSyncStatus(status, message) {
-      const syncStatus = document.getElementById('syncStatus');
-      syncStatus.textContent = message;
-      const dot = document.querySelector('.sync-dot');
-      
-      if (status === 'syncing') {
-        dot.style.background = '#f59e0b';
-      } else if (status === 'error') {
-        dot.style.background = '#ef4444';
-      } else {
-        dot.style.background = '#10b981';
-      }
-    }
-
-    // HISTÓRICO
-    function adicionarHistorico(tipo, plantaNome, plantaId, detalhes = '') {
-      const entrada = {
-        id: Date.now(),
-        tipo: tipo,
-        planta: plantaNome,
-        plantaId: plantaId,
-        detalhes: detalhes,
-        data: new Date().toISOString()
-      };
-      
-      historico.unshift(entrada);
-      
-      // Manter apenas últimas 100 entradas
-      if (historico.length > 100) {
-        historico = historico.slice(0, 100);
-      }
-      
-      salvarDadosLocal();
-    }
-
-    function renderHistorico() {
-      const container = document.getElementById('historicoList');
-      
-      if (historico.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
-        return;
-      }
-      
-      const iconMap = {
-        'rega': '💧',
-        'poda': '✂️',
-        'colheita': '🍊',
-        'foto': '📷',
-        'criacao': '🌱'
-      };
-      
-      container.innerHTML = historico.map(h => {
-        const date = new Date(h.data);
-        const dateStr = date.toLocaleDateString('pt-BR');
-        const timeStr = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-        
-        return `
-          <div class="history-item">
-            <div class="history-header">
-              <div class="history-title">
-                ${iconMap[h.tipo] || '📝'} ${h.tipo.charAt(0).toUpperCase() + h.tipo.slice(1)}
-              </div>
-              <div class="history-date">${dateStr} ${timeStr}</div>
-            </div>
-            <div class="history-desc">
-              <strong>${h.planta}</strong> #${h.plantaId}
-              ${h.detalhes ? ` - ${h.detalhes}` : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    // FOTOS
-    function adicionarFoto(plantaId) {
-      plantaFotoAtual = plantaId;
-      document.getElementById('photoInput').click();
-    }
-
-    document.getElementById('photoInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file || !plantaFotoAtual) return;
-      
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        const planta = plantas.find(p => p.id === plantaFotoAtual);
-        if (!planta) return;
-        
-        if (!planta.fotos) planta.fotos = [];
-        
-        // Limitar a 5 fotos por planta
-        if (planta.fotos.length >= 5) {
-          showToast('⚠️ Máximo de 5 fotos por planta');
-          return;
-        }
-        
-        planta.fotos.push({
-          id: Date.now(),
-          data: new Date().toISOString(),
-          base64: event.target.result
-        });
-        
-        adicionarHistorico('foto', planta.nome, planta.nomeId, 'Foto adicionada');
-        
-        if (salvarDadosLocal()) {
-          showToast('📷 Foto adicionada!');
-          renderPlantas();
-        } else {
-          showToast('❌ Erro ao salvar foto (arquivo muito grande?)', 4000);
-          planta.fotos.pop(); // Remove a foto se falhar
-        }
-      };
-      
-      reader.readAsDataURL(file);
-      e.target.value = '';
-      plantaFotoAtual = null;
-    });
-
-    function visualizarFoto(base64) {
-      showModal(
-        '📷 Visualizar Foto',
-        `<img src="${base64}" style="width: 100%; border-radius: 8px;">`,
-        null,
-        false
-      );
-    }
-
-    function removerFoto(plantaId, fotoId) {
-      const planta = plantas.find(p => p.id === plantaId);
-      if (!planta || !planta.fotos) return;
-      
-      const confirmacao = confirm('Deseja realmente remover esta foto?');
-      if (!confirmacao) return;
-      
-      planta.fotos = planta.fotos.filter(f => f.id !== fotoId);
-      
-      if (salvarDadosLocal()) {
-        showToast('🗑️ Foto removida');
-        renderPlantas();
-      }
-    }
-
-    // EXPORTAR BACKUP
-    function exportarBackup() {
-      try {
-        const backup = {
-          versao: '3.0',
-          dataExportacao: new Date().toISOString(),
-          plantas: plantas,
-          config: config,
-          historico: historico
-        };
-        
-        const json = JSON.stringify(backup, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `sitio-ipiranga-backup-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        
-        URL.revokeObjectURL(url);
-        showToast('💾 Backup exportado com sucesso!');
-      } catch (err) {
-        console.error('Erro ao exportar:', err);
-        showToast('❌ Erro ao exportar backup', 4000);
-      }
-    }
-
-    // PERSISTÊNCIA
-    function salvarDadosLocal() {
-      try {
-        const dados = {
-          plantas: plantas,
-          config: config,
-          historico: historico,
-          lastUpdate: new Date().toISOString()
-        };
-        
-        const json = JSON.stringify(dados);
-        
-        // Verificar tamanho (localStorage tem limite de ~5-10MB)
-        const sizeInMB = new Blob([json]).size / (1024 * 1024);
-        if (sizeInMB > 8) {
-          console.warn('Dados muito grandes:', sizeInMB.toFixed(2), 'MB');
-          showToast('⚠️ Muitas fotos podem causar problemas. Considere remover algumas.', 5000);
-        }
-        
-        localStorage.setItem('sitioIpiranga', json);
-        localStorage.setItem('sitioIpiranga_backup', json);
-        setSyncStatus('ok', 'Sincronizado');
-        return true;
-      } catch (err) {
-        console.error('Erro ao salvar:', err);
-        
-        if (err.name === 'QuotaExceededError') {
-          showToast('❌ Memória cheia! Remova fotos antigas.', 5000);
-        } else {
-          showToast('❌ Erro ao salvar dados', 4000);
-        }
-        
-        setSyncStatus('error', 'Erro ao salvar');
-        return false;
-      }
-    }
-
-    function carregarDadosLocal() {
-      try {
-        const dados = localStorage.getItem('sitioIpiranga');
-        if (dados) {
-          const parsed = JSON.parse(dados);
-          plantas = parsed.plantas || [];
-          config = parsed.config || config;
-          historico = parsed.historico || [];
-          
-          if (parsed.lastUpdate) {
-            const date = new Date(parsed.lastUpdate);
-            document.getElementById('lastUpdate').textContent = 
-              `${date.toLocaleDateString('pt-BR')} às ${date.toLocaleTimeString('pt-BR')}`;
-          }
-          
-          return true;
-        }
-        return false;
-      } catch (err) {
-        console.error('Erro ao carregar:', err);
-        
-        try {
-          const backup = localStorage.getItem('sitioIpiranga_backup');
-          if (backup) {
-            const parsed = JSON.parse(backup);
-            plantas = parsed.plantas || [];
-            config = parsed.config || config;
-            historico = parsed.historico || [];
-            showToast('⚠️ Dados restaurados do backup');
-            return true;
-          }
-        } catch (backupErr) {
-          console.error('Erro no backup também:', backupErr);
-        }
-        return false;
-      }
-    }
-
-    // CARREGAR DADOS DO GEOJSON
-    async function carregarDadosNativos() {
-      const btn = event?.target;
-      if (btn) {
-        btn.disabled = true;
-        btn.classList.add('loading');
-        const originalText = btn.textContent;
-        btn.textContent = '';
-      }
-      
-      setSyncStatus('syncing', 'Atualizando...');
-      
-      try {
-        // Tentar diferentes caminhos possíveis
-        let response;
-        const paths = [
-          './dados.geojson',
-          'dados.geojson',
-          '/S-tio_Ipiranga/dados.geojson'
-        ];
-        
-        for (const path of paths) {
-          try {
-            response = await fetch(path);
-            if (response.ok) {
-              console.log('✅ Dados encontrados em:', path);
-              break;
-            }
-          } catch (e) {
-            console.log('❌ Tentativa falhou:', path);
-          }
-        }
-        
-        if (!response || !response.ok) {
-          throw new Error('Arquivo dados.geojson não encontrado. Importe do QField.');
-        }
-        
-        const geojson = await response.json();
-        processarGeoJSON(geojson);
-        salvarDadosLocal();
-        showToast('✅ Dados atualizados com sucesso!');
-      } catch (err) {
-        console.error('Erro ao carregar dados:', err);
-        showToast('⚠️ ' + err.message, 5000);
-        setSyncStatus('error', 'Erro na atualização');
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.classList.remove('loading');
-          btn.textContent = '🔄 Recarregar Dados do Sistema';
-        }
-      }
-    }
-
-    function processarGeoJSON(geojson) {
-      const plantasAntigas = [...plantas];
-      
-      plantas = geojson.features.map(f => {
-        const p = f.properties;
-        const id = p.fid || p.ID || p.id || Math.random();
-        
-        // Manter fotos e dados extras da planta antiga, se existir
-        const plantaAntiga = plantasAntigas.find(pa => pa.id === id);
-        
-        return {
-          id: id,
-          nome: p.NOME_POPULAR || p.nome_popular || p.especie || p.nome || 'Sem ID',
-          nomeId: p.ID || p.fid || 'S/N',
-          ultRega: p.ULTIMA_REGA || p.ultima_rega || null,
-          ultPoda: p.ULTIMA_PODA || p.ultima_poda || null,
-          ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null,
-          fotos: plantaAntiga?.fotos || [],
-          coordenadas: f.geometry?.coordinates || null
-        };
-      });
-      
-      criarFiltros();
-      renderAll();
-    }
-
-    function importGeoJSON(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      setSyncStatus('syncing', 'Importando...');
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const geojson = JSON.parse(e.target.result);
-          processarGeoJSON(geojson);
-          salvarDadosLocal();
-          showToast(`✅ ${plantas.length} plantas importadas do QField!`);
-          adicionarHistorico('importacao', 'Sistema', 'Geral', `${plantas.length} plantas importadas`);
-        } catch (err) {
-          showToast('❌ Erro ao ler arquivo: ' + err.message, 4000);
-          setSyncStatus('error', 'Erro na importação');
-        }
-      };
-      reader.readAsText(file);
-    }
-
-    // CONFIGURAÇÕES
-    function loadConfig() {
-      const saved = localStorage.getItem('sitioIpiranga');
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed.config) {
-            config = parsed.config;
-          }
-        } catch (err) {
-          console.error('Erro ao carregar config:', err);
-        }
-      }
-      
-      document.getElementById('mang_rega').value = config.Mangabeira.rega;
-      document.getElementById('mang_poda').value = config.Mangabeira.poda;
-      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
-      
-      document.getElementById('caju_rega').value = config.Cajueiro.rega;
-      document.getElementById('caju_poda').value = config.Cajueiro.poda;
-      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
-      
-      document.getElementById('coq_rega').value = config.Coqueiro.rega;
-      document.getElementById('coq_poda').value = config.Coqueiro.poda;
-      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
-      
-      document.getElementById('cac_rega').value = config.Cacau.rega;
-      document.getElementById('cac_poda').value = config.Cacau.poda;
-      document.getElementById('cac_colh').value = config.Cacau.colheita;
-      
-      document.getElementById('def_rega').value = config.default.rega;
-      document.getElementById('def_poda').value = config.default.poda;
-      document.getElementById('def_colh').value = config.default.colheita;
-    }
-
-    function saveConfig() {
-      config.Mangabeira = {
-        rega: parseInt(document.getElementById('mang_rega').value),
-        poda: parseInt(document.getElementById('mang_poda').value),
-        colheita: parseInt(document.getElementById('mang_colh').value)
-      };
-      
-      config.Cajueiro = {
-        rega: parseInt(document.getElementById('caju_rega').value),
-        poda: parseInt(document.getElementById('caju_poda').value),
-        colheita: parseInt(document.getElementById('caju_colh').value)
-      };
-      
-      config.Coqueiro = {
-        rega: parseInt(document.getElementById('coq_rega').value),
-        poda: parseInt(document.getElementById('coq_poda').value),
-        colheita: parseInt(document.getElementById('coq_colh').value)
-      };
-      
-      config.Cacau = {
-        rega: parseInt(document.getElementById('cac_rega').value),
-        poda: parseInt(document.getElementById('cac_poda').value),
-        colheita: parseInt(document.getElementById('cac_colh').value)
-      };
-      
-      config.default = {
-        rega: parseInt(document.getElementById('def_rega').value),
-        poda: parseInt(document.getElementById('def_poda').value),
-        colheita: parseInt(document.getElementById('def_colh').value)
-      };
-
-      if (salvarDadosLocal()) {
-        showToast('✅ Configurações salvas!');
-        renderAll();
-      } else {
-        showToast('❌ Erro ao salvar configurações', 4000);
-      }
-    }
-
-    function getIntervalos(nome) {
-      const n = nome.toLowerCase();
-      if (n.includes('mangabeira')) return config.Mangabeira;
-      if (n.includes('caju')) return config.Cajueiro;
-      if (n.includes('coq')) return config.Coqueiro;
-      if (n.includes('cacau')) return config.Cacau;
-      return config.default;
-    }
-
-    // NAVEGAÇÃO
-    function switchTab(event, tabName) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      
-      event.target.classList.add('active');
-      document.getElementById(tabName).classList.add('active');
-      
-      if (tabName === 'historico') {
-        renderHistorico();
-      }
-    }
-
-    function switchToTab(tabName) {
-      const tabs = document.querySelectorAll('.tab');
-      const tabContents = document.querySelectorAll('.tab-content');
-      
-      tabs.forEach((tab, index) => {
-        tab.classList.remove('active');
-        tabContents[index].classList.remove('active');
-      });
-      
-      const tabIndex = ['acoes', 'plantas', 'historico', 'stats', 'config'].indexOf(tabName);
-      if (tabIndex !== -1) {
-        tabs[tabIndex].classList.add('active');
-        tabContents[tabIndex].classList.add('active');
-        
-        if (tabName === 'historico') {
-          renderHistorico();
-        }
-      }
-    }
-
-    // FILTROS
-    function criarFiltros() {
-      const esp = [...new Set(plantas.map(p => p.nome))];
-      const fg = document.getElementById('filterGroup');
-      
-      if (esp.length > 1) {
-        fg.style.display = 'flex';
-        fg.innerHTML = `
-          <button class="filter-btn active" onclick="filterPlantas(event, 'todos')">Todas (${plantas.length})</button>
-          ${esp.map(e => `
-            <button class="filter-btn" onclick="filterPlantas(event, '${e}')">${e} (${plantas.filter(p => p.nome === e).length})</button>
-          `).join('')}
-        `;
-      }
-    }
-
-    function filterPlantas(event, tipo) {
-      filtroAtual = tipo;
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-      event.target.classList.add('active');
-      renderPlantas();
-    }
-
-    // UTILITÁRIOS
-    function diasDesde(dataStr) {
-      if (!dataStr) return null;
-      const d = new Date(dataStr);
-      const h = new Date();
-      return Math.floor((h - d) / (1000 * 60 * 60 * 24));
-    }
-
-    function formatarData(dataStr) {
-      if (!dataStr) return 'Não registrada';
-      const d = new Date(dataStr);
-      return d.toLocaleDateString('pt-BR');
-    }
-
-    function getStatusPlanta(p) {
-      const int = getIntervalos(p.nome);
-      const dR = diasDesde(p.ultRega);
-      
-      if (dR === null || dR >= int.rega + 2) return 'urgent';
-      if (dR >= int.rega) return 'warning';
-      return 'ok';
-    }
-
-    // RENDERIZAÇÃO
-    function renderAcoes() {
-      const container = document.getElementById('acoesHoje');
-      const acoes = [];
-      
-      plantas.forEach(p => {
-        const int = getIntervalos(p.nome);
-        
-        const dR = diasDesde(p.ultRega);
-        if (dR === null || dR >= int.rega) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'rega',
-            icon: '💧',
-            urg: dR === null ? 'warning' : dR >= int.rega + 2 ? 'urgent' : 'normal',
-            msg: dR === null ? 'Nunca foi regada' : dR >= int.rega + 2 ? `Atrasada ${dR - int.rega} dias!` : 'Hora de regar',
-            date: p.ultRega,
-            pid: p.id
-          });
-        }
-        
-        const dP = diasDesde(p.ultPoda);
-        if (dP === null || dP >= int.poda) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'poda',
-            icon: '✂️',
-            urg: dP === null ? 'normal' : dP > int.poda + 30 ? 'warning' : 'normal',
-            msg: dP === null ? 'Nunca foi podada' : `Há ${dP} dias sem poda`,
-            date: p.ultPoda,
-            pid: p.id
-          });
-        }
-        
-        const dC = diasDesde(p.ultColh);
-        if (dC === null || dC >= int.colheita) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'colheita',
-            icon: '🍊',
-            urg: 'normal',
-            msg: dC === null ? 'Verificar frutos' : `Última colheita há ${dC} dias`,
-            date: p.ultColh,
-            pid: p.id
-          });
-        }
-      });
-      
-      if (acoes.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!<br>Todas as plantas estão em dia!</p></div>';
-        document.getElementById('actionCount').textContent = '0 pendências';
-        return;
-      }
-      
-      acoes.sort((a, b) => {
-        const ord = { urgent: 0, warning: 1, normal: 2 };
-        return ord[a.urg] - ord[b.urg];
-      });
-      
-      container.innerHTML = acoes.map(a => `
-        <div class="action-item ${a.urg}">
-          <div class="action-title">
-            ${a.icon} ${a.planta}
-            ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
-          </div>
-          <div class="action-desc">${a.msg}</div>
-          ${a.date ? `<div class="action-date">Última: ${formatarData(a.date)}</div>` : ''}
-          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
-            ✓ Marcar como feito
-          </button>
-        </div>
-      `).join('');
-      
-      document.getElementById('actionCount').textContent = `${acoes.length} pendências`;
-    }
-
-    function marcarFeito(pid, tipo) {
-      const p = plantas.find(pl => pl.id === pid);
-      if (!p) return;
-      
-      const hoje = new Date().toISOString().split('T')[0];
-      const tipoNome = tipo === 'rega' ? 'Rega' : tipo === 'poda' ? 'Poda' : 'Colheita';
-      
-      if (tipo === 'rega') p.ultRega = hoje;
-      if (tipo === 'poda') p.ultPoda = hoje;
-      if (tipo === 'colheita') p.ultColh = hoje;
-      
-      adicionarHistorico(tipo, p.nome, p.nomeId);
-      
-      if (salvarDadosLocal()) {
-        renderAll();
-        showToast(`✅ ${tipoNome} registrada para ${p.nome} #${p.nomeId}!`);
-      } else {
-        showToast('❌ Erro ao registrar ação', 4000);
-      }
-    }
-
-    function renderPlantas() {
-      const container = document.getElementById('plantasList');
-      
-      if (plantas.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada.<br>Carregue os dados do sistema ou importe do QField!</p></div>';
-        return;
-      }
-      
-      const pFilt = filtroAtual === 'todos' ? plantas : plantas.filter(p => p.nome === filtroAtual);
-      
-      container.innerHTML = pFilt.map(p => {
-        const status = getStatusPlanta(p);
-        const statusClass = status === 'urgent' ? 'status-urgent' : status === 'warning' ? 'status-warning' : 'status-ok';
-        
-        const fotosHtml = (p.fotos && p.fotos.length > 0) ? `
-          <div class="plant-photos">
-            ${p.fotos.map(f => `
-              <img src="${f.base64}" class="photo-thumb" onclick="visualizarFoto('${f.base64}')" alt="Foto da planta">
-            `).join('')}
-            ${p.fotos.length < 5 ? `<div class="add-photo-btn" onclick="adicionarFoto(${p.id})">+</div>` : ''}
-          </div>
-        ` : `
-          <div class="plant-photos">
-            <div class="add-photo-btn" onclick="adicionarFoto(${p.id})">📷</div>
-          </div>
-        `;
-        
-        return `
-        <div class="plant-card">
-          <div class="plant-header">
-            <div class="plant-name">
-              <span class="status-indicator ${statusClass}"></span>
-              🌿 ${p.nome}
-            </div>
-            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
-          </div>
-          <div class="plant-info">
-            <div class="plant-info-item">
-              <span>💧</span>
-              <span>Última rega: ${formatarData(p.ultRega)}</span>
-            </div>
-            <div class="plant-info-item">
-              <span>✂️</span>
-              <span>Última poda: ${formatarData(p.ultPoda)}</span>
-            </div>
-            <div class="plant-info-item">
-              <span>🍊</span>
-              <span>Última colheita: ${formatarData(p.ultColh)}</span>
-            </div>
-          </div>
-          ${fotosHtml}
-        </div>
-      `}).join('');
-    }
-
-    function renderStats() {
-      document.getElementById('statTotal').textContent = plantas.length;
-      
-      let pend = 0;
-      let urg = 0;
-      
-      plantas.forEach(p => {
-        const int = getIntervalos(p.nome);
-        const dR = diasDesde(p.ultRega);
-        const dP = diasDesde(p.ultPoda);
-        const dC = diasDesde(p.ultColh);
-        
-        if (dR === null || dR >= int.rega) {
-          pend++;
-          if (dR !== null && dR >= int.rega + 2) urg++;
-        }
-        if (dP === null || dP >= int.poda) pend++;
-        if (dC === null || dC >= int.colheita) pend++;
-      });
-      
-      document.getElementById('statPend').textContent = pend;
-      document.getElementById('statUrg').textContent = urg;
-      
-      const esp = [...new Set(plantas.map(p => p.nome))];
-      document.getElementById('statEsp').textContent = esp.length;
-    }
-
-    function renderAll() {
-      renderAcoes();
-      renderPlantas();
-      renderStats();
-      document.getElementById('plantCount').textContent = `${plantas.length} plantas`;
-    }
-
-    // LIMPAR DADOS
-    function confirmarLimparDados() {
-      showModal(
-        '⚠️ Confirmar Limpeza',
-        '<p style="color: #ef4444; margin-bottom: 1rem; font-weight: 600;">Esta ação irá apagar TODOS os dados salvos no dispositivo!</p><ul style="margin-left: 1.5rem; color: #666; margin-bottom: 1rem;"><li>Todas as plantas e suas informações</li><li>Todas as fotos anexadas</li><li>Configurações personalizadas</li><li>Histórico completo de ações</li></ul><p style="color: #666;">Você precisará importar os dados novamente do QField ou do sistema.</p><p style="color: #ef4444; font-weight: 600; margin-top: 1rem;">Esta ação NÃO pode ser desfeita!</p>',
-        limparDados
-      );
-    }
-
-    function limparDados() {
-      try {
-        localStorage.removeItem('sitioIpiranga');
-        localStorage.removeItem('sitioIpiranga_backup');
-        plantas = [];
-        historico = [];
-        config = {
-          default: { rega: 7, poda: 180, colheita: 90 },
-          Mangabeira: { rega: 7, poda: 180, colheita: 90 },
-          Cajueiro: { rega: 10, poda: 365, colheita: 60 },
-          Coqueiro: { rega: 5, poda: 730, colheita: 30 },
-          Cacau: { rega: 3, poda: 180, colheita: 120 }
-        };
-        renderAll();
-        renderHistorico();
-        loadConfig();
-        closeModal();
-        showToast('🗑️ Todos os dados foram apagados');
-        setSyncStatus('ok', 'Dados limpos');
-        document.getElementById('lastUpdate').textContent = 'Nunca atualizado';
-      } catch (err) {
-        showToast('❌ Erro ao limpar dados', 4000);
-      }
-    }
-
-    // INICIALIZAÇÃO
-    window.addEventListener('load', async () => {
-      console.log('🌿 Sítio Ipiranga v3.0 iniciando...');
-      
-      loadConfig();
-      
-      // Verificar se tem dados salvos
-      const hasLocal = carregarDadosLocal();
-      
-      if (hasLocal && plantas.length > 0) {
-        // Tem dados salvos, usar eles
-        criarFiltros();
-        renderAll();
-        renderHistorico();
-        console.log('✅ Dados carregados do dispositivo:', plantas.length, 'plantas');
-        setSyncStatus('ok', 'Dados locais');
-      } else {
-        // NÃO tem dados salvos - TENTAR CARREGAR DO SERVIDOR
-        console.log('⚠️ Sem dados salvos - tentando carregar do servidor...');
-        
-        try {
-          // Tentar buscar dados.geojson
-          const paths = ['./dados.geojson', 'dados.geojson', '/S-tio_Ipiranga/dados.geojson'];
-          let carregou = false;
-          
-          for (const path of paths) {
-            try {
-              console.log('Tentando:', path);
-              const response = await fetch(path);
-              if (response.ok) {
-                const geojson = await response.json();
-                console.log('✅ Arquivo encontrado em:', path);
-                processarGeoJSON(geojson);
-                salvarDadosLocal();
-                carregou = true;
-                showToast('✅ Dados carregados do sistema!');
-                break;
-              }
-            } catch (e) {
-              console.log('❌ Falhou:', path);
-            }
-          }
-          
-          if (!carregou) {
-            // Se não conseguiu carregar, mostrar mensagem
-            console.log('⚠️ Nenhum arquivo dados.geojson encontrado');
-            document.getElementById('acoesHoje').innerHTML = `
-              <div class="empty-state">
-                <div class="empty-state-icon">📥</div>
-                <h3 style="margin-bottom: 0.5rem;">Nenhum dado encontrado</h3>
-                <p style="margin-bottom: 1.5rem; color: #666;">Importe seus dados do QField para começar</p>
-                <button class="btn btn-primary" onclick="switchToTab('plantas'); setTimeout(() => document.getElementById('fileInput').click(), 300);">
-                  📥 Importar do QField Agora
-                </button>
-              </div>
-            `;
-            setSyncStatus('error', 'Sem dados');
-          }
-        } catch (err) {
-          console.error('Erro ao tentar carregar:', err);
-          setSyncStatus('error', 'Erro ao carregar');
-        }
-      }
-      
-      console.log('✅ Aplicativo pronto!');
-    });
-
-    // Salvar automaticamente antes de sair
-    window.addEventListener('beforeunload', () => {
-      if (plantas.length > 0) {
-        salvarDadosLocal();
-        console.log('💾 Dados salvos automaticamente');
-      }
-    });
-
-    // Detectar se está offline
-    window.addEventListener('online', () => {
-      showToast('🌐 Conexão restaurada');
-      setSyncStatus('ok', 'Online');
-    });
-
-    window.addEventListener('offline', () => {
-      showToast('📡 Modo offline ativado');
-      setSyncStatus('warning', 'Offline');
-    });
-
-    // Prevenir zoom acidental em iOS
-    document.addEventListener('touchmove', function(event) {
-      if (event.scale !== 1) {
-        event.preventDefault();
-      }
-    }, { passive: false });
-
-    // Log de estatísticas para debug
-    console.log('📊 Estatísticas do sistema:');
-    console.log('- localStorage disponível:', 'localStorage' in window);
-    console.log('- Service Worker disponível:', 'serviceWorker' in navigator);
-    console.log('- Suporte a fotos:', 'FileReader' in window);
-  </script>
-</body>
-</html>="section-title">
-        📋 Ações Necessárias Hoje
+      <div class="section-title">Ações Necessárias Hoje</div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="filterAcoes(event, 'todas')">Todas</button>
+        <button class="filter-btn" onclick="filterAcoes(event, 'urgente')">🚨 Urgentes</button>
+        <button class="filter-btn" onclick="filterAcoes(event, 'rega')">💧 Rega</button>
+        <button class="filter-btn" onclick="filterAcoes(event, 'poda')">✂️ Poda</button>
+        <button class="filter-btn" onclick="filterAcoes(event, 'colheita')">🍊 Colheita</button>
       </div>
       <div id="acoesHoje">
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <p>Carregando dados...</p>
-        </div>
+        <div class="loading">Carregando dados...</div>
       </div>
     </div>
   </div>
@@ -1685,17 +547,19 @@
   <div id="plantas" class="tab-content">
     <div class="section">
       <div class="info-box">
-        💡 <strong>Primeira vez usando?</strong> Clique em "Importar do QField" abaixo para carregar seus dados. Os dados ficam salvos no dispositivo automaticamente.
+        Os dados são carregados automaticamente. Você também pode atualizar importando do QField.
       </div>
       
-      <button class="btn btn-primary" onclick="carregarDadosNativos()" id="btnRecarregar">
-        🔄 Recarregar Dados do Sistema
+      <button class="btn btn-primary" onclick="carregarDadosNativos()">
+        📥 Recarregar Dados do Sistema
       </button>
       
       <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
-        📥 Importar Atualização do QField
+        📤 Importar Atualização do QField
       </button>
-      <input type="file" id="fileInput" accept=".geojson,.json,application/json,application/geo+json" onchange="importGeoJSON(event)">
+      <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)">
+      
+      <input type="text" class="search-box" id="searchPlanta" placeholder="Buscar planta..." onkeyup="filtrarPlantas()">
       
       <div class="filter-group" id="filterGroup" style="display: none;"></div>
       <div style="margin-top: 1rem;" id="plantasList"></div>
@@ -1704,17 +568,21 @@
 
   <div id="historico" class="tab-content">
     <div class="section">
-      <div class="section-title">📜 Histórico de Ações</div>
-      <div class="info-box">
-        Registro de todas as ações realizadas nas plantas
+      <div class="section-title">Histórico de Ações</div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="filterHistorico(event, '7')">Últimos 7 dias</button>
+        <button class="filter-btn" onclick="filterHistorico(event, '30')">Últimos 30 dias</button>
+        <button class="filter-btn" onclick="filterHistorico(event, 'todos')">Tudo</button>
       </div>
-      <div id="historicoList"></div>
+      <div id="historicoList">
+        <div class="loading">Carregando histórico...</div>
+      </div>
     </div>
   </div>
   
   <div id="stats" class="tab-content">
     <div class="section">
-      <div class="section-title">📊 Estatísticas Gerais</div>
+      <div class="section-title">Estatísticas Gerais</div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" id="statTotal">0</div>
@@ -1733,22 +601,29 @@
           <div class="stat-label">Espécies</div>
         </div>
       </div>
-    </div>
 
-    <div class="section">
-      <div class="section-title">📈 Última Atualização</div>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;" id="lastUpdate">Nunca atualizado</p>
-      
-      <button class="btn btn-secondary" onclick="exportarBackup()">
-        💾 Exportar Backup Completo
-      </button>
-      <p style="color: #9ca3af; font-size: 0.85rem; margin-top: 0.5rem;">
-        Salva todos os dados (plantas, fotos, histórico) em um arquivo
-      </p>
+      <div class="section" style="margin-top: 1rem;">
+        <div class="section-title">Resumo por Espécie</div>
+        <div id="speciesSummary"></div>
+      </div>
+
+      <div class="section" style="margin-top: 1rem;">
+        <div class="section-title">Taxa de Conclusão</div>
+        <div id="completionRate"></div>
+      </div>
     </div>
   </div>
   
   <div id="config" class="tab-content">
+    <div class="section">
+      <div class="section-title">👤 Perfil de Usuário</div>
+      <div class="info-box">
+        Selecione o seu perfil para registrar quem fez cada ação
+      </div>
+      <div class="profile-select" id="profileSelector"></div>
+      <button class="btn btn-primary" onclick="openProfileModal()">➕ Adicionar Novo Perfil</button>
+    </div>
+
     <div class="section">
       <div class="section-title">📋 Intervalos por Espécie</div>
       <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
@@ -1810,7 +685,7 @@
       </div>
 
       <div class="species-card">
-        <h3 class="species-header">🍫 Cacau</h3>
+        <h3 class="species-header">🫐 Cacau</h3>
         <div class="species-inputs">
           <div class="input-group">
             <label>💧 Rega</label>
@@ -1833,19 +708,716 @@
     </div>
 
     <div class="section" style="margin-top: 1.5rem;">
-      <div class="section-title">⚙️ Valores Padrão</div>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
-        Usados para espécies não configuradas acima
-      </p>
-      
-      <div class="input-group" style="margin-bottom: 1rem;">
-        <label>💧 Rega (dias)</label>
-        <input type="number" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;" id="def_rega" value="7" min="1">
+      <div class="section-title">💾 Backup e Exportação</div>
+      <div class="info-box">
+        Salve seus dados em diferentes formatos para segurança
       </div>
-      
-      <div class="input-group" style="margin-bottom: 1rem;">
-        <label>✂️ Poda (dias)</label>
-        <input type="number" style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px;" id="def_poda" value="180" min="1">
+      <div class="export-buttons">
+        <button class="btn-export" onclick="exportJSON()">📥 JSON</button>
+        <button class="btn-export" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn-export" onclick="exportPDF()">📄 PDF</button>
+        <button class="btn-export" onclick="downloadBackup()">🔄 Auto-Backup</button>
       </div>
+    </div>
+  </div>
+
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Novo Perfil de Usuário</div>
+      <input type="text" id="newProfileName" placeholder="Nome do usuário" class="search-box" style="margin-bottom: 1rem;">
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-primary" onclick="createProfile()" style="margin: 0;">Criar</button>
+        <button class="btn btn-secondary" onclick="closeProfileModal()" style="margin: 0;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-space"></div>
+
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
+          .then(reg => console.log('Service Worker registrado!'))
+          .catch(err => console.error('Erro SW:', err));
+      });
+    }
+
+    let plantas = [];
+    let historico = [];
+    let perfis = [];
+    let perfilAtual = null;
+    let filtroAcoesAtual = 'todas';
+    let filtroHistoricoAtual = '7';
+    
+    let config = {
+      default: { rega: 7, poda: 180, colheita: 90 },
+      Mangabeira: { rega: 7, poda: 180, colheita: 90 },
+      Cajueiro: { rega: 10, poda: 365, colheita: 60 },
+      Coqueiro: { rega: 5, poda: 730, colheita: 30 },
+      Cacau: { rega: 3, poda: 180, colheita: 120 }
+    };
+
+    // VALIDAÇÃO DE DADOS
+    function validarGeoJSON(geojson) {
+      if (!geojson.features || !Array.isArray(geojson.features)) {
+        throw new Error('GeoJSON inválido: sem features');
+      }
+      return geojson.features.filter(f => f.properties).length > 0;
+    }
+
+    function validarData(dataStr) {
+      if (!dataStr) return null;
+      const d = new Date(dataStr);
+      return isNaN(d.getTime()) ? null : dataStr;
+    }
+
+    // STATUS ONLINE/OFFLINE
+    function updateOnlineStatus() {
+      const dot = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (navigator.onLine) {
+        dot.classList.remove('offline');
+        text.textContent = 'Online';
+      } else {
+        dot.classList.add('offline');
+        text.textContent = 'Offline';
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // PERFIS DE USUÁRIO
+    function loadPerfis() {
+      const saved = localStorage.getItem('sitio-perfis');
+      if (saved) {
+        perfis = JSON.parse(saved);
+      } else {
+        perfis = [
+          { id: 1, nome: 'João', cor: '#3b82f6' },
+          { id: 2, nome: 'Maria', cor: '#ec4899' },
+          { id: 3, nome: 'Pedro', cor: '#f59e0b' }
+        ];
+        savePerfis();
+      }
+      renderPerfis();
+    }
+
+    function savePerfis() {
+      localStorage.setItem('sitio-perfis', JSON.stringify(perfis));
+    }
+
+    function renderPerfis() {
+      const selector = document.getElementById('profileSelector');
+      selector.innerHTML = perfis.map(p => `
+        <button class="profile-option ${perfilAtual?.id === p.id ? 'active' : ''}" 
+                onclick="selectProfile(${p.id})" 
+                style="${perfilAtual?.id === p.id ? `border-color: ${p.cor}; background: rgba(${hexToRgb(p.cor).join(',')}, 0.1);` : ''}">
+          ${p.nome}
+        </button>
+      `).join('');
       
-      <div class
+      if (perfilAtual) {
+        document.getElementById('currentProfile').textContent = perfilAtual.nome;
+      }
+    }
+
+    function selectProfile(id) {
+      perfilAtual = perfis.find(p => p.id === id);
+      localStorage.setItem('sitio-perfil-atual', id);
+      renderPerfis();
+      renderAll();
+    }
+
+    function openProfileModal() {
+      document.getElementById('profileModal').classList.add('active');
+    }
+
+    function closeProfileModal() {
+      document.getElementById('profileModal').classList.remove('active');
+    }
+
+    function createProfile() {
+      const nome = document.getElementById('newProfileName').value.trim();
+      if (!nome) return alert('Digite um nome');
+      
+      const cores = ['#3b82f6', '#ec4899', '#f59e0b', '#8b5cf6', '#06b6d4'];
+      const id = Math.max(...perfis.map(p => p.id), 0) + 1;
+      const cor = cores[perfis.length % cores.length];
+      
+      perfis.push({ id, nome, cor });
+      savePerfis();
+      renderPerfis();
+      document.getElementById('newProfileName').value = '';
+      closeProfileModal();
+      alert(`Perfil "${nome}" criado!`);
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : [0, 0, 0];
+    }
+
+    // PERSISTÊNCIA COM LOCALSTORAGE
+    function salvarDados() {
+      const backup = {
+        plantas: plantas,
+        config: config,
+        historico: historico,
+        dataSalvamento: new Date().toISOString(),
+        versao: '3.0'
+      };
+      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
+      document.getElementById('syncStatus').textContent = 'Sincronizado agora';
+      setTimeout(() => {
+        document.getElementById('syncStatus').textContent = 'Sincronizado';
+      }, 2000);
+    }
+
+    function carregarDadosPersistentes() {
+      const saved = localStorage.getItem('sitio-ipiranga-backup');
+      if (saved) {
+        try {
+          const backup = JSON.parse(saved);
+          plantas = backup.plantas || [];
+          config = backup.config || config;
+          historico = backup.historico || [];
+          return true;
+        } catch (e) {
+          console.error('Erro ao carregar backup:', e);
+          return false;
+        }
+      }
+      return false;
+    }
+
+    // CARREGAR DADOS NATIVOS DO GEOJSON
+    async function carregarDadosNativos() {
+      try {
+        const response = await fetch('/S-tio_Ipiranga/dados.geojson');
+        if (!response.ok) throw new Error('Arquivo não encontrado');
+        
+        const geojson = await response.json();
+        
+        if (!validarGeoJSON(geojson)) {
+          throw new Error('GeoJSON inválido');
+        }
+        
+        processarGeoJSON(geojson);
+        salvarDados();
+        alert('Dados do sistema carregados!');
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        alert('Não foi possível carregar os dados. Importe do QField.');
+      }
+    }
+
+    function processarGeoJSON(geojson) {
+      plantas = geojson.features.map(f => {
+        const p = f.properties;
+        return {
+          id: p.fid || p.ID || p.id || Math.random(),
+          nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem ID',
+          nomeId: p.ID || p.fid || 'S/N',
+          ultRega: validarData(p.ULTIMA_REGA || p.ultima_rega),
+          ultPoda: validarData(p.ULTIMA_PODA || p.ultima_poda),
+          ultColh: validarData(p.ULTIMA_COLHEITA || p.ultima_colheita)
+        };
+      });
+      
+      criarFiltros();
+      salvarDados();
+    }
+
+    function importGeoJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const geojson = JSON.parse(e.target.result);
+          
+          if (!validarGeoJSON(geojson)) {
+            throw new Error('Arquivo GeoJSON inválido');
+          }
+          
+          processarGeoJSON(geojson);
+          salvarDados();
+          alert(`${plantas.length} plantas atualizadas!`);
+          renderAll();
+        } catch (err) {
+          alert('Erro ao ler arquivo: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function loadConfig() {
+      const saved = localStorage.getItem('sitio-config');
+      if (saved) {
+        config = JSON.parse(saved);
+      }
+      
+      document.getElementById('mang_rega').value = config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      
+      document.getElementById('caju_rega').value = config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      
+      document.getElementById('coq_rega').value = config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
+      
+      document.getElementById('cac_rega').value = config.Cacau.rega;
+      document.getElementById('cac_poda').value = config.Cacau.poda;
+      document.getElementById('cac_colh').value = config.Cacau.colheita;
+    }
+
+    function saveConfig() {
+      config.Mangabeira = {
+        rega: parseInt(document.getElementById('mang_rega').value),
+        poda: parseInt(document.getElementById('mang_poda').value),
+        colheita: parseInt(document.getElementById('mang_colh').value)
+      };
+      
+      config.Cajueiro = {
+        rega: parseInt(document.getElementById('caju_rega').value),
+        poda: parseInt(document.getElementById('caju_poda').value),
+        colheita: parseInt(document.getElementById('caju_colh').value)
+      };
+      
+      config.Coqueiro = {
+        rega: parseInt(document.getElementById('coq_rega').value),
+        poda: parseInt(document.getElementById('coq_poda').value),
+        colheita: parseInt(document.getElementById('coq_colh').value)
+      };
+      
+      config.Cacau = {
+        rega: parseInt(document.getElementById('cac_rega').value),
+        poda: parseInt(document.getElementById('cac_poda').value),
+        colheita: parseInt(document.getElementById('cac_colh').value)
+      };
+
+      localStorage.setItem('sitio-config', JSON.stringify(config));
+      salvarDados();
+      alert('Configurações salvas!');
+      renderAll();
+    }
+
+    function getIntervalos(nome) {
+      const n = nome.toLowerCase();
+      if (n.includes('mangabeira')) return config.Mangabeira;
+      if (n.includes('caju')) return config.Cajueiro;
+      if (n.includes('coq')) return config.Coqueiro;
+      if (n.includes('cacau')) return config.Cacau;
+      return config.default;
+    }
+
+    function switchTab(event, tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
+    }
+
+    function criarFiltros() {
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      const fg = document.getElementById('filterGroup');
+      
+      if (esp.length > 1) {
+        fg.style.display = 'flex';
+        fg.innerHTML = `
+          <button class="filter-btn active" onclick="filterPlantas(event, 'todas')">Todas (${plantas.length})</button>
+          ${esp.map(e => `
+            <button class="filter-btn" onclick="filterPlantas(event, '${e}')">${e} (${plantas.filter(p => p.nome === e).length})</button>
+          `).join('')}
+        `;
+      }
+    }
+
+    function filterPlantas(event, tipo) {
+      document.querySelectorAll('#filterGroup .filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      renderPlantas();
+    }
+
+    function filtrarPlantas() {
+      renderPlantas();
+    }
+
+    function diasDesde(dataStr) {
+      if (!dataStr) return null;
+      const d = new Date(dataStr);
+      const h = new Date();
+      return Math.floor((h - d) / (1000 * 60 * 60 * 24));
+    }
+
+    function filterAcoes(event, tipo) {
+      document.querySelectorAll('#acoes .filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      filtroAcoesAtual = tipo;
+      renderAcoes();
+    }
+
+    function filterHistorico(event, dias) {
+      document.querySelectorAll('#historico .filter-btn').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      filtroHistoricoAtual = dias;
+      renderHistorico();
+    }
+
+    function renderAcoes() {
+      const container = document.getElementById('acoesHoje');
+      const acoes = [];
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        
+        const dR = diasDesde(p.ultRega);
+        if (dR === null || dR >= int.rega) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'rega',
+            icon: '💧',
+            urg: dR === null ? 'warning' : dR >= int.rega + 2 ? 'urgent' : 'normal',
+            msg: dR === null ? 'Nunca foi regada' : dR >= int.rega + 2 ? `Atrasada ${dR - int.rega} dias!` : 'Hora de regar',
+            pid: p.id,
+            dias: dR
+          });
+        }
+        
+        const dP = diasDesde(p.ultPoda);
+        if (dP === null || dP >= int.poda) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'poda',
+            icon: '✂️',
+            urg: dP === null ? 'normal' : dP > int.poda + 30 ? 'warning' : 'normal',
+            msg: dP === null ? 'Nunca foi podada' : `Há ${dP} dias sem poda`,
+            pid: p.id,
+            dias: dP
+          });
+        }
+        
+        const dC = diasDesde(p.ultColh);
+        if (dC === null || dC >= int.colheita) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'colheita',
+            icon: '🍊',
+            urg: 'normal',
+            msg: dC === null ? 'Verificar frutos' : `Última colheita há ${dC} dias`,
+            pid: p.id,
+            dias: dC
+          });
+        }
+      });
+      
+      // Filtrar por tipo
+      let acoesFiltradas = acoes;
+      if (filtroAcoesAtual === 'urgente') {
+        acoesFiltradas = acoes.filter(a => a.urg === 'urgent');
+      } else if (filtroAcoesAtual !== 'todas') {
+        acoesFiltradas = acoes.filter(a => a.tipo === filtroAcoesAtual);
+      }
+      
+      if (acoesFiltradas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!<br>Todas as plantas estão em dia!</p></div>';
+        document.getElementById('actionCount').textContent = '0 pendências';
+        return;
+      }
+      
+      acoesFiltradas.sort((a, b) => {
+        const ord = { urgent: 0, warning: 1, normal: 2 };
+        if (ord[a.urg] !== ord[b.urg]) return ord[a.urg] - ord[b.urg];
+        return (b.dias || 0) - (a.dias || 0);
+      });
+      
+      container.innerHTML = acoesFiltradas.map(a => `
+        <div class="action-item ${a.urg}">
+          <div class="action-item-header">
+            <div class="action-title">
+              ${a.icon} ${a.planta}
+              ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
+            </div>
+          </div>
+          <div class="action-desc">${a.msg}</div>
+          <div class="action-meta">Perfil: ${perfilAtual?.nome || 'Não selecionado'}</div>
+          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
+            ✓ Marcar como feito
+          </button>
+        </div>
+      `).join('');
+      
+      document.getElementById('actionCount').textContent = `${acoes.length} pendências`;
+    }
+
+    function marcarFeito(pid, tipo) {
+      const p = plantas.find(pl => pl.id === pid);
+      if (!p) return alert('Planta não encontrada');
+      
+      if (!perfilAtual) return alert('Selecione um perfil primeiro');
+      
+      const hoje = new Date().toISOString().split('T')[0];
+      
+      if (tipo === 'rega') p.ultRega = hoje;
+      if (tipo === 'poda') p.ultPoda = hoje;
+      if (tipo === 'colheita') p.ultColh = hoje;
+      
+      // Adicionar ao histórico
+      historico.push({
+        id: Math.random(),
+        tipo: tipo,
+        planta: p.nome,
+        plantaId: p.nomeId,
+        perfil: perfilAtual.nome,
+        perfilCor: perfilAtual.cor,
+        data: new Date().toISOString(),
+        observacao: ''
+      });
+      
+      salvarDados();
+      renderAll();
+      alert('Ação registrada por ' + perfilAtual.nome);
+    }
+
+    function renderHistorico() {
+      const container = document.getElementById('historicoList');
+      
+      if (historico.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
+        return;
+      }
+      
+      let dias = 999;
+      if (filtroHistoricoAtual !== 'todos') {
+        dias = parseInt(filtroHistoricoAtual);
+      }
+      
+      const agora = new Date();
+      const historicoFiltrado = historico.filter(h => {
+        const hData = new Date(h.data);
+        const diff = Math.floor((agora - hData) / (1000 * 60 * 60 * 24));
+        return diff <= dias;
+      }).reverse();
+      
+      container.innerHTML = historicoFiltrado.map(h => `
+        <div class="history-item ${Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24)) === 0 ? 'today' : ''}">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">
+            ${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId}
+          </div>
+          <div style="color: #6b7280; font-size: 0.75rem;">
+            👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getTipoIcon(tipo) {
+      const icons = { rega: '💧', poda: '✂️', colheita: '🍊' };
+      return icons[tipo] || '📌';
+    }
+
+    function renderPlantas() {
+      const container = document.getElementById('plantasList');
+      const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
+      
+      if (plantas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada.<br>Carregue os dados do sistema ou importe do QField!</p></div>';
+        return;
+      }
+      
+      let pFilt = plantas.filter(p => p.nome.toLowerCase().includes(searchTerm));
+      
+      container.innerHTML = pFilt.map(p => `
+        <div class="plant-card">
+          <div class="plant-header">
+            <div class="plant-name">🌿 ${p.nome}</div>
+            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
+          </div>
+          <div class="plant-info">
+            <div>💧 Última rega: ${p.ultRega ? `${p.ultRega} (${diasDesde(p.ultRega)} dias atrás)` : 'Não registrada'}</div>
+            <div>✂️ Última poda: ${p.ultPoda ? `${p.ultPoda} (${diasDesde(p.ultPoda)} dias atrás)` : 'Não registrada'}</div>
+            <div>🍊 Última colheita: ${p.ultColh ? `${p.ultColh} (${diasDesde(p.ultColh)} dias atrás)` : 'Não registrada'}</div>
+          </div>
+          <div style="margin-top: 0.75rem;">
+            ${getHistoricoPlanta(p.nomeId)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getHistoricoPlanta(plantaId) {
+      const ultimas = historico.filter(h => h.plantaId === plantaId).slice(-3);
+      if (ultimas.length === 0) return '';
+      
+      return '<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-top: 0.5rem;"><div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">Últimas ações:</div>' + 
+        ultimas.reverse().map(h => `
+          <div class="history-item" style="margin-bottom: 0.5rem; border: none; background: transparent; padding: 0; font-size: 0.75rem;">
+            ${getTipoIcon(h.tipo)} ${h.perfil} - ${new Date(h.data).toLocaleDateString('pt-BR')}
+          </div>
+        `).join('') + 
+      '</div>';
+    }
+
+    function renderStats() {
+      document.getElementById('statTotal').textContent = plantas.length;
+      
+      let pend = 0;
+      let urg = 0;
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        const dP = diasDesde(p.ultPoda);
+        const dC = diasDesde(p.ultColh);
+        
+        if (dR === null || dR >= int.rega) {
+          pend++;
+          if (dR !== null && dR >= int.rega + 2) urg++;
+        }
+        if (dP === null || dP >= int.poda) pend++;
+        if (dC === null || dC >= int.colheita) pend++;
+      });
+      
+      document.getElementById('statPend').textContent = pend;
+      document.getElementById('statUrg').textContent = urg;
+      
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      document.getElementById('statEsp').textContent = esp.length;
+
+      // Resumo por espécie
+      const speciesSummary = document.getElementById('speciesSummary');
+      speciesSummary.innerHTML = esp.map(e => {
+        const plantas_esp = plantas.filter(p => p.nome === e);
+        return `<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem;"><strong>${e}:</strong> ${plantas_esp.length} planta(s)</div>`;
+      }).join('');
+
+      // Taxa de conclusão
+      const totalHistorico = historico.length;
+      const hoje = new Date();
+      const hojeHistorico = historico.filter(h => {
+        const hData = new Date(h.data);
+        return Math.floor((hoje - hData) / (1000 * 60 * 60 * 24)) === 0;
+      }).length;
+      
+      const taxa = totalHistorico > 0 ? Math.round((hojeHistorico / totalHistorico) * 100) : 0;
+      document.getElementById('completionRate').innerHTML = `
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 6px;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">${taxa}%</div>
+          <div style="color: #6b7280; font-size: 0.9rem;">das ações completadas hoje</div>
+          <div style="color: #9ca3af; font-size: 0.85rem; margin-top: 0.5rem;">${hojeHistorico} de ${totalHistorico} ações</div>
+        </div>
+      `;
+    }
+
+    // EXPORTAÇÃO
+    function exportJSON() {
+      const dados = {
+        plantas: plantas,
+        historico: historico,
+        config: config,
+        dataSalvamento: new Date().toISOString()
+      };
+      const json = JSON.stringify(dados, null, 2);
+      downloadFile(json, 'sitio-ipiranga.json', 'application/json');
+    }
+
+    function exportCSV() {
+      let csv = 'Planta,ID,Tipo,Data,Perfil\n';
+      historico.forEach(h => {
+        csv += `"${h.planta}","${h.plantaId}","${h.tipo}","${h.data}","${h.perfil}"\n`;
+      });
+      downloadFile(csv, 'sitio-ipiranga.csv', 'text/csv');
+    }
+
+    function exportPDF() {
+      let pdfContent = 'SÍTIO IPIRANGA - RELATÓRIO\n';
+      pdfContent += '=' .repeat(50) + '\n\n';
+      pdfContent += `Data: ${new Date().toLocaleDateString('pt-BR')}\n\n`;
+      
+      pdfContent += 'PLANTAS CADASTRADAS\n';
+      pdfContent += '-'.repeat(50) + '\n';
+      plantas.forEach(p => {
+        pdfContent += `${p.nome} (#${p.nomeId})\n`;
+        pdfContent += `  Rega: ${p.ultRega || 'N/A'}\n`;
+        pdfContent += `  Poda: ${p.ultPoda || 'N/A'}\n`;
+        pdfContent += `  Colheita: ${p.ultColh || 'N/A'}\n\n`;
+      });
+      
+      pdfContent += '\nHISTÓRICO RECENTE (Últimas 20 ações)\n';
+      pdfContent += '-'.repeat(50) + '\n';
+      historico.slice(-20).reverse().forEach(h => {
+        pdfContent += `${getTipoIcon(h.tipo)} ${h.planta} - ${h.perfil} - ${new Date(h.data).toLocaleDateString('pt-BR')}\n`;
+      });
+      
+      downloadFile(pdfContent, 'sitio-ipiranga.txt', 'text/plain');
+    }
+
+    function downloadBackup() {
+      const backup = {
+        plantas: plantas,
+        historico: historico,
+        config: config,
+        perfis: perfis,
+        dataSalvamento: new Date().toISOString(),
+        versao: '3.0'
+      };
+      const json = JSON.stringify(backup, null, 2);
+      downloadFile(json, `sitio-ipiranga-backup-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+    }
+
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    function renderAll() {
+      renderAcoes();
+      renderPlantas();
+      renderHistorico();
+      renderStats();
+      document.getElementById('plantCount').textContent = `${plantas.length} plantas`;
+    }
+
+    // INICIALIZAÇÃO
+    window.addEventListener('load', async () => {
+      updateOnlineStatus();
+      loadPerfis();
+      
+      const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
+      if (perfilSalvo) {
+        selectProfile(parseInt(perfilSalvo));
+      } else if (perfis.length > 0) {
+        selectProfile(perfis[0].id);
+      }
+      
+      loadConfig();
+      
+      // Carregar dados salvos localmente
+      if (carregarDadosPersistentes()) {
+        criarFiltros();
+        renderAll();
+      } else {
+        // Caso contrário, tentar carregar do servidor
+        await carregarDadosNativos();
+      }
+    });
+
+    // Auto-save a cada 30 segundos
+    setInterval(salvarDados, 30000);
+  </script>
+</body>
+</html>
