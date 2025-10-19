@@ -547,7 +547,7 @@
       </div>
       
       <button class="btn btn-primary" onclick="carregarDadosNativos()">
-        📥 Recarregar Dados do Sistema
+        🔥 Recarregar Dados do Sistema
       </button>
       
       <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
@@ -681,7 +681,7 @@
       </div>
 
       <div class="species-card">
-        <h3 class="species-header">🫐 Cacau</h3>
+        <h3 class="species-header">🍫 Cacau</h3>
         <div class="species-inputs">
           <div class="input-group">
             <label>💧 Rega</label>
@@ -712,7 +712,7 @@
         <button class="btn-export" onclick="exportJSON()">📥 JSON</button>
         <button class="btn-export" onclick="exportCSV()">📊 CSV</button>
         <button class="btn-export" onclick="exportPDF()">📄 PDF</button>
-        <button class="btn-export" onclick="downloadBackup()">🔄 Auto-Backup</button>
+        <button class="btn-export" onclick="downloadBackup()">📄 Auto-Backup</button>
       </div>
     </div>
   </div>
@@ -802,11 +802,18 @@
     function renderPerfis() {
       const selector = document.getElementById('profileSelector');
       selector.innerHTML = perfis.map(p => `
-        <button class="profile-option ${perfilAtual?.id === p.id ? 'active' : ''}" 
-                onclick="selectProfile(${p.id})" 
-                style="${perfilAtual?.id === p.id ? `border-color: ${p.cor}; background: rgba(${hexToRgb(p.cor).join(',')}, 0.1);` : ''}">
-          ${p.nome}
-        </button>
+        <div style="position: relative; display: inline-block;">
+          <button class="profile-option ${perfilAtual?.id === p.id ? 'active' : ''}" 
+                  onclick="selectProfile(${p.id})" 
+                  style="${perfilAtual?.id === p.id ? `border-color: ${p.cor}; background: rgba(${hexToRgb(p.cor).join(',')}, 0.1);` : ''}">
+            ${p.nome}
+          </button>
+          <button onclick="deleteProfile(${p.id})" 
+                  style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: #ef4444; color: white; border: 2px solid white; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
+                  title="Excluir perfil">
+            ×
+          </button>
+        </div>
       `).join('');
       
       if (perfilAtual) {
@@ -843,6 +850,29 @@
       document.getElementById('newProfileName').value = '';
       closeProfileModal();
       alert(`Perfil "${nome}" criado!`);
+    }
+
+    function deleteProfile(id) {
+      const perfil = perfis.find(p => p.id === id);
+      if (!perfil) return;
+      
+      if (!confirm(`Tem certeza que deseja excluir o perfil "${perfil.nome}"?\n\nEsta ação não pode ser desfeita.`)) {
+        return;
+      }
+      
+      // Remove o perfil do array
+      perfis = perfis.filter(p => p.id !== id);
+      
+      // Se o perfil excluído era o atual, limpa a seleção
+      if (perfilAtual?.id === id) {
+        perfilAtual = null;
+        localStorage.removeItem('sitio-perfil-atual');
+      }
+      
+      savePerfis();
+      renderPerfis();
+      renderAll();
+      alert(`Perfil "${perfil.nome}" excluído com sucesso!`);
     }
 
     function hexToRgb(hex) {
