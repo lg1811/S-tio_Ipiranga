@@ -790,12 +790,7 @@
       if (saved) {
         perfis = JSON.parse(saved);
       } else {
-        perfis = [
-          { id: 1, nome: 'João', cor: '#3b82f6' },
-          { id: 2, nome: 'Maria', cor: '#ec4899' },
-          { id: 3, nome: 'Pedro', cor: '#f59e0b' }
-        ];
-        savePerfis();
+        perfis = [];
       }
       renderPerfis();
     }
@@ -1391,6 +1386,14 @@
     // INICIALIZAÇÃO
     window.addEventListener('load', async () => {
       updateOnlineStatus();
+      
+      // Limpar dados antigos (compatibilidade de versão)
+      const versaoSalva = localStorage.getItem('sitio-versao');
+      if (versaoSalva !== '3.0') {
+        localStorage.removeItem('sitio-perfis');
+        localStorage.setItem('sitio-versao', '3.0');
+      }
+      
       loadPerfis();
       
       const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
