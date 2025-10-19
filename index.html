@@ -1099,8 +1099,29 @@
       setSyncStatus('syncing', 'Atualizando...');
       
       try {
-        const response = await fetch('/S-tio_Ipiranga/dados.geojson');
-        if (!response.ok) throw new Error('Arquivo não encontrado');
+        // Tentar diferentes caminhos possíveis
+        let response;
+        const paths = [
+          './dados.geojson',
+          'dados.geojson',
+          '/S-tio_Ipiranga/dados.geojson'
+        ];
+        
+        for (const path of paths) {
+          try {
+            response = await fetch(path);
+            if (response.ok) {
+              console.log('✅ Dados encontrados em:', path);
+              break;
+            }
+          } catch (e) {
+            console.log('❌ Tentativa falhou:', path);
+          }
+        }
+        
+        if (!response || !response.ok) {
+          throw new Error('Arquivo dados.geojson não encontrado. Importe do QField.');
+        }
         
         const geojson = await response.json();
         processarGeoJSON(geojson);
@@ -1108,7 +1129,7 @@
         showToast('✅ Dados atualizados com sucesso!');
       } catch (err) {
         console.error('Erro ao carregar dados:', err);
-        showToast('❌ Erro ao carregar. Verifique a conexão.', 4000);
+        showToast('⚠️ ' + err.message, 5000);
         setSyncStatus('error', 'Erro na atualização');
       } finally {
         if (btn) {
@@ -1557,30 +1578,35 @@
       
       const hasLocal = carregarDadosLocal();
       
-      if (hasLocal) {
+      if (hasLocal && plantas.length > 0) {
         criarFiltros();
         renderAll();
         renderHistorico();
         console.log('✅ Dados carregados do dispositivo:', plantas.length, 'plantas');
-        
-        // Verificar se precisa atualizar do servidor
-        const lastUpdate = localStorage.getItem('sitioIpiranga');
-        if (lastUpdate) {
-          const parsed = JSON.parse(lastUpdate);
-          if (parsed.lastUpdate) {
-            const lastDate = new Date(parsed.lastUpdate);
-            const now = new Date();
-            const hoursSince = (now - lastDate) / (1000 * 60 * 60);
-            
-            // Se passou mais de 24 horas, sugerir atualização
-            if (hoursSince > 24) {
-              console.log('⚠️ Dados com mais de 24h, considere atualizar');
-            }
-          }
-        }
+        setSyncStatus('ok', 'Dados locais');
       } else {
+        // Se não tem dados locais, SEMPRE tentar carregar do sistema
         console.log('ℹ️ Sem dados locais, carregando do sistema...');
+        document.getElementById('acoesHoje').innerHTML = `
+          <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Buscando dados do sistema...</p>
+          </div>
+        `;
         await carregarDadosNativos();
+        
+        // Se ainda não carregou, mostrar mensagem para importar
+        if (plantas.length === 0) {
+          document.getElementById('acoesHoje').innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📥</div>
+              <p style="margin-bottom: 1rem;">Nenhum dado encontrado</p>
+              <button class="btn btn-primary" onclick="switchToTab('plantas'); document.getElementById('fileInput').click();">
+                📥 Importar do QField
+              </button>
+            </div>
+          `;
+        }
       }
       
       console.log('✅ Aplicativo pronto!');
@@ -1634,10 +1660,10 @@
   <div id="plantas" class="tab-content">
     <div class="section">
       <div class="info-box">
-        💡 Os dados são salvos no seu dispositivo. Use o botão abaixo para atualizar do QField quando necessário.
+        💡 <strong>Primeira vez usando?</strong> Clique em "Importar do QField" abaixo para carregar seus dados. Os dados ficam salvos no dispositivo automaticamente.
       </div>
       
-      <button class="btn btn-primary" onclick="carregarDadosNativos()">
+      <button class="btn btn-primary" onclick="carregarDadosNativos()" id="btnRecarregar">
         🔄 Recarregar Dados do Sistema
       </button>
       
