@@ -557,6 +557,7 @@
     <button class="tab active" onclick="switchTab(event, 'acoes')">📋 Ações</button>
     <button class="tab" onclick="switchTab(event, 'cadastro')">➕ Cadastro</button>
     <button class="tab" onclick="switchTab(event, 'plantas')">🌱 Plantas</button>
+    <button class="tab" onclick="switchTab(event, 'historico')">📜 Histórico</button>
     <button class="tab" onclick="switchTab(event, 'stats')">📊 Stats</button>
     <button class="tab" onclick="switchTab(event, 'config')">⚙️ Config</button>
   </div>
@@ -628,8 +629,14 @@
         </div>
 
         <div class="form-group">
-          <label>📝 Observações</label>
-          <textarea id="observacoes" placeholder="Condições do solo, proximidade de outras plantas, etc."></textarea>
+          <label>📍 Localização GPS</label>
+          <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: end;">
+            <input type="text" id="coordenadas" placeholder="Latitude, Longitude" readonly style="margin-bottom: 0;">
+            <button type="button" onclick="obterLocalizacao()" style="padding: 0.75rem 1rem; background: #10b981; color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; margin-bottom: 0;">
+              📍 Obter GPS
+            </button>
+          </div>
+          <div id="coordDisplay" style="background: #f9fafb; padding: 0.5rem; border-radius: 4px; font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem; display: none;"></div>
         </div>
 
         <div class="form-group">
@@ -649,9 +656,40 @@
     <div class="section">
       <div class="section-title">🌱 Minhas Plantas</div>
       
+      <div class="info-box">
+        💾 Sincronização automática com GitHub ativa
+      </div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+          📤 Importar QField
+        </button>
+        
+        <button class="btn btn-secondary" onclick="exportarParaQField()">
+          📥 Exportar QField
+        </button>
+      </div>
+      
+      <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)" style="display: none;">
+      
       <input type="text" class="search-box" id="searchPlanta" placeholder="🔍 Buscar planta..." onkeyup="filtrarPlantas()">
       
       <div style="margin-top: 1rem;" id="plantasList"></div>
+    </div>
+  </div>
+
+  <!-- ABA HISTÓRICO -->
+  <div id="historico" class="tab-content">
+    <div class="section">
+      <div class="section-title">📜 Histórico de Ações</div>
+      <div class="filter-group">
+        <button class="filter-btn active" onclick="filterHistorico(event, '7')">Últimos 7 dias</button>
+        <button class="filter-btn" onclick="filterHistorico(event, '30')">Últimos 30 dias</button>
+        <button class="filter-btn" onclick="filterHistorico(event, 'todos')">Tudo</button>
+      </div>
+      <div id="historicoList">
+        <div class="loading">Carregando histórico</div>
+      </div>
     </div>
   </div>
 
@@ -736,6 +774,9 @@
 
     <div class="section">
       <div class="section-title">📋 Intervalos por Espécie (dias)</div>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Ajuste os intervalos de manutenção para cada tipo de planta
+      </p>
       
       <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
         <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥭 Mangabeira</h3>
@@ -755,6 +796,66 @@
         </div>
       </div>
 
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌰 Cajueiro</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem;">💧 Rega</label>
+            <input type="number" id="caju_rega" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="caju_poda" value="365" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">🍊 Colheita</label>
+            <input type="number" id="caju_colh" value="60" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥥 Coqueiro</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem;">💧 Rega</label>
+            <input type="number" id="coq_rega" value="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="coq_poda" value="730" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">🍊 Colheita</label>
+            <input type="number" id="coq_colh" value="30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🍫 Cacau</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem;">💧 Rega</label>
+            <input type="number" id="cac_rega" value="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="cac_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">🍊 Colheita</label>
+            <input type="number" id="cac_colh" value="120" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div id="customSpeciesContainer"></div>
+
+      <button class="btn btn-secondary" onclick="openAddSpeciesModal()" style="margin-bottom: 1rem;">
+        ➕ Adicionar Nova Espécie
+      </button>
+
       <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Intervalos</button>
     </div>
   </div>
@@ -771,6 +872,42 @@
     </div>
   </div>
 
+  <!-- MODAL ADICIONAR ESPÉCIE -->
+  <div id="addSpeciesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">➕ Adicionar Nova Espécie</div>
+      
+      <div class="form-group">
+        <label>🌿 Nome da Espécie</label>
+        <input type="text" id="newSpeciesName" placeholder="Ex: Goiabeira, Mangueira, Bananeira..." class="search-box" style="margin-bottom: 0;">
+      </div>
+
+      <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <p style="font-size: 0.85rem; color: #0c4a6e; margin-bottom: 0.75rem;"><strong>Intervalos recomendados (em dias):</strong></p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: #374151;">💧 Rega</label>
+            <input type="number" id="newSpeciesRega" value="7" min="1" max="365" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #374151;">✂️ Poda</label>
+            <input type="number" id="newSpeciesPoda" value="180" min="1" max="730" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #374151;">🍊 Colheita</label>
+            <input type="number" id="newSpeciesColh" value="90" min="1" max="365" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-primary" onclick="addNewSpecies()" style="margin: 0;">✅ Adicionar</button>
+        <button class="btn btn-secondary" onclick="closeAddSpeciesModal()" style="margin: 0;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
   <div class="footer-space"></div>
 
@@ -781,6 +918,7 @@
     let perfis = [];
     let perfilAtual = null;
     let filtroAcoesAtual = 'todas';
+    let filtroHistoricoAtual = '7';
     let proximoId = 1;
     let githubConfig = { repo: 'lg1811/S-tio_Ipiranga', token: '' };
     
@@ -986,25 +1124,91 @@
           type: "name",
           properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" }
         },
-        features: plantas.map(p => ({
-          type: "Feature",
-          properties: {
-            fid: p.id,
-            ID: p.nomeId,
-            NOME_POPULAR: p.nome,
-            ULTIMA_REGA: p.ultRega,
-            ULTIMA_PODA: p.ultPoda,
-            ULTIMA_COLHEITA: p.ultColh,
-            DATA_PLANTIO: p.dataPlantio || null,
-            OBSERVACOES: p.observacoes || '',
-            ATUALIZADO_EM: new Date().toISOString()
-          },
-          geometry: {
-            type: "Point",
-            coordinates: [0, 0] // Coordenadas padrão
-          }
-        }))
+        features: plantas.map(p => {
+          const coords = p.coordenadas ? p.coordenadas.split(',').map(c => parseFloat(c.trim())) : [0, 0];
+          
+          return {
+            type: "Feature",
+            properties: {
+              fid: p.id,
+              ID: p.nomeId,
+              NOME_POPULAR: p.nome,
+              ULTIMA_REGA: p.ultRega,
+              ULTIMA_PODA: p.ultPoda,
+              ULTIMA_COLHEITA: p.ultColh,
+              DATA_PLANTIO: p.dataPlantio || null,
+              OBSERVACOES: p.observacoes || '',
+              ATUALIZADO_EM: new Date().toISOString()
+            },
+            geometry: {
+              type: "Point",
+              coordinates: coords.length === 2 ? [coords[1], coords[0]] : [0, 0]
+            }
+          };
+        })
       };
+    }
+
+    function exportarParaQField() {
+      const geojson = gerarGeoJSON();
+      const json = JSON.stringify(geojson, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dados.geojson';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('📥 GeoJSON exportado para QField!');
+    }
+
+    function importGeoJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const geojson = JSON.parse(e.target.result);
+          
+          if (!geojson.features || !Array.isArray(geojson.features)) {
+            throw new Error('Arquivo GeoJSON inválido');
+          }
+          
+          plantas = geojson.features.map((f, index) => {
+            const p = f.properties;
+            const coords = f.geometry?.coordinates;
+            
+            return {
+              id: proximoId++,
+              nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem nome',
+              nomeId: p.ID || p.fid || p.id || `P${index + 1}`,
+              ultRega: p.ULTIMA_REGA || p.ultima_rega || null,
+              ultPoda: p.ULTIMA_PODA || p.ultima_poda || null,
+              ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null,
+              dataPlantio: p.DATA_PLANTIO || p.data_plantio || null,
+              coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
+              observacoes: p.OBSERVACOES || p.observacoes || '',
+              cadastradoEm: p.CADASTRADO_EM || new Date().toISOString()
+            };
+          });
+          
+          salvarDados();
+          renderAll();
+          showToast(`✅ ${plantas.length} plantas importadas do QField!`);
+          
+          // Sincronizar automaticamente
+          if (githubConfig.token) {
+            sincronizarComGitHub();
+          }
+          
+        } catch (err) {
+          alert('❌ Erro ao ler arquivo: ' + err.message);
+        }
+      };
+      reader.readAsText(file);
     }
 
     // PERFIS
@@ -1061,6 +1265,44 @@
         this.value === 'Outra' ? 'block' : 'none';
     });
 
+    function obterLocalizacao() {
+      if (!navigator.geolocation) {
+        alert('GPS não disponível no seu dispositivo');
+        return;
+      }
+
+      showToast('📍 Obtendo localização...');
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          const accuracy = position.coords.accuracy.toFixed(0);
+          
+          document.getElementById('coordenadas').value = `${lat}, ${lon}`;
+          
+          const display = document.getElementById('coordDisplay');
+          display.innerHTML = `
+            <strong>📍 Localização obtida:</strong><br>
+            Latitude: ${lat}<br>
+            Longitude: ${lon}<br>
+            Precisão: ±${accuracy}m
+          `;
+          display.style.display = 'block';
+          
+          showToast('✅ Localização obtida!');
+        },
+        (error) => {
+          alert('Erro ao obter localização: ' + error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
     async function cadastrarPlanta(event) {
       event.preventDefault();
       
@@ -1085,12 +1327,25 @@
         ultColh: null,
         dataPlantio: document.getElementById('dataPlantio').value,
         idadeMeses: document.getElementById('idadePlanta').value || 0,
+        coordenadas: document.getElementById('coordenadas').value || null,
         observacoes: document.getElementById('observacoes').value.trim(),
         responsavelPlantio: document.getElementById('responsavel').value.trim() || perfilAtual?.nome || 'Sistema',
         cadastradoEm: new Date().toISOString()
       };
 
       plantas.push(novaPlanta);
+      
+      // Adicionar ao histórico
+      historico.push({
+        id: Math.random(),
+        tipo: 'cadastro',
+        planta: especie,
+        plantaId: nomeId,
+        perfil: perfilAtual?.nome || 'Sistema',
+        data: new Date().toISOString(),
+        observacao: 'Planta cadastrada'
+      });
+      
       salvarDados();
       renderAll();
       
@@ -1104,7 +1359,9 @@
       // Limpar form
       document.getElementById('novaEspecie').value = '';
       document.getElementById('novoId').value = '';
+      document.getElementById('coordenadas').value = '';
       document.getElementById('observacoes').value = '';
+      document.getElementById('coordDisplay').style.display = 'none';
       document.querySelector('.tab[onclick*="plantas"]').click();
     }
 
@@ -1135,25 +1392,181 @@
     }
 
     // CONFIGURAÇÕES
+    function loadConfig() {
+      const saved = localStorage.getItem('sitio-config');
+      if (saved) {
+        config = JSON.parse(saved);
+      }
+      
+      // Carregar intervalos padrão
+      document.getElementById('mang_rega').value = config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      
+      document.getElementById('caju_rega').value = config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      
+      document.getElementById('coq_rega').value = config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
+      
+      document.getElementById('cac_rega').value = config.Cacau.rega;
+      document.getElementById('cac_poda').value = config.Cacau.poda;
+      document.getElementById('cac_colh').value = config.Cacau.colheita;
+      
+      // Renderizar espécies customizadas
+      renderCustomSpecies();
+    }
+
+    function renderCustomSpecies() {
+      const container = document.getElementById('customSpeciesContainer');
+      const customSpecies = Object.keys(config).filter(k => 
+        k !== 'default' && k !== 'Mangabeira' && k !== 'Cajueiro' && k !== 'Coqueiro' && k !== 'Cacau'
+      );
+      
+      container.innerHTML = customSpecies.map(especie => `
+        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; position: relative;">
+          <button onclick="removeSpecies('${especie}')" 
+                  style="position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: bold;"
+                  title="Remover espécie">
+            ×
+          </button>
+          <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌳 ${especie}</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+            <div>
+              <label style="font-size: 0.75rem;">💧 Rega</label>
+              <input type="number" id="${especie}_rega" value="${config[especie].rega}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem;">✂️ Poda</label>
+              <input type="number" id="${especie}_poda" value="${config[especie].poda}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+            <div>
+              <label style="font-size: 0.75rem;">🍊 Colheita</label>
+              <input type="number" id="${especie}_colh" value="${config[especie].colheita}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openAddSpeciesModal() {
+      document.getElementById('addSpeciesModal').classList.add('active');
+    }
+
+    function closeAddSpeciesModal() {
+      document.getElementById('addSpeciesModal').classList.remove('active');
+      document.getElementById('newSpeciesName').value = '';
+    }
+
+    function addNewSpecies() {
+      const nome = document.getElementById('newSpeciesName').value.trim();
+      if (!nome) {
+        alert('⚠️ Digite o nome da espécie!');
+        return;
+      }
+      
+      // Verificar se já existe
+      if (config[nome]) {
+        alert('⚠️ Esta espécie já está cadastrada!');
+        return;
+      }
+      
+      const rega = parseInt(document.getElementById('newSpeciesRega').value);
+      const poda = parseInt(document.getElementById('newSpeciesPoda').value);
+      const colheita = parseInt(document.getElementById('newSpeciesColh').value);
+      
+      config[nome] = { rega, poda, colheita };
+      
+      localStorage.setItem('sitio-config', JSON.stringify(config));
+      
+      renderCustomSpecies();
+      closeAddSpeciesModal();
+      showToast(`✅ Espécie "${nome}" adicionada!`);
+    }
+
+    function removeSpecies(nome) {
+      if (!confirm(`Remover configuração de "${nome}"?\n\nAs plantas dessa espécie usarão valores padrão.`)) {
+        return;
+      }
+      
+      delete config[nome];
+      localStorage.setItem('sitio-config', JSON.stringify(config));
+      renderCustomSpecies();
+      showToast(`🗑️ Configuração de "${nome}" removida`);
+    }
+
     function saveConfig() {
+      // Salvar espécies padrão
       config.Mangabeira = {
         rega: parseInt(document.getElementById('mang_rega').value),
         poda: parseInt(document.getElementById('mang_poda').value),
         colheita: parseInt(document.getElementById('mang_colh').value)
       };
       
+      config.Cajueiro = {
+        rega: parseInt(document.getElementById('caju_rega').value),
+        poda: parseInt(document.getElementById('caju_poda').value),
+        colheita: parseInt(document.getElementById('caju_colh').value)
+      };
+      
+      config.Coqueiro = {
+        rega: parseInt(document.getElementById('coq_rega').value),
+        poda: parseInt(document.getElementById('coq_poda').value),
+        colheita: parseInt(document.getElementById('coq_colh').value)
+      };
+      
+      config.Cacau = {
+        rega: parseInt(document.getElementById('cac_rega').value),
+        poda: parseInt(document.getElementById('cac_poda').value),
+        colheita: parseInt(document.getElementById('cac_colh').value)
+      };
+      
+      // Salvar espécies customizadas
+      const customSpecies = Object.keys(config).filter(k => 
+        k !== 'default' && k !== 'Mangabeira' && k !== 'Cajueiro' && k !== 'Coqueiro' && k !== 'Cacau'
+      );
+      
+      customSpecies.forEach(especie => {
+        const regaEl = document.getElementById(`${especie}_rega`);
+        const podaEl = document.getElementById(`${especie}_poda`);
+        const colhEl = document.getElementById(`${especie}_colh`);
+        
+        if (regaEl && podaEl && colhEl) {
+          config[especie] = {
+            rega: parseInt(regaEl.value),
+            poda: parseInt(podaEl.value),
+            colheita: parseInt(colhEl.value)
+          };
+        }
+      });
+      
       localStorage.setItem('sitio-config', JSON.stringify(config));
       salvarDados();
-      showToast('✅ Configurações salvas!');
+      showToast('✅ Intervalos salvos!');
       renderAll();
     }
 
     function getIntervalos(nome) {
       const n = nome.toLowerCase();
+      
+      // Buscar exatamente pelo nome
+      if (config[nome]) return config[nome];
+      
+      // Buscar por correspondência
       if (n.includes('mangabeira')) return config.Mangabeira;
       if (n.includes('caju')) return config.Cajueiro;
       if (n.includes('coq')) return config.Coqueiro;
       if (n.includes('cacau')) return config.Cacau;
+      
+      // Buscar por qualquer chave que contenha parte do nome
+      const speciesKey = Object.keys(config).find(key => 
+        key !== 'default' && nome.toLowerCase().includes(key.toLowerCase())
+      );
+      
+      if (speciesKey) return config[speciesKey];
+      
       return config.default;
     }
 
@@ -1175,6 +1588,23 @@
       event.target.classList.add('active');
       filtroAcoesAtual = tipo;
       renderAcoes();
+    }
+
+    function filterHistorico(event, dias) {
+      document.querySelectorAll('#historico .filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      filtroHistoricoAtual = dias;
+      renderHistorico();
+    }
+
+    function getTipoIcon(tipo) {
+      const icons = { 
+        rega: '💧', 
+        poda: '✂️', 
+        colheita: '🍊',
+        cadastro: '🌱'
+      };
+      return icons[tipo] || '📌';
     }
 
     // RENDERIZAR AÇÕES
@@ -1333,6 +1763,48 @@
       document.getElementById('plantCount').textContent = `📊 ${plantas.length} plantas`;
     }
 
+    // RENDERIZAR HISTÓRICO
+    function renderHistorico() {
+      const container = document.getElementById('historicoList');
+      
+      if (historico.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
+        return;
+      }
+      
+      let dias = 999;
+      if (filtroHistoricoAtual !== 'todos') {
+        dias = parseInt(filtroHistoricoAtual);
+      }
+      
+      const agora = new Date();
+      const historicoFiltrado = historico.filter(h => {
+        const hData = new Date(h.data);
+        const diff = Math.floor((agora - hData) / (1000 * 60 * 60 * 24));
+        return diff <= dias;
+      }).reverse();
+      
+      if (historicoFiltrado.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação neste período</p></div>';
+        return;
+      }
+      
+      container.innerHTML = historicoFiltrado.map(h => {
+        const isToday = Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24)) === 0;
+        return `
+          <div style="background: ${isToday ? '#f0fdf4' : '#f9fafb'}; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid ${isToday ? '#10b981' : '#d1d5db'};">
+            <div style="font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem;">
+              ${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId}
+            </div>
+            <div style="color: #6b7280; font-size: 0.75rem;">
+              👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+            </div>
+            ${h.observacao ? `<div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">📝 ${h.observacao}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
     // RENDERIZAR STATS
     function renderStats() {
       document.getElementById('statTotal').textContent = plantas.length;
@@ -1372,6 +1844,7 @@
     function renderAll() {
       renderAcoes();
       renderPlantas();
+      renderHistorico();
       renderStats();
     }
 
