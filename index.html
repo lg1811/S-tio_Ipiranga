@@ -797,13 +797,17 @@
     };
 
     // ==================== SERVICE WORKER ====================
+    // Service Worker desabilitado para demonstração
+    // Em produção, descomente o código abaixo:
+    /*
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
           .then(reg => console.log('✓ Service Worker registrado!'))
-          .catch(err => console.error('✗ Erro SW:', err));
+          .catch(err => console.warn('Service Worker não disponível'));
       });
     }
+    */
 
     // ==================== STATUS ONLINE/OFFLINE ====================
     function updateOnlineStatus() {
