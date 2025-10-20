@@ -23,7 +23,6 @@
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: #f3f4f6;
       overflow-x: hidden;
-      padding-bottom: 70px;
     }
 
     .status-bar {
@@ -98,7 +97,7 @@
     
     .tab {
       flex: 1;
-      padding: 1rem 0.5rem;
+      padding: 1rem;
       border: none;
       background: white;
       cursor: pointer;
@@ -106,7 +105,7 @@
       transition: all 0.2s;
       white-space: nowrap;
       border-bottom: 3px solid transparent;
-      min-width: 80px;
+      min-width: 100px;
     }
     
     .tab.active {
@@ -180,6 +179,12 @@
       align-items: center;
       gap: 0.5rem;
     }
+
+    .action-meta {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.25rem;
+    }
     
     .badge {
       display: inline-block;
@@ -197,6 +202,12 @@
     .badge.warning {
       background: #fef3c7;
       color: #d97706;
+    }
+    
+    .action-desc {
+      color: #4b5563;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
     }
     
     .btn {
@@ -232,12 +243,19 @@
       color: white;
     }
 
+    .btn-small {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      width: auto;
+      margin: 0;
+    }
+
     .filter-group {
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1rem;
       overflow-x: auto;
-      padding-bottom: 0.5rem;
+      padding-bottom: 0.25rem;
     }
     
     .filter-btn {
@@ -257,7 +275,7 @@
       border-color: #10b981;
     }
 
-    .search-box, .input-field {
+    .search-box {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid #d1d5db;
@@ -266,17 +284,11 @@
       margin-bottom: 1rem;
     }
 
-    .input-field:focus {
-      outline: none;
-      border-color: #10b981;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-
     .form-group {
       margin-bottom: 1rem;
     }
 
-    .form-label {
+    .form-group label {
       display: block;
       font-weight: 600;
       margin-bottom: 0.5rem;
@@ -284,13 +296,26 @@
       font-size: 0.9rem;
     }
 
-    select {
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid #d1d5db;
       border-radius: 6px;
       font-size: 0.9rem;
-      background: white;
+      font-family: inherit;
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
     }
 
     .plant-card {
@@ -317,7 +342,7 @@
       font-weight: 600;
       font-size: 1rem;
     }
-
+    
     .plant-info {
       display: grid;
       grid-template-columns: 1fr;
@@ -327,10 +352,25 @@
       margin-bottom: 0.75rem;
     }
 
+    .history-item {
+      background: #f9fafb;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      border-left: 3px solid #d1d5db;
+    }
+
+    .history-item.today {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+    
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
+      margin-bottom: 1rem;
     }
     
     .stat-card {
@@ -362,40 +402,9 @@
       font-size: 3rem;
       margin-bottom: 1rem;
     }
-
-    .modal {
+    
+    input[type="file"] {
       display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-content {
-      background: white;
-      padding: 1.5rem;
-      border-radius: 12px;
-      max-width: 500px;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: #1f2937;
     }
 
     .info-box {
@@ -408,91 +417,55 @@
       color: #0c4a6e;
     }
 
-    .info-box.success {
+    .success-box {
       background: #f0fdf4;
-      border-color: #bbf7d0;
-      color: #14532d;
+      border: 1px solid #86efac;
+      color: #166534;
     }
 
-    .info-box.warning {
+    .warning-box {
       background: #fffbeb;
-      border-color: #fef3c7;
-      color: #78350f;
+      border: 1px solid #fde68a;
+      color: #92400e;
     }
 
-    .gps-button {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.75rem;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-
-    .gps-button:active {
-      background: #2563eb;
-    }
-
-    .gps-button.loading {
-      opacity: 0.7;
-      pointer-events: none;
-    }
-
-    .coord-display {
-      background: #f9fafb;
-      padding: 0.75rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #6b7280;
-      margin-bottom: 1rem;
-    }
-
-    .fab {
+    .modal {
+      display: none;
       position: fixed;
-      bottom: 80px;
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #10b981;
-      color: white;
-      border: none;
-      font-size: 1.5rem;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-      cursor: pointer;
-      z-index: 998;
-      display: flex;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
+      animation: fadeIn 0.2s;
     }
 
-    .fab:active {
-      transform: scale(0.9);
+    .modal.active {
+      display: flex;
     }
 
-    .photo-preview {
-      width: 100%;
-      max-height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-top: 0.5rem;
-    }
-
-    .sync-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.25rem;
-      padding: 0.25rem 0.5rem;
-      background: rgba(255,255,255,0.2);
+    .modal-content {
+      background: white;
+      padding: 2rem;
       border-radius: 12px;
-      font-size: 0.75rem;
+      max-width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
     }
 
     .loading {
@@ -501,43 +474,111 @@
       color: #6b7280;
     }
 
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: '.'; }
+      40% { content: '..'; }
+      60%, 100% { content: '...'; }
+    }
+
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .btn-export {
+      padding: 0.75rem;
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-export:active {
+      background: #e5e7eb;
+      transform: scale(0.98);
+    }
+
+    .profile-select {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .profile-option {
+      padding: 0.75rem 1rem;
+      border: 2px solid #d1d5db;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+    }
+
+    .profile-option.active {
+      border-color: #10b981;
+      background: #f0fdf4;
+      color: #10b981;
+    }
+
+    .location-input {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: end;
+    }
+
+    .location-btn {
+      padding: 0.75rem 1rem;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      z-index: 2000;
+      animation: slideUp 0.3s;
+      display: none;
+    }
+
+    .toast.show {
+      display: block;
+    }
+
     .footer-space {
       height: 2rem;
     }
 
-    .history-item {
+    .coord-display {
       background: #f9fafb;
-      padding: 0.75rem;
-      border-radius: 6px;
-      margin-top: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 4px;
       font-size: 0.85rem;
-      border-left: 3px solid #d1d5db;
-    }
-
-    .history-item.today {
-      border-left-color: #10b981;
-      background: #f0fdf4;
-    }
-
-    input[type="file"] {
-      display: none;
-    }
-
-    .photo-upload-btn {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px dashed #d1d5db;
-      background: #f9fafb;
-      border-radius: 6px;
-      cursor: pointer;
-      text-align: center;
       color: #6b7280;
-      transition: all 0.2s;
-    }
-
-    .photo-upload-btn:hover {
-      border-color: #10b981;
-      color: #10b981;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
@@ -547,30 +588,27 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Online</span>
     </div>
-    <div id="syncStatus" class="sync-badge">
-      <span>✓</span> <span id="syncTime">Sincronizado</span>
-    </div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v4.0</div>
   </div>
 
   <div class="header">
-    <h1>🌿 Sítio Ipiranga v4.0</h1>
+    <h1>🌿 Sítio Ipiranga</h1>
     <div class="header-stats">
-      <span id="plantCount">📊 0 plantas</span>
-      <span id="actionCount">⚡ 0 ações</span>
-      <span id="newPlantsCount">🌱 0 novas</span>
+      <span id="plantCount">📊 Carregando...</span>
+      <span id="actionCount">📋 0 ações</span>
     </div>
   </div>
   
   <div class="tabs">
     <button class="tab active" onclick="switchTab(event, 'acoes')">📋 Ações</button>
-    <button class="tab" onclick="switchTab(event, 'plantas')">🌱 Plantas</button>
     <button class="tab" onclick="switchTab(event, 'cadastro')">➕ Cadastro</button>
+    <button class="tab" onclick="switchTab(event, 'plantas')">🌱 Plantas</button>
     <button class="tab" onclick="switchTab(event, 'historico')">📜 Histórico</button>
-    <button class="tab" onclick="switchTab(event, 'sync')">🔄 Sync</button>
+    <button class="tab" onclick="switchTab(event, 'stats')">📊 Stats</button>
     <button class="tab" onclick="switchTab(event, 'config')">⚙️ Config</button>
   </div>
   
-  <!-- ABA DE AÇÕES -->
+  <!-- ABA AÇÕES -->
   <div id="acoes" class="tab-content active">
     <div class="section">
       <div class="section-title">📋 Ações Necessárias Hoje</div>
@@ -582,32 +620,23 @@
         <button class="filter-btn" onclick="filterAcoes(event, 'colheita')">🍊 Colheita</button>
       </div>
       <div id="acoesHoje">
-        <div class="loading">Carregando dados...</div>
+        <div class="loading">Carregando dados</div>
       </div>
     </div>
   </div>
-  
-  <!-- ABA DE PLANTAS -->
-  <div id="plantas" class="tab-content">
-    <div class="section">
-      <input type="text" class="search-box" id="searchPlanta" placeholder="🔍 Buscar planta..." onkeyup="filtrarPlantas()">
-      <div class="filter-group" id="filterGroup"></div>
-      <div id="plantasList"></div>
-    </div>
-  </div>
 
-  <!-- NOVA ABA DE CADASTRO -->
+  <!-- NOVA ABA CADASTRO -->
   <div id="cadastro" class="tab-content">
     <div class="section">
       <div class="section-title">➕ Cadastrar Nova Planta</div>
       
       <div class="info-box">
-        💡 <strong>Dica:</strong> Use o botão GPS para capturar a localização exata da planta.
+        📍 Cadastre novas mudas plantadas. Os dados serão salvos localmente e podem ser exportados para o QField.
       </div>
 
-      <form id="cadastroForm" onsubmit="cadastrarPlanta(event)">
+      <form onsubmit="cadastrarPlanta(event)">
         <div class="form-group">
-          <label class="form-label">🌿 Espécie da Planta</label>
+          <label>🌿 Espécie *</label>
           <select id="novaEspecie" required>
             <option value="">Selecione...</option>
             <option value="Mangabeira">🥭 Mangabeira</option>
@@ -618,42 +647,44 @@
           </select>
         </div>
 
-        <div class="form-group" id="outraEspecieGroup" style="display: none;">
-          <label class="form-label">Nome da Espécie</label>
-          <input type="text" id="outraEspecieNome" class="input-field" placeholder="Digite o nome da espécie">
+        <div class="form-group" id="outraEspecieGroup" style="display:none;">
+          <label>Nome da espécie</label>
+          <input type="text" id="outraEspecieNome" placeholder="Ex: Goiabeira, Mangueira...">
         </div>
 
         <div class="form-group">
-          <label class="form-label">🆔 Identificação (Número/Nome)</label>
-          <input type="text" id="novaPlantaId" class="input-field" placeholder="Ex: 001, A-1, etc." required>
+          <label>🏷️ Identificação/Código *</label>
+          <input type="text" id="novoId" placeholder="Ex: MG-001, COQ-15..." required>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">📍 Localização GPS</label>
-          <button type="button" class="gps-button" onclick="capturarGPS()">
-            <span id="gpsIcon">📍</span>
-            <span id="gpsText">Capturar Localização</span>
-          </button>
-          <div id="coordDisplay" class="coord-display" style="display: none;">
-            <strong>Coordenadas:</strong><br>
-            Latitude: <span id="latDisplay">-</span><br>
-            Longitude: <span id="lngDisplay">-</span><br>
-            Precisão: <span id="accDisplay">-</span>m
+        <div class="form-row">
+          <div class="form-group">
+            <label>📅 Data do Plantio *</label>
+            <input type="date" id="dataPlantio" required>
+          </div>
+          <div class="form-group">
+            <label>🌱 Idade (meses)</label>
+            <input type="number" id="idadePlanta" min="0" placeholder="0">
           </div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">📷 Foto da Planta (opcional)</label>
-          <label for="photoInput" class="photo-upload-btn">
-            📸 Tirar/Escolher Foto
-          </label>
-          <input type="file" id="photoInput" accept="image/*" capture="environment" onchange="previewPhoto(event)">
-          <img id="photoPreview" class="photo-preview" style="display: none;">
+          <label>📍 Localização GPS</label>
+          <div class="location-input">
+            <input type="text" id="coordenadas" placeholder="Latitude, Longitude" readonly>
+            <button type="button" class="location-btn" onclick="obterLocalizacao()">📍 Obter GPS</button>
+          </div>
+          <div id="coordDisplay" class="coord-display" style="display:none;"></div>
         </div>
 
         <div class="form-group">
-          <label class="form-label">📝 Observações (opcional)</label>
-          <textarea id="novaObs" class="input-field" rows="3" placeholder="Anotações sobre a planta..."></textarea>
+          <label>📝 Observações</label>
+          <textarea id="observacoes" placeholder="Condições do solo, proximidade de outras plantas, etc."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>👤 Responsável pelo plantio</label>
+          <input type="text" id="responsavel" placeholder="Nome" value="">
         </div>
 
         <button type="submit" class="btn btn-primary">
@@ -661,17 +692,41 @@
         </button>
       </form>
     </div>
-
-    <div class="section" id="plantasNovas" style="display: none;">
-      <div class="section-title">🌱 Plantas Cadastradas Hoje</div>
-      <div class="info-box success">
-        <strong>✓</strong> Essas plantas ainda não foram sincronizadas com o QField. Use a aba Sync para exportar.
+  </div>
+  
+  <!-- ABA PLANTAS -->
+  <div id="plantas" class="tab-content">
+    <div class="section">
+      <div class="section-title">🌱 Minhas Plantas</div>
+      
+      <div class="info-box">
+        💾 Dados sincronizados localmente. Use os botões abaixo para atualizar.
       </div>
-      <div id="plantasNovasList"></div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="carregarDadosNativos()">
+          🔄 Recarregar
+        </button>
+        
+        <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
+          📤 Importar
+        </button>
+      </div>
+
+      <button class="btn btn-secondary" onclick="exportarParaQField()" style="margin-bottom: 1rem;">
+        📥 Exportar para QField
+      </button>
+
+      <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)">
+      
+      <input type="text" class="search-box" id="searchPlanta" placeholder="🔍 Buscar planta..." onkeyup="filtrarPlantas()">
+      
+      <div class="filter-group" id="filterGroup" style="display: none;"></div>
+      <div style="margin-top: 1rem;" id="plantasList"></div>
     </div>
   </div>
 
-  <!-- ABA DE HISTÓRICO -->
+  <!-- ABA HISTÓRICO -->
   <div id="historico" class="tab-content">
     <div class="section">
       <div class="section-title">📜 Histórico de Ações</div>
@@ -681,112 +736,208 @@
         <button class="filter-btn" onclick="filterHistorico(event, 'todos')">Tudo</button>
       </div>
       <div id="historicoList">
-        <div class="loading">Carregando histórico...</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- NOVA ABA DE SINCRONIZAÇÃO -->
-  <div id="sync" class="tab-content">
-    <div class="section">
-      <div class="section-title">🔄 Sincronização com QField</div>
-      
-      <div class="info-box">
-        <strong>📱 Como funciona:</strong><br>
-        1. <strong>Importar:</strong> Carregue dados do QField/QGIS (GeoJSON)<br>
-        2. <strong>Exportar:</strong> Salve as alterações para sincronizar com QField
-      </div>
-
-      <div class="info-box warning" id="unsyncedWarning" style="display: none;">
-        ⚠️ <strong>Atenção!</strong> Você tem <span id="unsyncedCount">0</span> planta(s) nova(s) não sincronizada(s).
-      </div>
-
-      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1rem; color: #374151;">📥 Importar Dados</h3>
-      
-      <button class="btn btn-primary" onclick="carregarDadosNativos()">
-        🔄 Carregar Dados do Sistema
-      </button>
-      
-      <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
-        📤 Importar do QField (GeoJSON)
-      </button>
-      <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)">
-
-      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1rem; color: #374151;">📤 Exportar Dados</h3>
-
-      <button class="btn btn-primary" onclick="exportarParaQField()">
-        📲 Exportar para QField (GeoJSON Completo)
-      </button>
-
-      <button class="btn btn-secondary" onclick="exportarApenasNovas()">
-        🌱 Exportar Apenas Plantas Novas
-      </button>
-
-      <div class="info-box success" style="margin-top: 1rem;">
-        <strong>💡 Dica:</strong> Após exportar, transfira o arquivo para o dispositivo com QField e importe no projeto QGIS.
-      </div>
-
-      <h3 style="margin: 1.5rem 0 1rem 0; font-size: 1rem; color: #374151;">📊 Status da Sincronização</h3>
-      
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value" id="syncTotal">0</div>
-          <div class="stat-label">Total de Plantas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value" id="syncNovas">0</div>
-          <div class="stat-label">Plantas Novas</div>
-        </div>
-      </div>
-
-      <div id="ultimaSync" style="margin-top: 1rem; text-align: center; color: #6b7280; font-size: 0.85rem;">
-        Última sincronização: <span id="ultimaSyncData">Nunca</span>
+        <div class="loading">Carregando histórico</div>
       </div>
     </div>
   </div>
   
-  <!-- ABA DE CONFIGURAÇÕES -->
+  <!-- ABA STATS -->
+  <div id="stats" class="tab-content">
+    <div class="section">
+      <div class="section-title">📊 Estatísticas Gerais</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Plantas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statPend">0</div>
+          <div class="stat-label">Pendências</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statUrg">0</div>
+          <div class="stat-label">Urgentes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="statEsp">0</div>
+          <div class="stat-label">Espécies</div>
+        </div>
+      </div>
+
+      <div class="section" style="margin-top: 1rem;">
+        <div class="section-title">🌳 Resumo por Espécie</div>
+        <div id="speciesSummary"></div>
+      </div>
+
+      <div class="section" style="margin-top: 1rem;">
+        <div class="section-title">📈 Taxa de Conclusão</div>
+        <div id="completionRate"></div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ABA CONFIG -->
   <div id="config" class="tab-content">
     <div class="section">
       <div class="section-title">👤 Perfil de Usuário</div>
       <div class="info-box">
         Selecione o seu perfil para registrar quem fez cada ação
       </div>
-      <div id="profileSelector" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem;"></div>
+      <div class="profile-select" id="profileSelector"></div>
       <button class="btn btn-primary" onclick="openProfileModal()">➕ Adicionar Novo Perfil</button>
     </div>
 
     <div class="section">
+      <div class="section-title">📋 Intervalos por Espécie</div>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
+        Ajuste os intervalos (em dias) para cada tipo de planta
+      </p>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; color: #2d5f3f; font-size: 1.1rem;">🥭 Mangabeira</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">💧 Rega</label>
+            <input type="number" id="mang_rega" min="1" max="365" value="7" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">✂️ Poda</label>
+            <input type="number" id="mang_poda" min="1" max="730" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">🍊 Colheita</label>
+            <input type="number" id="mang_colh" min="1" max="365" value="90" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; color: #2d5f3f; font-size: 1.1rem;">🌰 Cajueiro</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">💧 Rega</label>
+            <input type="number" id="caju_rega" min="1" max="365" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">✂️ Poda</label>
+            <input type="number" id="caju_poda" min="1" max="730" value="365" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">🍊 Colheita</label>
+            <input type="number" id="caju_colh" min="1" max="365" value="60" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; color: #2d5f3f; font-size: 1.1rem;">🥥 Coqueiro</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">💧 Rega</label>
+            <input type="number" id="coq_rega" min="1" max="365" value="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">✂️ Poda</label>
+            <input type="number" id="coq_poda" min="1" max="730" value="730" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">🍊 Colheita</label>
+            <input type="number" id="coq_colh" min="1" max="365" value="30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; color: #2d5f3f; font-size: 1.1rem;">🍫 Cacau</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">💧 Rega</label>
+            <input type="number" id="cac_rega" min="1" max="365" value="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">✂️ Poda</label>
+            <input type="number" id="cac_poda" min="1" max="730" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: #666;">🍊 Colheita</label>
+            <input type="number" id="cac_colh" min="1" max="365" value="120" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="saveConfig()">
+        💾 Salvar Todas as Configurações
+      </button>
+    </div>
+
+    <div class="section" style="margin-top: 1.5rem;">
+      <div class="section-title">💾 Backup e Exportação</div>
+      <div class="info-box">
+        Salve seus dados em diferentes formatos para segurança
+      </div>
+      <div class="export-buttons">
+        <button class="btn-export" onclick="exportJSON()">📥 JSON</button>
+        <button class="btn-export" onclick="exportCSV()">📊 CSV</button>
+        <button class="btn-export" onclick="exportPDF()">📄 TXT</button>
+        <button class="btn-export" onclick="downloadBackup()">📦 Backup</button>
+      </div>
+    </div>
+
+    <div class="section" style="margin-top: 1.5rem;">
       <div class="section-title">🔔 Notificações</div>
       <button class="btn btn-secondary" onclick="solicitarNotificacoes()">
         🔔 Ativar Notificações Push
       </button>
-      <div class="info-box" style="margin-top: 1rem;">
-        Receba lembretes sobre ações pendentes mesmo quando o app estiver fechado.
-      </div>
+      <p style="font-size: 0.85rem; color: #6b7280; margin-top: 0.5rem;">
+        Receba lembretes sobre ações necessárias
+      </p>
     </div>
+  </div>
 
-    <div class="section">
-      <div class="section-title">💾 Backup e Exportação</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+  <!-- MODAL PERFIL -->
+  <div id="profileModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Novo Perfil de Usuário</div>
+      <input type="text" id="newProfileName" placeholder="Nome do usuário" class="search-box" style="margin-bottom: 1rem;">
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-primary" onclick="createProfile()" style="margin: 0;">Criar</button>
         <button class="btn btn-secondary" onclick="closeProfileModal()" style="margin: 0;">Cancelar</button>
       </div>
     </div>
   </div>
 
+  <!-- MODAL DETALHES PLANTA -->
+  <div id="plantDetailsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title" id="plantDetailsTitle">Detalhes da Planta</div>
+      <div id="plantDetailsContent"></div>
+      <button class="btn btn-secondary" onclick="closePlantDetails()" style="margin-top: 1rem;">Fechar</button>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICAÇÕES -->
+  <div id="toast" class="toast"></div>
+
   <div class="footer-space"></div>
 
   <script>
-    // ==================== VARIÁVEIS GLOBAIS ====================
+    // SERVICE WORKER
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
+          .then(reg => console.log('✅ Service Worker registrado!'))
+          .catch(err => console.error('❌ Erro SW:', err));
+      });
+    }
+
+    // VARIÁVEIS GLOBAIS
     let plantas = [];
-    let plantasNovas = []; // Plantas cadastradas localmente
     let historico = [];
     let perfis = [];
     let perfilAtual = null;
     let filtroAcoesAtual = 'todas';
     let filtroHistoricoAtual = '7';
-    let coordenadas = null;
-    let fotoBase64 = null;
+    let proximoId = 1;
     
     let config = {
       default: { rega: 7, poda: 180, colheita: 90 },
@@ -796,20 +947,15 @@
       Cacau: { rega: 3, poda: 180, colheita: 120 }
     };
 
-    // ==================== SERVICE WORKER ====================
-    // Service Worker desabilitado para demonstração
-    // Em produção, descomente o código abaixo:
-    /*
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/S-tio_Ipiranga/service-worker.js')
-          .then(reg => console.log('✓ Service Worker registrado!'))
-          .catch(err => console.warn('Service Worker não disponível'));
-      });
+    // TOAST/NOTIFICAÇÕES
+    function showToast(message, duration = 3000) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), duration);
     }
-    */
 
-    // ==================== STATUS ONLINE/OFFLINE ====================
+    // STATUS ONLINE/OFFLINE
     function updateOnlineStatus() {
       const dot = document.getElementById('statusDot');
       const text = document.getElementById('statusText');
@@ -825,37 +971,33 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // ==================== NOTIFICAÇÕES ====================
-    function solicitarNotificacoes() {
+    // NOTIFICAÇÕES PUSH
+    async function solicitarNotificacoes() {
       if (!('Notification' in window)) {
         alert('Seu navegador não suporta notificações');
         return;
       }
 
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          alert('✓ Notificações ativadas com sucesso!');
-          new Notification('Sítio Ipiranga', {
-            body: 'Você receberá lembretes sobre suas plantas! 🌿',
-            icon: '/S-tio_Ipiranga/icon.png'
-          });
-        } else {
-          alert('⚠️ Permissão negada. Ative nas configurações do navegador.');
-        }
-      });
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        showToast('✅ Notificações ativadas!');
+        localStorage.setItem('notificacoes-ativadas', 'true');
+      } else {
+        alert('Notificações bloqueadas. Ative nas configurações do navegador.');
+      }
     }
 
-    function enviarNotificacao(titulo, mensagem) {
+    function enviarNotificacao(title, body) {
       if (Notification.permission === 'granted') {
-        new Notification(titulo, {
-          body: mensagem,
-          icon: '/S-tio_Ipiranga/icon.png',
-          badge: '/S-tio_Ipiranga/badge.png'
+        new Notification(title, {
+          body: body,
+          icon: '🌿',
+          badge: '🌿'
         });
       }
     }
 
-    // ==================== PERFIS DE USUÁRIO ====================
+    // PERFIS DE USUÁRIO
     function loadPerfis() {
       const saved = localStorage.getItem('sitio-perfis');
       if (saved) {
@@ -872,24 +1014,24 @@
 
     function renderPerfis() {
       const selector = document.getElementById('profileSelector');
-      if (!selector) return;
-      
       selector.innerHTML = perfis.map(p => `
         <div style="position: relative; display: inline-block;">
-          <button class="filter-btn ${perfilAtual?.id === p.id ? 'active' : ''}" 
-                  onclick="selectProfile(${p.id})" 
-                  style="${perfilAtual?.id === p.id ? 'border-color: #10b981; background: #10b981; color: white;' : ''}">
+          <button class="profile-option ${perfilAtual?.id === p.id ? 'active' : ''}" 
+                  onclick="selectProfile(${p.id})">
             ${p.nome}
           </button>
-          ${perfis.length > 1 ? `
           <button onclick="deleteProfile(${p.id})" 
                   style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: #ef4444; color: white; border: 2px solid white; font-size: 0.75rem; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"
                   title="Excluir perfil">
             ×
           </button>
-          ` : ''}
         </div>
       `).join('');
+      
+      const respField = document.getElementById('responsavel');
+      if (respField && perfilAtual) {
+        respField.value = perfilAtual.nome;
+      }
     }
 
     function selectProfile(id) {
@@ -901,147 +1043,86 @@
 
     function openProfileModal() {
       document.getElementById('profileModal').classList.add('active');
-      document.getElementById('newProfileName').focus();
     }
 
     function closeProfileModal() {
       document.getElementById('profileModal').classList.remove('active');
-      document.getElementById('newProfileName').value = '';
     }
 
     function createProfile() {
       const nome = document.getElementById('newProfileName').value.trim();
       if (!nome) return alert('Digite um nome');
       
+      const cores = ['#3b82f6', '#ec4899', '#f59e0b', '#8b5cf6', '#06b6d4'];
       const id = Math.max(...perfis.map(p => p.id), 0) + 1;
+      const cor = cores[perfis.length % cores.length];
       
-      perfis.push({ id, nome });
+      perfis.push({ id, nome, cor });
       savePerfis();
       renderPerfis();
+      document.getElementById('newProfileName').value = '';
       closeProfileModal();
-      
-      if (perfis.length === 1) {
-        selectProfile(id);
-      }
-      
-      alert(`✓ Perfil "${nome}" criado!`);
+      showToast(`✅ Perfil "${nome}" criado!`);
     }
 
     function deleteProfile(id) {
       const perfil = perfis.find(p => p.id === id);
       if (!perfil) return;
       
-      if (!confirm(`Tem certeza que deseja excluir o perfil "${perfil.nome}"?`)) {
-        return;
-      }
+      if (!confirm(`Excluir o perfil "${perfil.nome}"?`)) return;
       
       perfis = perfis.filter(p => p.id !== id);
       
       if (perfilAtual?.id === id) {
-        perfilAtual = perfis.length > 0 ? perfis[0] : null;
-        if (perfilAtual) {
-          localStorage.setItem('sitio-perfil-atual', perfilAtual.id);
-        } else {
-          localStorage.removeItem('sitio-perfil-atual');
-        }
+        perfilAtual = null;
+        localStorage.removeItem('sitio-perfil-atual');
       }
       
       savePerfis();
       renderPerfis();
       renderAll();
-      alert(`✓ Perfil "${perfil.nome}" excluído!`);
+      showToast(`🗑️ Perfil "${perfil.nome}" excluído!`);
     }
 
-    // ==================== PERSISTÊNCIA ====================
-    function salvarDados() {
-      const backup = {
-        plantas: plantas,
-        plantasNovas: plantasNovas,
-        config: config,
-        historico: historico,
-        perfis: perfis,
-        dataSalvamento: new Date().toISOString(),
-        versao: '4.0'
-      };
-      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
-      
-      const agora = new Date();
-      document.getElementById('syncTime').textContent = `${agora.getHours()}:${String(agora.getMinutes()).padStart(2, '0')}`;
-    }
-
-    function carregarDadosPersistentes() {
-      const saved = localStorage.getItem('sitio-ipiranga-backup');
-      if (saved) {
-        try {
-          const backup = JSON.parse(saved);
-          plantas = backup.plantas || [];
-          plantasNovas = backup.plantasNovas || [];
-          config = backup.config || config;
-          historico = backup.historico || [];
-          perfis = backup.perfis || [];
-          
-          if (backup.dataSalvamento) {
-            const data = new Date(backup.dataSalvamento);
-            document.getElementById('ultimaSyncData').textContent = 
-              `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}`;
-          }
-          
-          return true;
-        } catch (e) {
-          console.error('Erro ao carregar backup:', e);
-          return false;
-        }
+    // CADASTRO DE PLANTAS
+    document.getElementById('novaEspecie')?.addEventListener('change', function() {
+      const outraGroup = document.getElementById('outraEspecieGroup');
+      if (this.value === 'Outra') {
+        outraGroup.style.display = 'block';
+      } else {
+        outraGroup.style.display = 'none';
       }
-      return false;
-    }
+    });
 
-    // ==================== CAPTURA GPS ====================
-    function capturarGPS() {
+    function obterLocalizacao() {
       if (!navigator.geolocation) {
-        alert('❌ Seu dispositivo não suporta GPS');
+        alert('GPS não disponível no seu dispositivo');
         return;
       }
 
-      const btn = document.querySelector('.gps-button');
-      const icon = document.getElementById('gpsIcon');
-      const text = document.getElementById('gpsText');
+      showToast('📍 Obtendo localização...');
       
-      btn.classList.add('loading');
-      icon.textContent = '⏳';
-      text.textContent = 'Capturando...';
-
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          coordenadas = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-            accuracy: position.coords.accuracy
-          };
-
-          document.getElementById('coordDisplay').style.display = 'block';
-          document.getElementById('latDisplay').textContent = coordenadas.lat.toFixed(6);
-          document.getElementById('lngDisplay').textContent = coordenadas.lng.toFixed(6);
-          document.getElementById('accDisplay').textContent = Math.round(coordenadas.accuracy);
-
-          icon.textContent = '✅';
-          text.textContent = 'Localização Capturada!';
-          btn.classList.remove('loading');
-
-          setTimeout(() => {
-            icon.textContent = '📍';
-            text.textContent = 'Recapturar Localização';
-          }, 2000);
+          const lat = position.coords.latitude.toFixed(6);
+          const lon = position.coords.longitude.toFixed(6);
+          const accuracy = position.coords.accuracy.toFixed(0);
+          
+          document.getElementById('coordenadas').value = `${lat}, ${lon}`;
+          
+          const display = document.getElementById('coordDisplay');
+          display.innerHTML = `
+            <strong>📍 Localização obtida:</strong><br>
+            Latitude: ${lat}<br>
+            Longitude: ${lon}<br>
+            Precisão: ±${accuracy}m
+          `;
+          display.style.display = 'block';
+          
+          showToast('✅ Localização obtida!');
         },
         (error) => {
-          alert('❌ Erro ao capturar GPS: ' + error.message);
-          icon.textContent = '❌';
-          text.textContent = 'Erro - Tentar Novamente';
-          btn.classList.remove('loading');
-          
-          setTimeout(() => {
-            icon.textContent = '📍';
-            text.textContent = 'Capturar Localização';
-          }, 2000);
+          alert('Erro ao obter localização: ' + error.message);
         },
         {
           enableHighAccuracy: true,
@@ -1051,190 +1132,157 @@
       );
     }
 
-    // ==================== PREVIEW DE FOTO ====================
-    function previewPhoto(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        fotoBase64 = e.target.result;
-        const preview = document.getElementById('photoPreview');
-        preview.src = fotoBase64;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // ==================== CADASTRO DE NOVA PLANTA ====================
-    document.getElementById('novaEspecie')?.addEventListener('change', function() {
-      const outraGroup = document.getElementById('outraEspecieGroup');
-      if (this.value === 'Outra') {
-        outraGroup.style.display = 'block';
-        document.getElementById('outraEspecieNome').required = true;
-      } else {
-        outraGroup.style.display = 'none';
-        document.getElementById('outraEspecieNome').required = false;
-      }
-    });
-
     function cadastrarPlanta(event) {
       event.preventDefault();
-
-      if (!coordenadas) {
-        if (!confirm('Você não capturou a localização GPS. Deseja continuar mesmo assim?')) {
-          return;
-        }
-      }
-
+      
       let especie = document.getElementById('novaEspecie').value;
       if (especie === 'Outra') {
         especie = document.getElementById('outraEspecieNome').value.trim();
         if (!especie) {
-          alert('❌ Digite o nome da espécie');
+          alert('Digite o nome da espécie');
           return;
         }
       }
+      
+      const nomeId = document.getElementById('novoId').value.trim();
+      const dataPlantio = document.getElementById('dataPlantio').value;
+      const idade = document.getElementById('idadePlanta').value;
+      const coordenadas = document.getElementById('coordenadas').value;
+      const observacoes = document.getElementById('observacoes').value.trim();
+      const responsavel = document.getElementById('responsavel').value.trim();
 
-      const plantaId = document.getElementById('novaPlantaId').value.trim();
-      const observacoes = document.getElementById('novaObs').value.trim();
-
-      // Verificar se ID já existe
-      const idExiste = [...plantas, ...plantasNovas].some(p => p.nomeId === plantaId);
-      if (idExiste) {
-        alert('❌ Já existe uma planta com este ID!');
+      // Verificar ID duplicado
+      if (plantas.some(p => p.nomeId === nomeId)) {
+        alert('⚠️ Já existe uma planta com este ID!');
         return;
       }
 
-      const novaPlanta = {
-        id: Date.now(),
+      const novaplanta = {
+        id: proximoId++,
         nome: especie,
-        nomeId: plantaId,
+        nomeId: nomeId,
         ultRega: null,
         ultPoda: null,
         ultColh: null,
-        coordenadas: coordenadas,
-        foto: fotoBase64,
-        observacoes: observacoes,
-        dataCadastro: new Date().toISOString(),
-        cadastradoPor: perfilAtual?.nome || 'Desconhecido',
-        sincronizado: false
+        dataPlantio: dataPlantio,
+        idadeMeses: idade || 0,
+        coordenadas: coordenadas || null,
+        observacoes: observacoes || '',
+        responsavelPlantio: responsavel || perfilAtual?.nome || 'Não informado',
+        cadastradoEm: new Date().toISOString(),
+        cadastradoPor: perfilAtual?.nome || 'Sistema'
       };
 
-      plantasNovas.push(novaPlanta);
-      salvarDados();
+      plantas.push(novaplanta);
+      
+      // Registrar no histórico
+      historico.push({
+        id: Math.random(),
+        tipo: 'cadastro',
+        planta: especie,
+        plantaId: nomeId,
+        perfil: perfilAtual?.nome || 'Sistema',
+        perfilCor: perfilAtual?.cor || '#10b981',
+        data: new Date().toISOString(),
+        observacao: `Planta cadastrada${responsavel ? ' por ' + responsavel : ''}`
+      });
 
+      salvarDados();
+      criarFiltros();
+      renderAll();
+      
+      showToast(`✅ ${especie} #${nomeId} cadastrada!`);
+      
       // Limpar formulário
-      document.getElementById('cadastroForm').reset();
-      coordenadas = null;
-      fotoBase64 = null;
+      document.getElementById('novaEspecie').value = '';
+      document.getElementById('novoId').value = '';
+      document.getElementById('dataPlantio').value = '';
+      document.getElementById('idadePlanta').value = '';
+      document.getElementById('coordenadas').value = '';
+      document.getElementById('observacoes').value = '';
       document.getElementById('coordDisplay').style.display = 'none';
-      document.getElementById('photoPreview').style.display = 'none';
-      document.getElementById('outraEspecieGroup').style.display = 'none';
-
-      alert(`✅ Planta "${especie} #${plantaId}" cadastrada com sucesso!`);
       
-      enviarNotificacao('Nova Planta Cadastrada', `${especie} #${plantaId} adicionado ao sistema`);
-      
-      renderAll();
-      renderPlantasNovas();
-
-      // Mostrar seção de plantas novas
-      document.getElementById('plantasNovas').style.display = 'block';
+      // Ir para aba de plantas
+      document.querySelector('.tab[onclick*="plantas"]').click();
     }
 
-    function renderPlantasNovas() {
-      const container = document.getElementById('plantasNovasList');
-      if (!container) return;
+    // PERSISTÊNCIA
+    function salvarDados() {
+      const backup = {
+        plantas: plantas,
+        config: config,
+        historico: historico,
+        proximoId: proximoId,
+        dataSalvamento: new Date().toISOString(),
+        versao: '4.0'
+      };
+      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
+      document.getElementById('syncStatus').textContent = 'Salvo ✓';
+      setTimeout(() => {
+        document.getElementById('syncStatus').textContent = 'v4.0';
+      }, 2000);
+    }
 
-      if (plantasNovas.length === 0) {
-        document.getElementById('plantasNovas').style.display = 'none';
-        return;
+    function carregarDadosPersistentes() {
+      const saved = localStorage.getItem('sitio-ipiranga-backup');
+      if (saved) {
+        try {
+          const backup = JSON.parse(saved);
+          plantas = backup.plantas || [];
+          config = backup.config || config;
+          historico = backup.historico || [];
+          proximoId = backup.proximoId || plantas.length + 1;
+          return true;
+        } catch (e) {
+          console.error('Erro ao carregar backup:', e);
+          return false;
+        }
       }
-
-      document.getElementById('plantasNovas').style.display = 'block';
-      
-      container.innerHTML = plantasNovas.map(p => `
-        <div class="plant-card" style="border-left: 4px solid #10b981;">
-          <div class="plant-header">
-            <div class="plant-name">🌱 ${p.nome}</div>
-            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
-          </div>
-          ${p.foto ? `<img src="${p.foto}" class="photo-preview" style="display: block; margin-bottom: 0.75rem;">` : ''}
-          <div class="plant-info">
-            <div>📅 Cadastrado: ${new Date(p.dataCadastro).toLocaleDateString('pt-BR')}</div>
-            <div>👤 Por: ${p.cadastradoPor}</div>
-            ${p.coordenadas ? `<div>📍 GPS: ${p.coordenadas.lat.toFixed(4)}, ${p.coordenadas.lng.toFixed(4)}</div>` : '<div>📍 Sem coordenadas</div>'}
-            ${p.observacoes ? `<div>📝 ${p.observacoes}</div>` : ''}
-          </div>
-          <button class="btn btn-danger" onclick="excluirPlantaNova(${p.id})" style="font-size: 0.85rem; padding: 0.5rem;">
-            🗑️ Excluir
-          </button>
-        </div>
-      `).join('');
+      return false;
     }
 
-    function excluirPlantaNova(id) {
-      const planta = plantasNovas.find(p => p.id === id);
-      if (!planta) return;
-
-      if (!confirm(`Tem certeza que deseja excluir "${planta.nome} #${planta.nomeId}"?`)) {
-        return;
-      }
-
-      plantasNovas = plantasNovas.filter(p => p.id !== id);
-      salvarDados();
-      renderPlantasNovas();
-      renderAll();
-      alert('✓ Planta excluída!');
-    }
-
-    // ==================== SINCRONIZAÇÃO COM QFIELD ====================
+    // CARREGAR DADOS DO GEOJSON
     async function carregarDadosNativos() {
       try {
         const response = await fetch('/S-tio_Ipiranga/dados.geojson');
         if (!response.ok) throw new Error('Arquivo não encontrado');
         
         const geojson = await response.json();
+        
+        if (!geojson.features || !Array.isArray(geojson.features)) {
+          throw new Error('GeoJSON inválido');
+        }
+        
         processarGeoJSON(geojson);
         salvarDados();
-        alert('✅ Dados do sistema carregados!');
-        renderAll();
+        showToast('✅ Dados carregados do sistema!');
       } catch (err) {
-        console.error('Erro ao carregar dados:', err);
-        alert('❌ Não foi possível carregar os dados do sistema.');
+        console.error('Erro:', err);
+        alert('❌ Não foi possível carregar. Importe do QField.');
       }
     }
 
     function processarGeoJSON(geojson) {
-      if (!geojson.features || !Array.isArray(geojson.features)) {
-        throw new Error('GeoJSON inválido');
-      }
-
-      plantas = geojson.features.map(f => {
+      plantas = geojson.features.map((f, index) => {
         const p = f.properties;
         const coords = f.geometry?.coordinates;
         
         return {
-          id: p.fid || p.ID || p.id || Math.random(),
-          nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem Nome',
-          nomeId: p.ID || p.fid || String(p.id || 'S/N'),
-          ultRega: validarData(p.ULTIMA_REGA || p.ultima_rega),
-          ultPoda: validarData(p.ULTIMA_PODA || p.ultima_poda),
-          ultColh: validarData(p.ULTIMA_COLHEITA || p.ultima_colheita),
-          coordenadas: coords ? { lng: coords[0], lat: coords[1] } : null,
+          id: proximoId++,
+          nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem nome',
+          nomeId: p.ID || p.fid || p.id || `P${index + 1}`,
+          ultRega: p.ULTIMA_REGA || p.ultima_rega || null,
+          ultPoda: p.ULTIMA_PODA || p.ultima_poda || null,
+          ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null,
+          dataPlantio: p.DATA_PLANTIO || p.data_plantio || null,
+          coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
           observacoes: p.OBSERVACOES || p.observacoes || '',
-          sincronizado: true
+          cadastradoEm: p.CADASTRADO_EM || new Date().toISOString()
         };
       });
       
       criarFiltros();
-    }
-
-    function validarData(dataStr) {
-      if (!dataStr) return null;
-      const d = new Date(dataStr);
-      return isNaN(d.getTime()) ? null : dataStr;
+      renderAll();
     }
 
     function importGeoJSON(event) {
@@ -1245,121 +1293,114 @@
       reader.onload = function(e) {
         try {
           const geojson = JSON.parse(e.target.result);
+          
+          if (!geojson.features || !Array.isArray(geojson.features)) {
+            throw new Error('Arquivo GeoJSON inválido');
+          }
+          
           processarGeoJSON(geojson);
           salvarDados();
-          alert(`✅ ${plantas.length} plantas importadas do QField!`);
+          showToast(`✅ ${plantas.length} plantas importadas!`);
           renderAll();
         } catch (err) {
           alert('❌ Erro ao ler arquivo: ' + err.message);
         }
       };
       reader.readAsText(file);
-      event.target.value = '';
     }
 
+    // EXPORTAR PARA QFIELD
     function exportarParaQField() {
-      const todasPlantas = [...plantas, ...plantasNovas];
-      
-      if (todasPlantas.length === 0) {
-        alert('❌ Nenhuma planta para exportar!');
-        return;
-      }
-
       const geojson = {
         type: "FeatureCollection",
-        name: "sitio_ipiranga_completo",
+        name: "sitio_ipiranga",
         crs: {
           type: "name",
           properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" }
         },
-        features: todasPlantas.map(p => ({
-          type: "Feature",
-          properties: {
-            fid: p.id,
-            ID: p.nomeId,
-            NOME_POPULAR: p.nome,
-            ULTIMA_REGA: p.ultRega,
-            ULTIMA_PODA: p.ultPoda,
-            ULTIMA_COLHEITA: p.ultColh,
-            OBSERVACOES: p.observacoes || '',
-            DATA_CADASTRO: p.dataCadastro || new Date().toISOString(),
-            CADASTRADO_POR: p.cadastradoPor || ''
-          },
-          geometry: p.coordenadas ? {
-            type: "Point",
-            coordinates: [p.coordenadas.lng, p.coordenadas.lat]
-          } : null
-        }))
+        features: plantas.map(p => {
+          const coords = p.coordenadas ? p.coordenadas.split(',').map(c => parseFloat(c.trim())) : [0, 0];
+          
+          return {
+            type: "Feature",
+            properties: {
+              fid: p.id,
+              ID: p.nomeId,
+              NOME_POPULAR: p.nome,
+              ULTIMA_REGA: p.ultRega,
+              ULTIMA_PODA: p.ultPoda,
+              ULTIMA_COLHEITA: p.ultColh,
+              DATA_PLANTIO: p.dataPlantio || null,
+              OBSERVACOES: p.observacoes || '',
+              CADASTRADO_EM: p.cadastradoEm || new Date().toISOString(),
+              ATUALIZADO_EM: new Date().toISOString()
+            },
+            geometry: {
+              type: "Point",
+              coordinates: coords.length === 2 ? [coords[1], coords[0]] : [0, 0]
+            }
+          };
+        })
       };
 
       const json = JSON.stringify(geojson, null, 2);
-      downloadFile(json, `sitio_ipiranga_${new Date().toISOString().split('T')[0]}.geojson`, 'application/json');
+      downloadFile(json, `sitio-ipiranga-qfield-${new Date().toISOString().split('T')[0]}.geojson`, 'application/json');
+      showToast('📥 Arquivo GeoJSON exportado para QField!');
+    }
 
-      // Marcar plantas novas como sincronizadas
-      plantasNovas.forEach(p => p.sincronizado = true);
+    // CONFIGURAÇÕES
+    function loadConfig() {
+      const saved = localStorage.getItem('sitio-config');
+      if (saved) {
+        config = JSON.parse(saved);
+      }
+      
+      document.getElementById('mang_rega').value = config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      
+      document.getElementById('caju_rega').value = config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      
+      document.getElementById('coq_rega').value = config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
+      
+      document.getElementById('cac_rega').value = config.Cacau.rega;
+      document.getElementById('cac_poda').value = config.Cacau.poda;
+      document.getElementById('cac_colh').value = config.Cacau.colheita;
+    }
+
+    function saveConfig() {
+      config.Mangabeira = {
+        rega: parseInt(document.getElementById('mang_rega').value),
+        poda: parseInt(document.getElementById('mang_poda').value),
+        colheita: parseInt(document.getElementById('mang_colh').value)
+      };
+      
+      config.Cajueiro = {
+        rega: parseInt(document.getElementById('caju_rega').value),
+        poda: parseInt(document.getElementById('caju_poda').value),
+        colheita: parseInt(document.getElementById('caju_colh').value)
+      };
+      
+      config.Coqueiro = {
+        rega: parseInt(document.getElementById('coq_rega').value),
+        poda: parseInt(document.getElementById('coq_poda').value),
+        colheita: parseInt(document.getElementById('coq_colh').value)
+      };
+      
+      config.Cacau = {
+        rega: parseInt(document.getElementById('cac_rega').value),
+        poda: parseInt(document.getElementById('cac_poda').value),
+        colheita: parseInt(document.getElementById('cac_colh').value)
+      };
+
+      localStorage.setItem('sitio-config', JSON.stringify(config));
       salvarDados();
-      
-      alert(`✅ Exportado ${todasPlantas.length} plantas para QField!`);
+      showToast('✅ Configurações salvas!');
       renderAll();
-    }
-
-    function exportarApenasNovas() {
-      if (plantasNovas.length === 0) {
-        alert('❌ Nenhuma planta nova para exportar!');
-        return;
-      }
-
-      const geojson = {
-        type: "FeatureCollection",
-        name: "sitio_ipiranga_novas",
-        crs: {
-          type: "name",
-          properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" }
-        },
-        features: plantasNovas.map(p => ({
-          type: "Feature",
-          properties: {
-            fid: p.id,
-            ID: p.nomeId,
-            NOME_POPULAR: p.nome,
-            ULTIMA_REGA: p.ultRega,
-            ULTIMA_PODA: p.ultPoda,
-            ULTIMA_COLHEITA: p.ultColh,
-            OBSERVACOES: p.observacoes || '',
-            DATA_CADASTRO: p.dataCadastro,
-            CADASTRADO_POR: p.cadastradoPor
-          },
-          geometry: p.coordenadas ? {
-            type: "Point",
-            coordinates: [p.coordenadas.lng, p.coordenadas.lat]
-          } : null
-        }))
-      };
-
-      const json = JSON.stringify(geojson, null, 2);
-      downloadFile(json, `sitio_ipiranga_novas_${new Date().toISOString().split('T')[0]}.geojson`, 'application/json');
-
-      alert(`✅ Exportado ${plantasNovas.length} plantas novas!`);
-    }
-
-    // ==================== FUNÇÕES AUXILIARES ====================
-    function switchTab(event, tabName) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      
-      event.target.classList.add('active');
-      document.getElementById(tabName).classList.add('active');
-
-      if (tabName === 'cadastro') {
-        renderPlantasNovas();
-      }
-    }
-
-    function diasDesde(dataStr) {
-      if (!dataStr) return null;
-      const d = new Date(dataStr);
-      const h = new Date();
-      return Math.floor((h - d) / (1000 * 60 * 60 * 24));
     }
 
     function getIntervalos(nome) {
@@ -1371,21 +1412,26 @@
       return config.default;
     }
 
-    function getTipoIcon(tipo) {
-      const icons = { rega: '💧', poda: '✂️', colheita: '🍊' };
-      return icons[tipo] || '📌';
+    // NAVEGAÇÃO
+    function switchTab(event, tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
     }
 
+    // FILTROS
     function criarFiltros() {
-      const todasPlantas = [...plantas, ...plantasNovas];
-      const esp = [...new Set(todasPlantas.map(p => p.nome))];
+      const esp = [...new Set(plantas.map(p => p.nome))];
       const fg = document.getElementById('filterGroup');
       
       if (esp.length > 1) {
+        fg.style.display = 'flex';
         fg.innerHTML = `
-          <button class="filter-btn active" onclick="filterPlantas(event, 'todas')">Todas (${todasPlantas.length})</button>
+          <button class="filter-btn active" onclick="filterPlantas(event, 'todas')">Todas (${plantas.length})</button>
           ${esp.map(e => `
-            <button class="filter-btn" onclick="filterPlantas(event, '${e}')">${e} (${todasPlantas.filter(p => p.nome === e).length})</button>
+            <button class="filter-btn" onclick="filterPlantas(event, '${e}')">${e} (${plantas.filter(p => p.nome === e).length})</button>
           `).join('')}
         `;
       }
@@ -1399,6 +1445,13 @@
 
     function filtrarPlantas() {
       renderPlantas();
+    }
+
+    function diasDesde(dataStr) {
+      if (!dataStr) return null;
+      const d = new Date(dataStr);
+      const h = new Date();
+      return Math.floor((h - d) / (1000 * 60 * 60 * 24));
     }
 
     function filterAcoes(event, tipo) {
@@ -1415,13 +1468,12 @@
       renderHistorico();
     }
 
-    // ==================== RENDERIZAÇÃO ====================
+    // RENDERIZAR AÇÕES
     function renderAcoes() {
       const container = document.getElementById('acoesHoje');
-      const todasPlantas = [...plantas, ...plantasNovas];
       const acoes = [];
       
-      todasPlantas.forEach(p => {
+      plantas.forEach(p => {
         const int = getIntervalos(p.nome);
         
         const dR = diasDesde(p.ultRega);
@@ -1464,6 +1516,7 @@
         }
       });
       
+      // Filtrar por tipo
       let acoesFiltradas = acoes;
       if (filtroAcoesAtual === 'urgente') {
         acoesFiltradas = acoes.filter(a => a.urg === 'urgent');
@@ -1473,7 +1526,7 @@
       
       if (acoesFiltradas.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!<br>Todas as plantas estão em dia!</p></div>';
-        document.getElementById('actionCount').textContent = '⚡ 0 ações';
+        document.getElementById('actionCount').textContent = '📋 0 ações';
         return;
       }
       
@@ -1491,38 +1544,31 @@
               ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
             </div>
           </div>
-          <div style="color: #4b5563; font-size: 0.9rem; margin-bottom: 0.5rem;">${a.msg}</div>
-          <div style="color: #9ca3af; font-size: 0.75rem; margin-bottom: 0.75rem;">Por: ${perfilAtual?.nome || 'Selecione um perfil'}</div>
-          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')" ${!perfilAtual ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>
-            ✓ Marcar como feito
+          <div class="action-desc">${a.msg}</div>
+          <div class="action-meta">Perfil: ${perfilAtual?.nome || '⚠️ Não selecionado'}</div>
+          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
+            ✔ Marcar como feito
           </button>
         </div>
       `).join('');
       
-      document.getElementById('actionCount').textContent = `⚡ ${acoes.length} ações`;
+      document.getElementById('actionCount').textContent = `📋 ${acoes.length} ações`;
     }
 
     function marcarFeito(pid, tipo) {
-      let todasPlantas = [...plantas, ...plantasNovas];
-      const p = todasPlantas.find(pl => pl.id === pid);
+      const p = plantas.find(pl => pl.id === pid);
       if (!p) return alert('Planta não encontrada');
       
-      if (!perfilAtual) return alert('❌ Selecione um perfil primeiro');
+      if (!perfilAtual) {
+        alert('⚠️ Selecione um perfil primeiro na aba Config');
+        return;
+      }
       
       const hoje = new Date().toISOString().split('T')[0];
       
       if (tipo === 'rega') p.ultRega = hoje;
       if (tipo === 'poda') p.ultPoda = hoje;
       if (tipo === 'colheita') p.ultColh = hoje;
-      
-      // Atualizar na lista correta
-      if (p.sincronizado === false) {
-        const idx = plantasNovas.findIndex(pn => pn.id === pid);
-        if (idx !== -1) plantasNovas[idx] = p;
-      } else {
-        const idx = plantas.findIndex(pn => pn.id === pid);
-        if (idx !== -1) plantas[idx] = p;
-      }
       
       // Adicionar ao histórico
       historico.push({
@@ -1531,67 +1577,20 @@
         planta: p.nome,
         plantaId: p.nomeId,
         perfil: perfilAtual.nome,
+        perfilCor: perfilAtual.cor,
         data: new Date().toISOString(),
         observacao: ''
       });
       
       salvarDados();
       renderAll();
+      showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
       
-      enviarNotificacao('Ação Concluída', `${getTipoIcon(tipo)} ${p.nome} #${p.nomeId}`);
-      alert('✅ Ação registrada por ' + perfilAtual.nome);
+      // Notificar
+      enviarNotificacao('✅ Ação Concluída', `${tipo} de ${p.nome} #${p.nomeId}`);
     }
 
-    function renderPlantas() {
-      const container = document.getElementById('plantasList');
-      const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
-      const todasPlantas = [...plantas, ...plantasNovas];
-      
-      if (todasPlantas.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada.<br>Use a aba Cadastro para adicionar plantas!</p></div>';
-        return;
-      }
-      
-      let pFilt = todasPlantas.filter(p => 
-        p.nome.toLowerCase().includes(searchTerm) || 
-        p.nomeId.toLowerCase().includes(searchTerm)
-      );
-      
-      container.innerHTML = pFilt.map(p => `
-        <div class="plant-card" style="${!p.sincronizado ? 'border-left: 4px solid #10b981;' : ''}">
-          <div class="plant-header">
-            <div class="plant-name">🌿 ${p.nome}</div>
-            <div style="color: #10b981; font-weight: 600;">
-              #${p.nomeId}
-              ${!p.sincronizado ? '<span class="badge" style="background: #10b981; color: white; margin-left: 0.5rem; font-size: 0.7rem;">NOVA</span>' : ''}
-            </div>
-          </div>
-          ${p.foto ? `<img src="${p.foto}" class="photo-preview" style="display: block; margin-bottom: 0.75rem;">` : ''}
-          <div class="plant-info">
-            <div>💧 Última rega: ${p.ultRega ? `${new Date(p.ultRega).toLocaleDateString('pt-BR')} (${diasDesde(p.ultRega)} dias atrás)` : 'Não registrada'}</div>
-            <div>✂️ Última poda: ${p.ultPoda ? `${new Date(p.ultPoda).toLocaleDateString('pt-BR')} (${diasDesde(p.ultPoda)} dias atrás)` : 'Não registrada'}</div>
-            <div>🍊 Última colheita: ${p.ultColh ? `${new Date(p.ultColh).toLocaleDateString('pt-BR')} (${diasDesde(p.ultColh)} dias atrás)` : 'Não registrada'}</div>
-            ${p.coordenadas ? `<div>📍 GPS: ${p.coordenadas.lat.toFixed(4)}, ${p.coordenadas.lng.toFixed(4)}</div>` : ''}
-            ${p.observacoes ? `<div>📝 ${p.observacoes}</div>` : ''}
-          </div>
-          ${getHistoricoPlanta(p.nomeId)}
-        </div>
-      `).join('');
-    }
-
-    function getHistoricoPlanta(plantaId) {
-      const ultimas = historico.filter(h => h.plantaId === plantaId).slice(-3);
-      if (ultimas.length === 0) return '';
-      
-      return '<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-top: 0.75rem;"><div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem;">📜 Últimas ações:</div>' + 
-        ultimas.reverse().map(h => `
-          <div class="history-item" style="margin-bottom: 0.5rem; border: none; background: transparent; padding: 0; font-size: 0.75rem;">
-            ${getTipoIcon(h.tipo)} ${h.perfil} - ${new Date(h.data).toLocaleDateString('pt-BR')}
-          </div>
-        `).join('') + 
-      '</div>';
-    }
-
+    // RENDERIZAR HISTÓRICO
     function renderHistorico() {
       const container = document.getElementById('historicoList');
       
@@ -1613,30 +1612,227 @@
       }).reverse();
       
       if (historicoFiltrado.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação no período selecionado</p></div>';
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação neste período</p></div>';
         return;
       }
       
-      container.innerHTML = historicoFiltrado.map(h => {
-        const diasAtras = Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24));
-        return `
-        <div class="history-item ${diasAtras === 0 ? 'today' : ''}">
+      container.innerHTML = historicoFiltrado.map(h => `
+        <div class="history-item ${Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24)) === 0 ? 'today' : ''}">
           <div style="font-weight: 600; margin-bottom: 0.25rem;">
             ${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId}
           </div>
-          <div style="color: #6b7280; font-size: 0.8rem;">
+          <div style="color: #6b7280; font-size: 0.75rem;">
             👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
-            ${diasAtras === 0 ? ' • <strong>Hoje</strong>' : diasAtras === 1 ? ' • Ontem' : ` • Há ${diasAtras} dias`}
           </div>
+          ${h.observacao ? `<div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">📝 ${h.observacao}</div>` : ''}
         </div>
-      `}).join('');
+      `).join('');
     }
 
-    // ==================== EXPORTAÇÃO ====================
+    function getTipoIcon(tipo) {
+      const icons = { 
+        rega: '💧', 
+        poda: '✂️', 
+        colheita: '🍊',
+        cadastro: '🌱'
+      };
+      return icons[tipo] || '📌';
+    }
+
+    // RENDERIZAR PLANTAS
+    function renderPlantas() {
+      const container = document.getElementById('plantasList');
+      const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
+      
+      if (plantas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada.<br>Carregue do sistema, importe do QField ou cadastre uma nova!</p></div>';
+        document.getElementById('plantCount').textContent = '📊 0 plantas';
+        return;
+      }
+      
+      // Filtro ativo
+      const filtroAtivo = document.querySelector('#filterGroup .filter-btn.active');
+      const tipoFiltro = filtroAtivo ? filtroAtivo.textContent.split('(')[0].trim() : 'Todas';
+      
+      let pFilt = plantas.filter(p => {
+        const matchSearch = p.nome.toLowerCase().includes(searchTerm) || 
+                           p.nomeId.toLowerCase().includes(searchTerm);
+        const matchTipo = tipoFiltro === 'Todas' || p.nome === tipoFiltro;
+        return matchSearch && matchTipo;
+      });
+      
+      if (pFilt.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p>Nenhuma planta encontrada</p></div>';
+        return;
+      }
+      
+      container.innerHTML = pFilt.map(p => `
+        <div class="plant-card" onclick="showPlantDetails(${p.id})">
+          <div class="plant-header">
+            <div class="plant-name">🌿 ${p.nome}</div>
+            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
+          </div>
+          <div class="plant-info">
+            <div>💧 Última rega: ${p.ultRega ? `${new Date(p.ultRega).toLocaleDateString('pt-BR')} (${diasDesde(p.ultRega)} dias)` : '❌ Não registrada'}</div>
+            <div>✂️ Última poda: ${p.ultPoda ? `${new Date(p.ultPoda).toLocaleDateString('pt-BR')} (${diasDesde(p.ultPoda)} dias)` : '❌ Não registrada'}</div>
+            <div>🍊 Última colheita: ${p.ultColh ? `${new Date(p.ultColh).toLocaleDateString('pt-BR')} (${diasDesde(p.ultColh)} dias)` : '❌ Não registrada'}</div>
+            ${p.dataPlantio ? `<div>🌱 Plantio: ${new Date(p.dataPlantio).toLocaleDateString('pt-BR')}</div>` : ''}
+            ${p.coordenadas ? `<div>📍 GPS: ${p.coordenadas}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('plantCount').textContent = `📊 ${plantas.length} plantas`;
+    }
+
+    // DETALHES DA PLANTA
+    function showPlantDetails(pid) {
+      const p = plantas.find(pl => pl.id === pid);
+      if (!p) return;
+      
+      const modal = document.getElementById('plantDetailsModal');
+      const title = document.getElementById('plantDetailsTitle');
+      const content = document.getElementById('plantDetailsContent');
+      
+      title.textContent = `${p.nome} #${p.nomeId}`;
+      
+      const historicoPlanta = historico.filter(h => h.plantaId === p.nomeId).reverse();
+      
+      content.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">📋 Informações</h3>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
+            <div style="margin-bottom: 0.5rem;"><strong>🏷️ ID:</strong> ${p.nomeId}</div>
+            <div style="margin-bottom: 0.5rem;"><strong>🌿 Espécie:</strong> ${p.nome}</div>
+            ${p.dataPlantio ? `<div style="margin-bottom: 0.5rem;"><strong>🌱 Plantio:</strong> ${new Date(p.dataPlantio).toLocaleDateString('pt-BR')}</div>` : ''}
+            ${p.idadeMeses ? `<div style="margin-bottom: 0.5rem;"><strong>📅 Idade:</strong> ${p.idadeMeses} meses</div>` : ''}
+            ${p.coordenadas ? `<div style="margin-bottom: 0.5rem;"><strong>📍 GPS:</strong> ${p.coordenadas}</div>` : ''}
+            ${p.responsavelPlantio ? `<div style="margin-bottom: 0.5rem;"><strong>👤 Plantada por:</strong> ${p.responsavelPlantio}</div>` : ''}
+            ${p.observacoes ? `<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #e5e7eb;"><strong>📝 Observações:</strong><br>${p.observacoes}</div>` : ''}
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">🕐 Últimas Ações</h3>
+          <div style="background: #f9fafb; padding: 1rem; border-radius: 8px; font-size: 0.9rem;">
+            <div style="margin-bottom: 0.5rem;"><strong>💧 Rega:</strong> ${p.ultRega ? `${new Date(p.ultRega).toLocaleDateString('pt-BR')} (${diasDesde(p.ultRega)} dias atrás)` : 'Nunca realizada'}</div>
+            <div style="margin-bottom: 0.5rem;"><strong>✂️ Poda:</strong> ${p.ultPoda ? `${new Date(p.ultPoda).toLocaleDateString('pt-BR')} (${diasDesde(p.ultPoda)} dias atrás)` : 'Nunca realizada'}</div>
+            <div><strong>🍊 Colheita:</strong> ${p.ultColh ? `${new Date(p.ultColh).toLocaleDateString('pt-BR')} (${diasDesde(p.ultColh)} dias atrás)` : 'Nunca realizada'}</div>
+          </div>
+        </div>
+        
+        ${historicoPlanta.length > 0 ? `
+          <div>
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">📜 Histórico (${historicoPlanta.length})</h3>
+            ${historicoPlanta.slice(0, 10).map(h => `
+              <div class="history-item" style="margin-bottom: 0.5rem;">
+                <div style="font-weight: 600; font-size: 0.85rem;">${getTipoIcon(h.tipo)} ${h.tipo.charAt(0).toUpperCase() + h.tipo.slice(1)}</div>
+                <div style="color: #6b7280; font-size: 0.75rem;">
+                  👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+                </div>
+              </div>
+            `).join('')}
+            ${historicoPlanta.length > 10 ? `<p style="color: #6b7280; font-size: 0.85rem; margin-top: 0.5rem;">... e mais ${historicoPlanta.length - 10} ações</p>` : ''}
+          </div>
+        ` : '<div class="info-box">📜 Nenhuma ação registrada ainda para esta planta</div>'}
+        
+        <div style="margin-top: 1.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+          <button class="btn btn-primary" onclick="closePlantDetails(); marcarFeito(${p.id}, 'rega')" style="margin: 0;">
+            💧 Regar Agora
+          </button>
+          <button class="btn btn-danger" onclick="deletarPlanta(${p.id})" style="margin: 0;">
+            🗑️ Excluir
+          </button>
+        </div>
+      `;
+      
+      modal.classList.add('active');
+    }
+
+    function closePlantDetails() {
+      document.getElementById('plantDetailsModal').classList.remove('active');
+    }
+
+    function deletarPlanta(pid) {
+      const p = plantas.find(pl => pl.id === pid);
+      if (!p) return;
+      
+      if (!confirm(`⚠️ Excluir ${p.nome} #${p.nomeId}?\n\nEsta ação não pode ser desfeita!`)) {
+        return;
+      }
+      
+      plantas = plantas.filter(pl => pl.id !== pid);
+      historico = historico.filter(h => h.plantaId !== p.nomeId);
+      
+      salvarDados();
+      closePlantDetails();
+      renderAll();
+      criarFiltros();
+      showToast(`🗑️ ${p.nome} #${p.nomeId} excluída`);
+    }
+
+    // RENDERIZAR STATS
+    function renderStats() {
+      document.getElementById('statTotal').textContent = plantas.length;
+      
+      let pend = 0;
+      let urg = 0;
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        const dP = diasDesde(p.ultPoda);
+        const dC = diasDesde(p.ultColh);
+        
+        if (dR === null || dR >= int.rega) {
+          pend++;
+          if (dR !== null && dR >= int.rega + 2) urg++;
+        }
+        if (dP === null || dP >= int.poda) pend++;
+        if (dC === null || dC >= int.colheita) pend++;
+      });
+      
+      document.getElementById('statPend').textContent = pend;
+      document.getElementById('statUrg').textContent = urg;
+      
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      document.getElementById('statEsp').textContent = esp.length;
+
+      // Resumo por espécie
+      const speciesSummary = document.getElementById('speciesSummary');
+      if (esp.length === 0) {
+        speciesSummary.innerHTML = '<div class="info-box">Nenhuma planta cadastrada</div>';
+      } else {
+        speciesSummary.innerHTML = esp.map(e => {
+          const plantas_esp = plantas.filter(p => p.nome === e);
+          return `<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between;"><strong>${e}</strong> <span>${plantas_esp.length} planta(s)</span></div>`;
+        }).join('');
+      }
+
+      // Taxa de conclusão
+      const totalHistorico = historico.length;
+      const hoje = new Date();
+      const hojeHistorico = historico.filter(h => {
+        const hData = new Date(h.data);
+        return Math.floor((hoje - hData) / (1000 * 60 * 60 * 24)) === 0;
+      }).length;
+      
+      const taxa = pend > 0 ? Math.round(((pend - urg) / pend) * 100) : 100;
+      document.getElementById('completionRate').innerHTML = `
+        <div style="background: #f9fafb; padding: 1rem; border-radius: 6px;">
+          <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">${taxa}%</div>
+          <div style="color: #6b7280; font-size: 0.9rem;">de conformidade</div>
+          <div style="color: #9ca3af; font-size: 0.85rem; margin-top: 0.5rem;">
+            ${hojeHistorico} ações hoje | ${totalHistorico} total
+          </div>
+        </div>
+      `;
+    }
+
+    // EXPORTAÇÃO
     function exportJSON() {
       const dados = {
         plantas: plantas,
-        plantasNovas: plantasNovas,
         historico: historico,
         config: config,
         perfis: perfis,
@@ -1644,60 +1840,59 @@
         versao: '4.0'
       };
       const json = JSON.stringify(dados, null, 2);
-      downloadFile(json, `sitio-ipiranga-backup-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      downloadFile(json, `sitio-ipiranga-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      showToast('📥 JSON exportado!');
     }
 
     function exportCSV() {
-      let csv = 'Planta,ID,Tipo,Data,Perfil,Observacoes\n';
+      let csv = 'Planta,ID,Tipo,Data,Perfil,Observacao\n';
       historico.forEach(h => {
         csv += `"${h.planta}","${h.plantaId}","${h.tipo}","${h.data}","${h.perfil}","${h.observacao || ''}"\n`;
       });
-      downloadFile(csv, `sitio-ipiranga-historico-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      downloadFile(csv, `sitio-ipiranga-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv');
+      showToast('📊 CSV exportado!');
     }
 
     function exportPDF() {
-      const todasPlantas = [...plantas, ...plantasNovas];
-      let pdfContent = 'SÍTIO IPIRANGA - RELATÓRIO v4.0\n';
-      pdfContent += '='.repeat(60) + '\n\n';
+      let pdfContent = 'SÍTIO IPIRANGA - RELATÓRIO\n';
+      pdfContent += '='.repeat(50) + '\n\n';
       pdfContent += `Data: ${new Date().toLocaleDateString('pt-BR')}\n`;
-      pdfContent += `Hora: ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
-      
-      pdfContent += 'RESUMO GERAL\n';
-      pdfContent += '-'.repeat(60) + '\n';
-      pdfContent += `Total de Plantas: ${todasPlantas.length}\n`;
-      pdfContent += `Plantas Sincronizadas: ${plantas.length}\n`;
-      pdfContent += `Plantas Novas (não sincronizadas): ${plantasNovas.length}\n`;
-      pdfContent += `Total de Ações Registradas: ${historico.length}\n\n`;
+      pdfContent += `Total de Plantas: ${plantas.length}\n\n`;
       
       pdfContent += 'PLANTAS CADASTRADAS\n';
-      pdfContent += '-'.repeat(60) + '\n';
-      todasPlantas.forEach(p => {
-        pdfContent += `${p.nome} (#${p.nomeId})${!p.sincronizado ? ' [NOVA]' : ''}\n`;
+      pdfContent += '-'.repeat(50) + '\n';
+      plantas.forEach(p => {
+        pdfContent += `${p.nome} (#${p.nomeId})\n`;
         pdfContent += `  Rega: ${p.ultRega ? new Date(p.ultRega).toLocaleDateString('pt-BR') : 'N/A'}\n`;
         pdfContent += `  Poda: ${p.ultPoda ? new Date(p.ultPoda).toLocaleDateString('pt-BR') : 'N/A'}\n`;
         pdfContent += `  Colheita: ${p.ultColh ? new Date(p.ultColh).toLocaleDateString('pt-BR') : 'N/A'}\n`;
-        if (p.coordenadas) {
-          pdfContent += `  GPS: ${p.coordenadas.lat.toFixed(6)}, ${p.coordenadas.lng.toFixed(6)}\n`;
-        }
-        if (p.observacoes) {
-          pdfContent += `  Obs: ${p.observacoes}\n`;
-        }
+        if (p.observacoes) pdfContent += `  Obs: ${p.observacoes}\n`;
         pdfContent += '\n';
       });
       
       pdfContent += '\nHISTÓRICO RECENTE (Últimas 30 ações)\n';
-      pdfContent += '-'.repeat(60) + '\n';
+      pdfContent += '-'.repeat(50) + '\n';
       historico.slice(-30).reverse().forEach(h => {
-        pdfContent += `${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId} - ${h.perfil}\n`;
-        pdfContent += `   ${new Date(h.data).toLocaleDateString('pt-BR')} ${new Date(h.data).toLocaleTimeString('pt-BR')}\n\n`;
+        pdfContent += `${getTipoIcon(h.tipo)} ${h.planta} - ${h.perfil} - ${new Date(h.data).toLocaleDateString('pt-BR')}\n`;
       });
       
       downloadFile(pdfContent, `sitio-ipiranga-relatorio-${new Date().toISOString().split('T')[0]}.txt`, 'text/plain');
+      showToast('📄 Relatório exportado!');
     }
 
     function downloadBackup() {
-      exportJSON();
-      alert('✅ Backup completo salvo!');
+      const backup = {
+        plantas: plantas,
+        historico: historico,
+        config: config,
+        perfis: perfis,
+        proximoId: proximoId,
+        dataSalvamento: new Date().toISOString(),
+        versao: '4.0'
+      };
+      const json = JSON.stringify(backup, null, 2);
+      downloadFile(json, `sitio-ipiranga-backup-${new Date().toISOString().split('T')[0]}.json`, 'application/json');
+      showToast('📦 Backup completo salvo!');
     }
 
     function downloadFile(content, filename, type) {
@@ -1712,135 +1907,74 @@
       URL.revokeObjectURL(url);
     }
 
-    // ==================== LIMPEZA DE DADOS ====================
-    function limparTodosDados() {
-      if (!confirm('⚠️ ATENÇÃO: Isso apagará TODOS os dados locais!\n\nPlantas, histórico, perfis e configurações serão perdidos.\n\nDeseja continuar?')) {
-        return;
-      }
-
-      if (!confirm('Tem CERTEZA ABSOLUTA? Esta ação não pode ser desfeita!')) {
-        return;
-      }
-
-      localStorage.clear();
-      plantas = [];
-      plantasNovas = [];
-      historico = [];
-      perfis = [];
-      perfilAtual = null;
-      
-      alert('✅ Todos os dados foram apagados. Recarregando...');
-      location.reload();
-    }
-
-    // ==================== RENDER ALL ====================
     function renderAll() {
-      const todasPlantas = [...plantas, ...plantasNovas];
-      
-      // Atualizar contadores
-      document.getElementById('plantCount').textContent = `📊 ${todasPlantas.length} plantas`;
-      document.getElementById('newPlantsCount').textContent = `🌱 ${plantasNovas.length} novas`;
-      
-      document.getElementById('syncTotal').textContent = todasPlantas.length;
-      document.getElementById('syncNovas').textContent = plantasNovas.length;
-      
-      // Atualizar aviso de não sincronizadas
-      const unsyncedWarning = document.getElementById('unsyncedWarning');
-      if (plantasNovas.length > 0) {
-        unsyncedWarning.style.display = 'block';
-        document.getElementById('unsyncedCount').textContent = plantasNovas.length;
-      } else {
-        unsyncedWarning.style.display = 'none';
-      }
-      
       renderAcoes();
       renderPlantas();
       renderHistorico();
-      renderPlantasNovas();
-      criarFiltros();
-      
-      // Checar ações urgentes
-      checarAcoesUrgentes();
+      renderStats();
     }
 
-    function checarAcoesUrgentes() {
-      const todasPlantas = [...plantas, ...plantasNovas];
-      let urgentes = 0;
-      
-      todasPlantas.forEach(p => {
-        const int = getIntervalos(p.nome);
-        const dR = diasDesde(p.ultRega);
-        if (dR !== null && dR >= int.rega + 2) urgentes++;
-      });
-      
-      if (urgentes > 0 && Notification.permission === 'granted') {
-        enviarNotificacao('Ações Urgentes!', `${urgentes} planta(s) com rega atrasada!`);
-      }
-    }
-
-    // ==================== INICIALIZAÇÃO ====================
+    // INICIALIZAÇÃO
     window.addEventListener('load', async () => {
       updateOnlineStatus();
       
-      // Verificar versão
+      // Compatibilidade de versão
       const versaoSalva = localStorage.getItem('sitio-versao');
-      if (versaoSalva && versaoSalva !== '4.0') {
-        if (confirm('🔄 Nova versão detectada! Deseja fazer backup antes de atualizar?')) {
-          downloadBackup();
-        }
+      if (versaoSalva !== '4.0') {
+        console.log('Atualizando para v4.0...');
+        localStorage.setItem('sitio-versao', '4.0');
       }
-      localStorage.setItem('sitio-versao', '4.0');
       
-      // Carregar dados
       loadPerfis();
       
       const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
       if (perfilSalvo) {
-        const perfil = perfis.find(p => p.id === parseInt(perfilSalvo));
-        if (perfil) {
-          selectProfile(perfil.id);
-        }
+        selectProfile(parseInt(perfilSalvo));
+      } else if (perfis.length > 0) {
+        selectProfile(perfis[0].id);
       }
       
-      // Carregar dados persistentes
+      loadConfig();
+      
+      // Carregar dados
       if (carregarDadosPersistentes()) {
+        criarFiltros();
         renderAll();
+        showToast('✅ Dados carregados!');
       } else {
-        // Tentar carregar do servidor
         await carregarDadosNativos();
       }
-      
-      // Auto-save a cada 30 segundos
-      setInterval(salvarDados, 30000);
-      
-      // Verificar ações urgentes a cada 1 hora
-      setInterval(checarAcoesUrgentes, 3600000);
+
+      // Verificar notificações pendentes
+      const acoesUrgentes = plantas.filter(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        return dR !== null && dR >= int.rega + 2;
+      }).length;
+
+      if (acoesUrgentes > 0 && Notification.permission === 'granted') {
+        enviarNotificacao('🚨 Ações Urgentes', `${acoesUrgentes} planta(s) precisam de atenção imediata!`);
+      }
+
+      // Data de hoje no campo de cadastro
+      document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
     });
+
+    // Auto-save a cada 30 segundos
+    setInterval(salvarDados, 30000);
+
+    // Verificar ações pendentes a cada hora
+    setInterval(() => {
+      const acoesUrgentes = plantas.filter(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        return dR !== null && dR >= int.rega + 2;
+      }).length;
+
+      if (acoesUrgentes > 0) {
+        showToast(`⚠️ ${acoesUrgentes} ações urgentes!`);
+      }
+    }, 3600000); // 1 hora
   </script>
 </body>
-</html>" onclick="exportJSON()" style="margin: 0;">📥 JSON</button>
-        <button class="btn btn-secondary" onclick="exportCSV()" style="margin: 0;">📊 CSV</button>
-        <button class="btn btn-secondary" onclick="exportPDF()" style="margin: 0;">📄 TXT</button>
-        <button class="btn btn-primary" onclick="downloadBackup()" style="margin: 0;">🔄 Backup</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">🗑️ Limpeza de Dados</div>
-      <button class="btn btn-danger" onclick="limparTodosDados()">
-        ⚠️ Limpar Todos os Dados
-      </button>
-      <div class="info-box warning" style="margin-top: 1rem;">
-        <strong>⚠️ Cuidado:</strong> Esta ação apagará TODOS os dados locais. Faça backup antes!
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal de Perfil -->
-  <div id="profileModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title">Novo Perfil de Usuário</div>
-      <input type="text" id="newProfileName" placeholder="Nome do usuário" class="input-field">
-      <div style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-primary" onclick="createProfile()" style="margin: 0;">Criar</button>
-        <button class="btn btn-secondary
+</html>
