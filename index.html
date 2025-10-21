@@ -782,32 +782,6 @@
         <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥭 Mangabeira</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
           <div>
-            <label style="font-size: 0.75rem;">💧 Rega</label>
-            <input type="number" id="mang_rega" value="7" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem;">✂️ Poda</label>
-            <input type="number" id="mang_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem;">🍊 Colheita</label>
-            <input type="number" id="mang_colh" value="90" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-      </div>
-
-      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌰 Cajueiro</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-          <div>
-            <label style="font-size: 0.75rem;">💧 Rega</label>
-            <input type="number" id="caju_rega" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem;">✂️ Poda</label>
-            <input type="number" id="caju_poda" value="365" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
             <label style="font-size: 0.75rem;">🍊 Colheita</label>
             <input type="number" id="caju_colh" value="60" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
           </div>
@@ -980,7 +954,6 @@
       githubConfig = { repo, token };
       localStorage.setItem('github-config', JSON.stringify(githubConfig));
       
-      // Testar conexão
       testarConexaoGitHub();
     }
 
@@ -1049,10 +1022,8 @@
       statusDot.classList.add('syncing');
 
       try {
-        // Gerar GeoJSON atualizado
         const geojson = gerarGeoJSON();
         
-        // Obter SHA do arquivo atual
         const fileResponse = await fetch(
           `https://api.github.com/repos/${githubConfig.repo}/contents/dados.geojson`,
           {
@@ -1069,7 +1040,6 @@
           sha = fileData.sha;
         }
         
-        // Atualizar arquivo
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(geojson, null, 2))));
         
         const updateResponse = await fetch(
@@ -1199,7 +1169,6 @@
           renderAll();
           showToast(`✅ ${plantas.length} plantas importadas do QField!`);
           
-          // Sincronizar automaticamente
           if (githubConfig.token) {
             sincronizarComGitHub();
           }
@@ -1209,6 +1178,45 @@
         }
       };
       reader.readAsText(file);
+    }
+
+    // CARREGAR DADOS DO GEOJSON
+    async function carregarDadosGeoJSON() {
+      try {
+        const response = await fetch('dados.geojson');
+        if (!response.ok) {
+          throw new Error('Arquivo não encontrado');
+        }
+        
+        const geojson = await response.json();
+        
+        if (geojson.features && Array.isArray(geojson.features)) {
+          plantas = geojson.features.map((f, index) => {
+            const p = f.properties;
+            const coords = f.geometry?.coordinates;
+            
+            return {
+              id: proximoId++,
+              nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem nome',
+              nomeId: p.ID || p.fid || `P${index + 1}`,
+              ultRega: p.ULTIMA_REGA || p.ultima_rega || p.IRRIGACAO_ORDINARIA || null,
+              ultPoda: p.ULTIMA_PODA || p.ultima_poda || p.DATA_PODA_FORMACAO_1 || null,
+              ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null,
+              dataPlantio: p.DATA_PLANTIO || p.data_plantio || null,
+              coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
+              observacoes: p.OBSERVACOES || p.observacoes || '',
+              cadastradoEm: p.CADASTRADO_EM || p.ATUALIZADO_EM || new Date().toISOString()
+            };
+          });
+          
+          salvarDados();
+          console.log(`✅ ${plantas.length} plantas carregadas do GeoJSON`);
+          return true;
+        }
+      } catch (error) {
+        console.log('ℹ️ Nenhum arquivo GeoJSON encontrado, iniciando vazio');
+        return false;
+      }
     }
 
     // PERFIS
@@ -1335,7 +1343,6 @@
 
       plantas.push(novaPlanta);
       
-      // Adicionar ao histórico
       historico.push({
         id: Math.random(),
         tipo: 'cadastro',
@@ -1351,12 +1358,10 @@
       
       showToast(`✅ ${especie} #${nomeId} cadastrada!`);
       
-      // Sincronizar automaticamente
       if (githubConfig.token) {
         await sincronizarComGitHub();
       }
       
-      // Limpar form
       document.getElementById('novaEspecie').value = '';
       document.getElementById('novoId').value = '';
       document.getElementById('coordenadas').value = '';
@@ -1398,7 +1403,6 @@
         config = JSON.parse(saved);
       }
       
-      // Carregar intervalos padrão
       document.getElementById('mang_rega').value = config.Mangabeira.rega;
       document.getElementById('mang_poda').value = config.Mangabeira.poda;
       document.getElementById('mang_colh').value = config.Mangabeira.colheita;
@@ -1415,7 +1419,6 @@
       document.getElementById('cac_poda').value = config.Cacau.poda;
       document.getElementById('cac_colh').value = config.Cacau.colheita;
       
-      // Renderizar espécies customizadas
       renderCustomSpecies();
     }
 
@@ -1467,7 +1470,6 @@
         return;
       }
       
-      // Verificar se já existe
       if (config[nome]) {
         alert('⚠️ Esta espécie já está cadastrada!');
         return;
@@ -1498,7 +1500,6 @@
     }
 
     function saveConfig() {
-      // Salvar espécies padrão
       config.Mangabeira = {
         rega: parseInt(document.getElementById('mang_rega').value),
         poda: parseInt(document.getElementById('mang_poda').value),
@@ -1523,7 +1524,6 @@
         colheita: parseInt(document.getElementById('cac_colh').value)
       };
       
-      // Salvar espécies customizadas
       const customSpecies = Object.keys(config).filter(k => 
         k !== 'default' && k !== 'Mangabeira' && k !== 'Cajueiro' && k !== 'Coqueiro' && k !== 'Cacau'
       );
@@ -1551,16 +1551,13 @@
     function getIntervalos(nome) {
       const n = nome.toLowerCase();
       
-      // Buscar exatamente pelo nome
       if (config[nome]) return config[nome];
       
-      // Buscar por correspondência
       if (n.includes('mangabeira')) return config.Mangabeira;
       if (n.includes('caju')) return config.Cajueiro;
       if (n.includes('coq')) return config.Coqueiro;
       if (n.includes('cacau')) return config.Cacau;
       
-      // Buscar por qualquer chave que contenha parte do nome
       const speciesKey = Object.keys(config).find(key => 
         key !== 'default' && nome.toLowerCase().includes(key.toLowerCase())
       );
@@ -1683,7 +1680,7 @@
           <div class="action-desc">${a.msg}</div>
           <div class="action-meta">Por: ${perfilAtual?.nome || '⚠️ Selecione perfil'}</div>
           <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
-            ✔ Marcar como feito
+            ✓ Marcar como feito
           </button>
         </div>
       `).join('');
@@ -1719,7 +1716,6 @@
       renderAll();
       showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
       
-      // Sincronizar automaticamente
       if (githubConfig.token) {
         await sincronizarComGitHub();
       }
@@ -1849,7 +1845,7 @@
     }
 
     // INICIALIZAÇÃO
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
       updateOnlineStatus();
       
       carregarConfigGitHub();
@@ -1860,7 +1856,12 @@
         selectProfile(parseInt(perfilSalvo));
       }
       
-      carregarDados();
+      const temDadosLocais = carregarDados();
+      
+      if (!temDadosLocais || plantas.length === 0) {
+        await carregarDadosGeoJSON();
+      }
+      
       renderAll();
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
@@ -1868,8 +1869,33 @@
       showToast('✅ App carregado!');
     });
 
-    // Auto-save
     setInterval(salvarDados, 30000);
   </script>
 </body>
-</html>
+</html>rem;">💧 Rega</label>
+            <input type="number" id="mang_rega" value="7" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="mang_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">🍊 Colheita</label>
+            <input type="number" id="mang_colh" value="90" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌰 Cajueiro</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem;">💧 Rega</label>
+            <input type="number" id="caju_rega" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="caju_poda" value="365" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75
