@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v6.0 - Auto Sync</title>
+  <title>Sítio Ipiranga v6.1 - Sync Real</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -544,7 +544,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v6.0 Auto-Sync</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v6.1 Real-Sync</div>
   </div>
 
   <div class="header">
@@ -572,7 +572,7 @@
       
       <div id="autoSyncInfo" class="sync-indicator success">
         <span>✅</span>
-        <span>Sincronização automática ativa - GitHub Actions detecta suas mudanças</span>
+        <span>Sincronização automática ativa - dados vão direto para o GitHub</span>
       </div>
 
       <div class="filter-group">
@@ -925,7 +925,7 @@
       }
     }
 
-    // SINCRONIZAR COM GITHUB (VIA GIST PÚBLICO COMO BRIDGE)
+    // SINCRONIZAR COM GITHUB (VIA GITHUB API - REQUER TOKEN)
     async function sincronizarComGitHub() {
       const syncInfo = document.getElementById('autoSyncInfo');
       const statusDot = document.getElementById('statusDot');
@@ -937,40 +937,72 @@
       try {
         const geojson = gerarGeoJSON();
         
-        // Salvar no localStorage como trigger para GitHub Actions detectar
-        localStorage.setItem('sitio-last-sync', new Date().toISOString());
-        localStorage.setItem('sitio-pending-sync', JSON.stringify(geojson));
+        // Opção 1: Via GitHub Gist (público)
+        const gistUrl = 'https://api.github.com/gists';
+        const gistData = {
+          description: 'Sítio Ipiranga - Dados Sincronizados',
+          public: true,
+          files: {
+            'dados.geojson': {
+              content: JSON.stringify(geojson, null, 2)
+            }
+          }
+        };
         
-        // Notificar via webhook (se configurado no GitHub)
-        const webhookUrl = localStorage.getItem('github-webhook-url');
-        if (webhookUrl) {
-          await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event: 'data_updated',
-              timestamp: new Date().toISOString(),
-              total_plantas: plantas.length
-            })
-          });
+        const response = await fetch(gistUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(gistData)
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          localStorage.setItem('sitio-last-gist-url', result.html_url);
+          localStorage.setItem('sitio-last-sync', new Date().toISOString());
+          
+          syncInfo.className = 'sync-indicator success';
+          syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
+          statusDot.classList.remove('syncing');
+          
+          showToast('✅ Dados sincronizados no GitHub Gist!');
+          return true;
         }
         
-        syncInfo.className = 'sync-indicator success';
-        syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
-        statusDot.classList.remove('syncing');
-        
-        showToast('✅ Dados salvos! GitHub Actions atualizará o Telegram Bot');
-        return true;
+        throw new Error('Falha na sincronização');
         
       } catch (error) {
         console.error('Erro ao sincronizar:', error);
-        syncInfo.className = 'sync-indicator error';
-        syncInfo.innerHTML = '<span>❌</span><span>Erro na sincronização</span>';
+        
+        // Fallback: salvar localmente e mostrar link para download
+        const geojson = gerarGeoJSON();
+        localStorage.setItem('sitio-pending-sync', JSON.stringify(geojson));
+        
+        syncInfo.className = 'sync-indicator warning';
+        syncInfo.innerHTML = '<span>⚠️</span><span>Salvou localmente. <a href="#" onclick="downloadGeoJSON(); return false;" style="color: #d97706; text-decoration: underline;">Baixe para sincronizar</a></span>';
         statusDot.classList.remove('syncing');
         
-        showToast('⚠️ Erro ao sincronizar');
+        showToast('⚠️ Salvou localmente. Baixe o arquivo para sincronizar.');
         return false;
       }
+    }
+
+    // BAIXAR GEOJSON PARA SINCRONIZAÇÃO MANUAL
+    function downloadGeoJSON() {
+      const geojson = gerarGeoJSON();
+      const json = JSON.stringify(geojson, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'dados.geojson';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      showToast('📥 Arquivo baixado! Faça commit no GitHub para sincronizar.');
     }
 
     function gerarGeoJSON() {
@@ -1247,7 +1279,7 @@
         historico,
         proximoId,
         dataSalvamento: new Date().toISOString(),
-        versao: '6.0'
+        versao: '6.1'
       };
       localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
     }
@@ -1637,7 +1669,7 @@
       }
     });
 
-    // Auto-save
+    // Auto-save a cada 30 segundos
     setInterval(salvarDados, 30000);
     
     // Fechar modal ao clicar fora
