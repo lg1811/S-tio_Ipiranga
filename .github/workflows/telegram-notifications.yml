@@ -1,4 +1,4 @@
-name: Notificações Telegram - Sincronização Automática
+name: Notificações Telegram - Sincronização Automática v2
 
 on:
   push:
@@ -46,12 +46,21 @@ jobs:
           HORA_EXIBICAO=$(date +%H:%M)
           HORA_NUM=$(date +%H)
           
+          echo "🕒 Processando dados em $DATA_EXIBICAO às $HORA_EXIBICAO (Brasília)"
+          echo "📂 Lendo arquivo: dados.geojson"
+          
+          # Verificar se arquivo existe
+          if [ ! -f "dados.geojson" ]; then
+            echo "❌ Erro: arquivo dados.geojson não encontrado!"
+            exit 1
+          fi
+          
           # Intervalos por espécie (dias)
           declare -A REGA_INT=( ["Mangabeira"]=7 ["Cajueiro"]=10 ["Coqueiro"]=5 ["Cacau"]=3 ["default"]=7 )
           declare -A PODA_INT=( ["Mangabeira"]=180 ["Cajueiro"]=365 ["Coqueiro"]=730 ["Cacau"]=180 ["default"]=180 )
           declare -A COLH_INT=( ["Mangabeira"]=90 ["Cajueiro"]=60 ["Coqueiro"]=30 ["Cacau"]=120 ["default"]=90 )
           
-          # Função para calcular dias
+          # Função para calcular dias desde uma data
           dias_desde() {
             if [ -z "$1" ] || [ "$1" = "null" ]; then
               echo "999"
@@ -60,7 +69,7 @@ jobs:
             fi
           }
           
-          # Função para obter intervalo
+          # Função para obter intervalo baseado na espécie
           get_intervalo() {
             local especie=$1
             local tipo=$2
@@ -99,14 +108,16 @@ jobs:
             echo "$valor"
           }
           
-          # Arrays de ações
-          REGA_URG=""
-          REGA_NORM=""
-          PODA=""
-          COLHEITA=""
+          # Criar arquivo temporário para ações
+          > /tmp/acoes.txt
           
-          # Processar cada planta
+          # Contador de plantas processadas
+          TOTAL_PLANTAS=0
+          
+          # Processar cada planta do GeoJSON
           jq -c '.features[]' dados.geojson | while read -r feature; do
+            TOTAL_PLANTAS=$((TOTAL_PLANTAS + 1))
+            
             ID=$(echo "$feature" | jq -r '.properties.ID // .properties.fid // "S/N"')
             NOME=$(echo "$feature" | jq -r '.properties.NOME_POPULAR // .properties.nome_popular // "Planta"')
             ULT_REGA=$(echo "$feature" | jq -r '.properties.ULTIMA_REGA // .properties.ultima_rega // "null"')
@@ -118,7 +129,7 @@ jobs:
             DIAS_R=$(dias_desde "$ULT_REGA")
             
             if [ "$DIAS_R" -ge $((INT_R + 2)) ]; then
-              echo "REGA_URG:$NOME #$ID - Atrasada $DIAS_R dias" >> /tmp/acoes.txt
+              echo "REGA_URG:$NOME #$ID - Atrasada $((DIAS_R - INT_R)) dias!" >> /tmp/acoes.txt
             elif [ "$DIAS_R" -ge "$INT_R" ]; then
               if [ "$ULT_REGA" = "null" ]; then
                 echo "REGA_NORM:$NOME #$ID - Nunca foi regada" >> /tmp/acoes.txt
@@ -152,8 +163,9 @@ jobs:
             fi
           done
           
-          # Montar mensagem
+          # Contar total de plantas
           TOTAL=$(jq '.features | length' dados.geojson)
+          echo "✅ Processadas $TOTAL plantas"
           
           # Saudação por horário (horário de Brasília)
           if [ "$HORA_NUM" -lt 12 ]; then
@@ -174,10 +186,12 @@ jobs:
             TOTAL_ACOES=0
           fi
           
+          echo "📊 Total de ações pendentes: $TOTAL_ACOES"
+          
           # Detectar se foi acionado por commit (push)
           if [ "${{ github.event_name }}" = "push" ]; then
-            COMMIT_MSG=$(git log -1 --pretty=%B)
-            MESSAGE="${MESSAGE}🔄 *Atualização automática*%0A"
+            COMMIT_MSG=$(git log -1 --pretty=%B || echo "Atualização automática")
+            MESSAGE="${MESSAGE}📄 *Atualização automática*%0A"
             MESSAGE="${MESSAGE}Dados sincronizados do PWA%0A%0A"
           fi
           
@@ -194,7 +208,12 @@ jobs:
             PODA_COUNT=$(grep -c "^PODA:" /tmp/acoes.txt 2>/dev/null || echo 0)
             COLH_COUNT=$(grep -c "^COLHEITA:" /tmp/acoes.txt 2>/dev/null || echo 0)
             
-            # Mostrar apenas resumo se muitas ações
+            echo "  🚨 Urgentes: $URG_COUNT"
+            echo "  💧 Rega: $NORM_COUNT"
+            echo "  ✂️ Poda: $PODA_COUNT"
+            echo "  🍊 Colheita: $COLH_COUNT"
+            
+            # Mostrar apenas resumo se muitas ações (mais de 15)
             if [ "$TOTAL_ACOES" -gt 15 ]; then
               [ "$URG_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}🚨 URGENTE: ${URG_COUNT} rega(s) atrasada(s)%0A"
               [ "$NORM_COUNT" -gt 0 ] && MESSAGE="${MESSAGE}💧 Rega: ${NORM_COUNT} planta(s)%0A"
@@ -257,14 +276,22 @@ jobs:
           # Limpar arquivo temporário
           rm -f /tmp/acoes.txt
           
-          # Enviar notificação
-          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+          # Enviar notificação para o Telegram
+          echo "📤 Enviando notificação para o Telegram..."
+          
+          RESPONSE=$(curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="${MESSAGE}" \
-            -d parse_mode="Markdown"
+            -d parse_mode="Markdown")
           
-          echo "Notificação enviada com sucesso!"
-          echo "Horário: ${DATA_EXIBICAO} às ${HORA_EXIBICAO} (Brasília)"
+          if echo "$RESPONSE" | jq -e '.ok' > /dev/null 2>&1; then
+            echo "✅ Notificação enviada com sucesso!"
+            echo "🕒 Horário: ${DATA_EXIBICAO} às ${HORA_EXIBICAO} (Brasília)"
+          else
+            echo "❌ Erro ao enviar notificação:"
+            echo "$RESPONSE" | jq '.'
+            exit 1
+          fi
           
       - name: Resumo estatístico (apenas 06h)
         if: github.event.schedule == '0 9 * * *'
@@ -289,7 +316,11 @@ jobs:
           [ "$CACAU" -gt 0 ] && STATS="${STATS}🍫 Cacau: ${CACAU}%0A"
           [ "$MANGABEIRA" -gt 0 ] && STATS="${STATS}🥭 Mangabeira: ${MANGABEIRA}%0A"
           
+          echo "📊 Enviando resumo estatístico..."
+          
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             -d text="${STATS}" \
             -d parse_mode="Markdown"
+          
+          echo "✅ Resumo enviado!"
