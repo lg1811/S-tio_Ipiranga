@@ -657,18 +657,22 @@
       <div class="section-title">🌱 Minhas Plantas</div>
       
       <div class="info-box">
-        💾 Sincronização automática com GitHub ativa
+        💾 Dados salvos localmente. Use os botões abaixo para importar/exportar.
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="recarregarDados()">
+          🔄 Recarregar Dados
+        </button>
+        
         <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
           📤 Importar QField
         </button>
-        
-        <button class="btn btn-secondary" onclick="exportarParaQField()">
-          📥 Exportar QField
-        </button>
       </div>
+
+      <button class="btn btn-secondary" onclick="exportarParaQField()" style="margin-bottom: 1rem;">
+        📥 Exportar QField
+      </button>
       
       <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)" style="display: none;">
       
@@ -797,7 +801,22 @@
       </div>
 
       <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌰 Cajueiro</h3>
+        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥭 Mangabeira</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem;">💧 Rega</label>
+            <input type="number" id="mang_rega" value="7" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">✂️ Poda</label>
+            <input type="number" id="mang_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem;">🍊 Colheita</label>
+            <input type="number" id="mang_colh" value="90" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          </div>
+        </div>
+      </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
           <div>
             <label style="font-size: 0.75rem;">💧 Rega</label>
@@ -1854,6 +1873,7 @@
       
       carregarConfigGitHub();
       loadPerfis();
+      loadConfig();
       
       const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
       if (perfilSalvo) {
