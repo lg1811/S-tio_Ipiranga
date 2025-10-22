@@ -657,12 +657,12 @@
       <div class="section-title">🌱 Minhas Plantas</div>
       
       <div class="info-box">
-        💾 Dados salvos localmente. Use os botões abaixo para importar/exportar.
+        💾 Dados salvos localmente. Use os botões abaixo para gerenciar.
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
         <button class="btn btn-primary" onclick="recarregarDados()">
-          🔄 Recarregar Dados
+          🔄 Recarregar do Servidor
         </button>
         
         <button class="btn btn-secondary" onclick="document.getElementById('fileInput').click()">
@@ -670,9 +670,15 @@
         </button>
       </div>
 
-      <button class="btn btn-secondary" onclick="exportarParaQField()" style="margin-bottom: 1rem;">
-        📥 Exportar QField
-      </button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+        <button class="btn btn-secondary" onclick="exportarParaQField()">
+          📥 Exportar QField
+        </button>
+
+        <button class="btn btn-danger" onclick="limparDados()">
+          🗑️ Limpar Dados
+        </button>
+      </div>
       
       <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)" style="display: none;">
       
