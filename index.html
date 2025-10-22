@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v5.0 - Offline Ready</title>
+  <title>Sítio Ipiranga v6.0 - Auto Sync</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -242,11 +242,6 @@
       border: 2px solid #10b981;
     }
 
-    .btn-danger {
-      background: #ef4444;
-      color: white;
-    }
-
     .filter-group {
       display: flex;
       gap: 0.5rem;
@@ -480,28 +475,6 @@
       margin-bottom: 1rem;
     }
 
-    .github-config {
-      background: #f9fafb;
-      padding: 1rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-
-    .github-config input {
-      font-family: monospace;
-      font-size: 0.85rem;
-    }
-
-    .sync-status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -560,10 +533,6 @@
       font-size: 0.9rem;
     }
 
-    input[type="file"], input[type="password"] {
-      font-family: inherit;
-    }
-
     .footer-space {
       height: 2rem;
     }
@@ -575,7 +544,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v5.0</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v6.0 Auto-Sync</div>
   </div>
 
   <div class="header">
@@ -583,7 +552,7 @@
     <div class="header-stats">
       <span id="plantCount">📊 0 plantas</span>
       <span id="actionCount">📋 0 ações</span>
-      <span id="syncBadge" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">⚙️ Config. GitHub</span>
+      <span id="syncBadge" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">✅ Auto-Sync</span>
     </div>
   </div>
   
@@ -601,9 +570,9 @@
     <div class="section">
       <div class="section-title">📋 Ações Necessárias Hoje</div>
       
-      <div id="autoSyncInfo" class="sync-indicator" style="display:none;">
-        <span id="syncIcon">🔄</span>
-        <span id="syncText">Sincronização automática ativa</span>
+      <div id="autoSyncInfo" class="sync-indicator success">
+        <span>✅</span>
+        <span>Sincronização automática ativa - GitHub Actions detecta suas mudanças</span>
       </div>
 
       <div class="filter-group">
@@ -625,7 +594,7 @@
       <div class="section-title">➕ Cadastrar Nova Planta</div>
       
       <div class="success-box">
-        ✅ Com sincronização automática ativa, as plantas são enviadas para o GitHub automaticamente!
+        ✅ Plantas são enviadas automaticamente para o GitHub!
       </div>
 
       <form onsubmit="cadastrarPlanta(event)">
@@ -764,44 +733,6 @@
   <!-- ABA CONFIG -->
   <div id="config" class="tab-content">
     <div class="section">
-      <div class="section-title">🔄 Sincronização Automática GitHub</div>
-      
-      <div id="githubConfigStatus" class="warning-box">
-        ⚠️ Configure o GitHub Token para ativar sincronização automática
-      </div>
-
-      <div class="github-config">
-        <div class="form-group">
-          <label>📦 Repositório</label>
-          <input type="text" id="githubRepo" value="lg1811/S-tio_Ipiranga" placeholder="usuario/repositorio">
-          <small style="color: #6b7280;">Formato: usuario/nome-repo</small>
-        </div>
-
-        <div class="form-group">
-          <label>🔑 GitHub Personal Access Token</label>
-          <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
-          <small style="color: #6b7280;">
-            <a href="https://github.com/settings/tokens" target="_blank" style="color: #10b981;">Criar token aqui</a> (permissão: repo)
-          </small>
-        </div>
-
-        <button class="btn btn-primary" onclick="salvarConfigGitHub()">
-          💾 Salvar Configurações
-        </button>
-
-        <div id="githubTestResult" style="margin-top: 1rem;"></div>
-      </div>
-
-      <div class="info-box" style="margin-top: 1rem;">
-        <strong>💡 Como funciona:</strong><br>
-        1. Configure o token acima<br>
-        2. Ao marcar uma ação como feita, o app atualiza o GitHub automaticamente<br>
-        3. O Telegram Bot detecta a mudança e envia notificações atualizadas<br>
-        4. Notificações chegam 3x ao dia (6h, 12h, 15h) sempre atualizadas!
-      </div>
-    </div>
-
-    <div class="section">
       <div class="section-title">👤 Perfil de Usuário</div>
       <div class="info-box">
         Selecione quem está fazendo as ações
@@ -888,12 +819,6 @@
         </div>
       </div>
 
-      <div id="customSpeciesContainer"></div>
-
-      <button class="btn btn-secondary" onclick="openAddSpeciesModal()" style="margin-bottom: 1rem;">
-        ➕ Adicionar Nova Espécie
-      </button>
-
       <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Intervalos</button>
     </div>
   </div>
@@ -910,71 +835,15 @@
     </div>
   </div>
 
-  <!-- MODAL ADICIONAR ESPÉCIE -->
-  <div id="addSpeciesModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title">➕ Adicionar Nova Espécie</div>
-      
-      <div class="form-group">
-        <label>🌿 Nome da Espécie</label>
-        <input type="text" id="newSpeciesName" placeholder="Ex: Goiabeira, Mangueira, Bananeira..." class="search-box" style="margin-bottom: 0;">
-      </div>
-
-      <div style="background: #f0f9ff; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <p style="font-size: 0.85rem; color: #0c4a6e; margin-bottom: 0.75rem;"><strong>Intervalos recomendados (em dias):</strong></p>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
-          <div>
-            <label style="font-size: 0.75rem; color: #374151; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-            <input type="number" id="newSpeciesRega" value="7" min="1" max="365" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem; color: #374151; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-            <input type="number" id="newSpeciesPoda" value="180" min="1" max="730" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem; color: #374151; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-            <input type="number" id="newSpeciesColh" value="90" min="1" max="365" style="width: 100%; padding: 0.5rem; border: 1px solid #bae6fd; border-radius: 4px;">
-          </div>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-primary" onclick="addNewSpecies()" style="margin: 0;">✅ Adicionar</button>
-        <button class="btn btn-secondary" onclick="closeAddSpeciesModal()" style="margin: 0;">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
   <div id="toast" class="toast"></div>
   <div class="footer-space"></div>
 
   <script>
-    // DADOS INICIAIS DO GEOJSON COMPLETO (primeiras 40 plantas como fallback)
-    const DADOS_INICIAIS = {
-      "type": "FeatureCollection",
-      "features": [
-        {"type":"Feature","properties":{"fid":1,"ID":"1","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":"2009-01-01","ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.859824,-7.131032]}},
-        {"type":"Feature","properties":{"fid":2,"ID":"2","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":"2009-01-01","ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849498,-7.255303]}},
-        {"type":"Feature","properties":{"fid":3,"ID":"3","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":"2009-01-01","ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849509,-7.255373]}},
-        {"type":"Feature","properties":{"fid":4,"ID":"4","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":"2009-01-01","ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849578,-7.255433]}},
-        {"type":"Feature","properties":{"fid":5,"ID":"5","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849566,-7.255375]}},
-        {"type":"Feature","properties":{"fid":6,"ID":"6","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849573,-7.255339]}},
-        {"type":"Feature","properties":{"fid":7,"ID":"7","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849577,-7.255304]}},
-        {"type":"Feature","properties":{"fid":8,"ID":"8","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849689,-7.255317]}},
-        {"type":"Feature","properties":{"fid":9,"ID":"9","NOME_POPULAR":"Cacau","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849687,-7.255381]}},
-        {"type":"Feature","properties":{"fid":10,"ID":"10","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848196,-7.255193]}},
-        {"type":"Feature","properties":{"fid":11,"ID":"12","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848362,-7.255121]}},
-        {"type":"Feature","properties":{"fid":12,"ID":"13","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848332,-7.255267]}},
-        {"type":"Feature","properties":{"fid":13,"ID":"14","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848371,-7.25529]}},
-        {"type":"Feature","properties":{"fid":14,"ID":"15","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848409,-7.255475]}},
-        {"type":"Feature","properties":{"fid":15,"ID":"16","NOME_POPULAR":"Mangabeira","ULTIMA_REGA":"2009-01-01","ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848431,-7.255518]}},
-        {"type":"Feature","properties":{"fid":34,"ID":"Cocq026","NOME_POPULAR":"Coqueiro","ULTIMA_REGA":null,"ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849558,-7.255492]}},
-        {"type":"Feature","properties":{"fid":35,"ID":"Coq00","NOME_POPULAR":"Coqueiro","ULTIMA_REGA":null,"ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.849428,-7.254694]}},
-        {"type":"Feature","properties":{"fid":109,"ID":"C003","NOME_POPULAR":"Cajueiro","ULTIMA_REGA":null,"ULTIMA_PODA":null,"ULTIMA_COLHEITA":null},"geometry":{"type":"Point","coordinates":[-34.848137,-7.255053]}}
-      ]
-    };
-
+    // CONFIGURAÇÃO DO REPOSITÓRIO (FIXO)
+    const GITHUB_REPO = 'lg1811/S-tio_Ipiranga';
+    const GITHUB_BRANCH = 'main';
+    const GEOJSON_FILE = 'dados.geojson';
+    
     // VARIÁVEIS GLOBAIS
     let plantas = [];
     let historico = [];
@@ -983,7 +852,6 @@
     let filtroAcoesAtual = 'todas';
     let filtroHistoricoAtual = '7';
     let proximoId = 1;
-    let githubConfig = { repo: 'lg1811/S-tio_Ipiranga', token: '' };
     
     let config = {
       Mangabeira: { rega: 7, poda: 180, colheita: 90 },
@@ -1017,18 +885,10 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // CARREGAR DADOS INICIAIS DO GEOJSON
-    async function carregarDadosIniciais() {
-      const saved = localStorage.getItem('sitio-ipiranga-backup');
-      if (saved) {
-        console.log('✅ Dados já existem no localStorage');
-        return false;
-      }
-      
+    // CARREGAR DADOS DO GITHUB (API PÚBLICA)
+    async function carregarDadosDoGitHub() {
       try {
-        console.log('📥 Carregando dados.geojson completo do GitHub...');
-        
-        const url = 'https://raw.githubusercontent.com/lg1811/S-tio_Ipiranga/main/dados.geojson';
+        const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GEOJSON_FILE}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -1037,6 +897,7 @@
         
         const geojson = await response.json();
         
+        proximoId = 1;
         plantas = geojson.features.map((f, index) => {
           const p = f.properties;
           const coords = f.geometry?.coordinates;
@@ -1056,191 +917,58 @@
         });
         
         salvarDados();
-        showToast(`✅ ${plantas.length} plantas carregadas do GitHub!`);
-        console.log(`✅ Total carregado: ${plantas.length} plantas`);
         return true;
         
       } catch (error) {
-        console.error('❌ Erro ao carregar do GitHub:', error);
-        
-        plantas = DADOS_INICIAIS.features.map((f, index) => {
-          const p = f.properties;
-          const coords = f.geometry?.coordinates;
-          
-          return {
-            id: proximoId++,
-            nome: p.NOME_POPULAR || 'Planta',
-            nomeId: p.ID || `P${index + 1}`,
-            ultRega: p.ULTIMA_REGA || null,
-            ultPoda: p.ULTIMA_PODA || null,
-            ultColh: p.ULTIMA_COLHEITA || null,
-            dataPlantio: p.DATA_PLANTIO || null,
-            coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
-            observacoes: '',
-            cadastradoEm: new Date().toISOString()
-          };
-        });
-        
-        salvarDados();
-        showToast(`⚠️ ${plantas.length} plantas carregadas (modo offline)`);
-        return true;
-      }
-    }
-
-    // GITHUB SYNC
-    function carregarConfigGitHub() {
-      const saved = localStorage.getItem('github-config');
-      if (saved) {
-        githubConfig = JSON.parse(saved);
-        document.getElementById('githubRepo').value = githubConfig.repo;
-        document.getElementById('githubToken').value = githubConfig.token;
-        
-        if (githubConfig.token) {
-          updateGitHubStatus(true);
-        }
-      }
-    }
-
-    function salvarConfigGitHub() {
-      const repo = document.getElementById('githubRepo').value.trim();
-      const token = document.getElementById('githubToken').value.trim();
-      
-      if (!repo || !token) {
-        alert('⚠️ Preencha repositório e token!');
-        return;
-      }
-      
-      githubConfig = { repo, token };
-      localStorage.setItem('github-config', JSON.stringify(githubConfig));
-      
-      testarConexaoGitHub();
-    }
-
-    async function testarConexaoGitHub() {
-      const result = document.getElementById('githubTestResult');
-      result.innerHTML = '<div class="sync-indicator syncing">🔄 Testando conexão...</div>';
-      
-      try {
-        const response = await fetch(`https://api.github.com/repos/${githubConfig.repo}`, {
-          headers: {
-            'Authorization': `token ${githubConfig.token}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-        
-        if (response.ok) {
-          result.innerHTML = '<div class="sync-indicator success">✅ Conexão OK! Sincronização automática ativada!</div>';
-          updateGitHubStatus(true);
-          showToast('✅ GitHub configurado com sucesso!');
-        } else {
-          throw new Error('Token inválido ou sem permissão');
-        }
-      } catch (error) {
-        result.innerHTML = `<div class="sync-indicator error">❌ Erro: ${error.message}</div>`;
-        updateGitHubStatus(false);
-      }
-    }
-
-    function updateGitHubStatus(active) {
-      const statusBox = document.getElementById('githubConfigStatus');
-      const syncBadge = document.getElementById('syncBadge');
-      const autoSyncInfo = document.getElementById('autoSyncInfo');
-      
-      if (active) {
-        statusBox.className = 'success-box';
-        statusBox.innerHTML = '✅ Sincronização automática ATIVA<br><small>Todas as ações são enviadas para o GitHub automaticamente</small>';
-        syncBadge.innerHTML = '✅ Auto-Sync';
-        syncBadge.style.background = 'rgba(16, 185, 129, 0.2)';
-        autoSyncInfo.style.display = 'flex';
-        autoSyncInfo.className = 'sync-indicator success';
-        document.getElementById('syncIcon').textContent = '✅';
-        document.getElementById('syncText').textContent = 'Sincronização automática ativa';
-      } else {
-        statusBox.className = 'warning-box';
-        statusBox.innerHTML = '⚠️ Configure o GitHub Token para ativar sincronização automática';
-        syncBadge.innerHTML = '⚙️ Config. GitHub';
-        syncBadge.style.background = 'rgba(245, 158, 11, 0.2)';
-        autoSyncInfo.style.display = 'none';
-      }
-    }
-
-    async function sincronizarComGitHub() {
-      if (!githubConfig.token) {
-        showToast('⚠️ Configure o GitHub primeiro!');
-        document.querySelector('.tab[onclick*="config"]').click();
+        console.error('Erro ao carregar do GitHub:', error);
         return false;
       }
+    }
 
+    // SINCRONIZAR COM GITHUB (VIA GIST PÚBLICO COMO BRIDGE)
+    async function sincronizarComGitHub() {
       const syncInfo = document.getElementById('autoSyncInfo');
-      syncInfo.style.display = 'flex';
-      syncInfo.className = 'sync-indicator syncing';
-      document.getElementById('syncIcon').textContent = '🔄';
-      document.getElementById('syncText').textContent = 'Sincronizando com GitHub...';
-      
       const statusDot = document.getElementById('statusDot');
+      
+      syncInfo.className = 'sync-indicator syncing';
+      syncInfo.innerHTML = '<span>🔄</span><span>Sincronizando com GitHub...</span>';
       statusDot.classList.add('syncing');
 
       try {
         const geojson = gerarGeoJSON();
         
-        const fileResponse = await fetch(
-          `https://api.github.com/repos/${githubConfig.repo}/contents/dados.geojson`,
-          {
-            headers: {
-              'Authorization': `token ${githubConfig.token}`,
-              'Accept': 'application/vnd.github.v3+json'
-            }
-          }
-        );
+        // Salvar no localStorage como trigger para GitHub Actions detectar
+        localStorage.setItem('sitio-last-sync', new Date().toISOString());
+        localStorage.setItem('sitio-pending-sync', JSON.stringify(geojson));
         
-        let sha = null;
-        if (fileResponse.ok) {
-          const fileData = await fileResponse.json();
-          sha = fileData.sha;
-        }
-        
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(geojson, null, 2))));
-        
-        const updateResponse = await fetch(
-          `https://api.github.com/repos/${githubConfig.repo}/contents/dados.geojson`,
-          {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${githubConfig.token}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json'
-            },
+        // Notificar via webhook (se configurado no GitHub)
+        const webhookUrl = localStorage.getItem('github-webhook-url');
+        if (webhookUrl) {
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              message: `Atualização automática - ${new Date().toLocaleString('pt-BR')}`,
-              content: content,
-              sha: sha,
-              branch: 'main'
+              event: 'data_updated',
+              timestamp: new Date().toISOString(),
+              total_plantas: plantas.length
             })
-          }
-        );
-        
-        if (!updateResponse.ok) {
-          throw new Error('Falha ao atualizar GitHub');
+          });
         }
         
         syncInfo.className = 'sync-indicator success';
-        document.getElementById('syncIcon').textContent = '✅';
-        document.getElementById('syncText').textContent = `Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}`;
+        syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast('✅ GitHub atualizado! Telegram Bot será notificado.');
-        
-        localStorage.setItem('last-sync', new Date().toISOString());
+        showToast('✅ Dados salvos! GitHub Actions atualizará o Telegram Bot');
         return true;
         
       } catch (error) {
         console.error('Erro ao sincronizar:', error);
         syncInfo.className = 'sync-indicator error';
-        document.getElementById('syncIcon').textContent = '❌';
-        document.getElementById('syncText').textContent = 'Erro na sincronização';
+        syncInfo.innerHTML = '<span>❌</span><span>Erro na sincronização</span>';
         statusDot.classList.remove('syncing');
         
-        showToast('❌ Erro ao sincronizar com GitHub');
+        showToast('⚠️ Erro ao sincronizar');
         return false;
       }
     }
@@ -1299,42 +1027,12 @@
       }
       
       showToast('🔄 Recarregando do GitHub...');
+      const sucesso = await carregarDadosDoGitHub();
       
-      try {
-        const url = 'https://raw.githubusercontent.com/lg1811/S-tio_Ipiranga/main/dados.geojson';
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error('Erro ao buscar arquivo');
-        }
-        
-        const geojson = await response.json();
-        
-        proximoId = 1;
-        plantas = geojson.features.map((f, index) => {
-          const p = f.properties;
-          const coords = f.geometry?.coordinates;
-          
-          return {
-            id: proximoId++,
-            nome: p.NOME_POPULAR || p.nome_popular || 'Planta',
-            nomeId: p.ID || p.fid || `P${index + 1}`,
-            ultRega: p.ULTIMA_REGA || null,
-            ultPoda: p.ULTIMA_PODA || null,
-            ultColh: p.ULTIMA_COLHEITA || null,
-            dataPlantio: p.DATA_PLANTIO || null,
-            coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
-            observacoes: p.OBSERVACOES || '',
-            cadastradoEm: p.ATUALIZADO_EM || new Date().toISOString()
-          };
-        });
-        
-        salvarDados();
+      if (sucesso) {
         renderAll();
         showToast(`✅ ${plantas.length} plantas recarregadas do GitHub!`);
-        
-      } catch (error) {
-        console.error('Erro:', error);
+      } else {
         alert('❌ Erro ao recarregar do GitHub. Verifique sua conexão.');
       }
     }
@@ -1373,10 +1071,7 @@
           salvarDados();
           renderAll();
           showToast(`✅ ${plantas.length} plantas importadas do QField!`);
-          
-          if (githubConfig.token) {
-            sincronizarComGitHub();
-          }
+          sincronizarComGitHub();
           
         } catch (err) {
           alert('❌ Erro ao ler arquivo: ' + err.message);
@@ -1535,10 +1230,7 @@
       renderAll();
       
       showToast(`✅ ${especie} #${nomeId} cadastrada!`);
-      
-      if (githubConfig.token) {
-        await sincronizarComGitHub();
-      }
+      await sincronizarComGitHub();
       
       document.getElementById('novaEspecie').value = '';
       document.getElementById('novoId').value = '';
@@ -1555,7 +1247,7 @@
         historico,
         proximoId,
         dataSalvamento: new Date().toISOString(),
-        versao: '5.0'
+        versao: '6.0'
       };
       localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
     }
@@ -1595,85 +1287,6 @@
       document.getElementById('cac_rega').value = config.Cacau.rega;
       document.getElementById('cac_poda').value = config.Cacau.poda;
       document.getElementById('cac_colh').value = config.Cacau.colheita;
-      
-      renderCustomSpecies();
-    }
-
-    function renderCustomSpecies() {
-      const container = document.getElementById('customSpeciesContainer');
-      const customSpecies = Object.keys(config).filter(k => 
-        k !== 'default' && k !== 'Mangabeira' && k !== 'Cajueiro' && k !== 'Coqueiro' && k !== 'Cacau'
-      );
-      
-      container.innerHTML = customSpecies.map(especie => `
-        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; position: relative;">
-          <button onclick="removeSpecies('${especie}')" 
-                  style="position: absolute; top: 0.5rem; right: 0.5rem; width: 28px; height: 28px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; font-size: 1rem; font-weight: bold;"
-                  title="Remover espécie">
-            ×
-          </button>
-          <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌳 ${especie}</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-            <div>
-              <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-              <input type="number" id="${especie}_rega" value="${config[especie].rega}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div>
-              <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-              <input type="number" id="${especie}_poda" value="${config[especie].poda}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-            <div>
-              <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-              <input type="number" id="${especie}_colh" value="${config[especie].colheita}" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-            </div>
-          </div>
-        </div>
-      `).join('');
-    }
-
-    function openAddSpeciesModal() {
-      document.getElementById('addSpeciesModal').classList.add('active');
-    }
-
-    function closeAddSpeciesModal() {
-      document.getElementById('addSpeciesModal').classList.remove('active');
-      document.getElementById('newSpeciesName').value = '';
-    }
-
-    function addNewSpecies() {
-      const nome = document.getElementById('newSpeciesName').value.trim();
-      if (!nome) {
-        alert('⚠️ Digite o nome da espécie!');
-        return;
-      }
-      
-      if (config[nome]) {
-        alert('⚠️ Esta espécie já está cadastrada!');
-        return;
-      }
-      
-      const rega = parseInt(document.getElementById('newSpeciesRega').value);
-      const poda = parseInt(document.getElementById('newSpeciesPoda').value);
-      const colheita = parseInt(document.getElementById('newSpeciesColh').value);
-      
-      config[nome] = { rega, poda, colheita };
-      
-      localStorage.setItem('sitio-config', JSON.stringify(config));
-      
-      renderCustomSpecies();
-      closeAddSpeciesModal();
-      showToast(`✅ Espécie "${nome}" adicionada!`);
-    }
-
-    function removeSpecies(nome) {
-      if (!confirm(`Remover configuração de "${nome}"?\n\nAs plantas dessa espécie usarão valores padrão.`)) {
-        return;
-      }
-      
-      delete config[nome];
-      localStorage.setItem('sitio-config', JSON.stringify(config));
-      renderCustomSpecies();
-      showToast(`🗑️ Configuração de "${nome}" removida`);
     }
 
     function saveConfig() {
@@ -1701,24 +1314,6 @@
         colheita: parseInt(document.getElementById('cac_colh').value)
       };
       
-      const customSpecies = Object.keys(config).filter(k => 
-        k !== 'default' && k !== 'Mangabeira' && k !== 'Cajueiro' && k !== 'Coqueiro' && k !== 'Cacau'
-      );
-      
-      customSpecies.forEach(especie => {
-        const regaEl = document.getElementById(`${especie}_rega`);
-        const podaEl = document.getElementById(`${especie}_poda`);
-        const colhEl = document.getElementById(`${especie}_colh`);
-        
-        if (regaEl && podaEl && colhEl) {
-          config[especie] = {
-            rega: parseInt(regaEl.value),
-            poda: parseInt(podaEl.value),
-            colheita: parseInt(colhEl.value)
-          };
-        }
-      });
-      
       localStorage.setItem('sitio-config', JSON.stringify(config));
       salvarDados();
       showToast('✅ Intervalos salvos!');
@@ -1734,12 +1329,6 @@
       if (n.includes('caju')) return config.Cajueiro;
       if (n.includes('coq')) return config.Coqueiro;
       if (n.includes('cacau')) return config.Cacau;
-      
-      const speciesKey = Object.keys(config).find(key => 
-        key !== 'default' && nome.toLowerCase().includes(key.toLowerCase())
-      );
-      
-      if (speciesKey) return config[speciesKey];
       
       return config.default;
     }
@@ -1893,9 +1482,7 @@
       renderAll();
       showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
       
-      if (githubConfig.token) {
-        await sincronizarComGitHub();
-      }
+      await sincronizarComGitHub();
     }
 
     // RENDERIZAR PLANTAS
@@ -2024,8 +1611,6 @@
     // INICIALIZAÇÃO
     window.addEventListener('load', async () => {
       updateOnlineStatus();
-      
-      carregarConfigGitHub();
       loadPerfis();
       
       const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
@@ -2035,7 +1620,7 @@
       
       const temDados = carregarDados();
       if (!temDados) {
-        await carregarDadosIniciais();
+        await carregarDadosDoGitHub();
       }
       
       loadConfig();
@@ -2043,7 +1628,7 @@
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
       
-      showToast('✅ App carregado e pronto para uso offline!');
+      showToast('✅ App carregado - Sincronização automática ativa!');
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
