@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v6.0 - Auto Sync</title>
+  <title>Sítio Ipiranga v6.1 - Auto Sync Real</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -536,6 +536,38 @@
     .footer-space {
       height: 2rem;
     }
+
+    .github-token-setup {
+      background: #f0f9ff;
+      border: 2px solid #3b82f6;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .github-token-setup h3 {
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+      color: #1e40af;
+    }
+
+    .github-token-setup ol {
+      margin-left: 1.25rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+      color: #1e3a8a;
+    }
+
+    .github-token-setup li {
+      margin-bottom: 0.5rem;
+    }
+
+    .github-token-setup code {
+      background: #dbeafe;
+      padding: 0.125rem 0.375rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
   </style>
 </head>
 <body>
@@ -544,7 +576,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v6.0 Auto-Sync</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v6.1 Auto-Sync</div>
   </div>
 
   <div class="header">
@@ -572,7 +604,7 @@
       
       <div id="autoSyncInfo" class="sync-indicator success">
         <span>✅</span>
-        <span>Sincronização automática ativa - GitHub Actions detecta suas mudanças</span>
+        <span>Sincronização automática ativa com GitHub</span>
       </div>
 
       <div class="filter-group">
@@ -733,6 +765,38 @@
   <!-- ABA CONFIG -->
   <div id="config" class="tab-content">
     <div class="section">
+      <div class="section-title">🔐 Configuração do GitHub (OBRIGATÓRIO)</div>
+      
+      <div id="githubConfigStatus" class="error-box" style="margin-bottom: 1rem;">
+        ⚠️ Token do GitHub não configurado! As alterações não serão enviadas automaticamente.
+      </div>
+
+      <div class="github-token-setup">
+        <h3>Como configurar:</h3>
+        <ol>
+          <li>Acesse: <code>github.com/settings/tokens</code></li>
+          <li>Clique em "Generate new token (classic)"</li>
+          <li>Dê um nome (ex: "Sitio Ipiranga PWA")</li>
+          <li>Marque a permissão: <code>repo</code> (full control)</li>
+          <li>Clique em "Generate token"</li>
+          <li>Copie o token e cole abaixo</li>
+        </ol>
+      </div>
+
+      <div class="form-group">
+        <label>🔑 GitHub Personal Access Token</label>
+        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxx" style="font-family: monospace;">
+        <div style="font-size: 0.8rem; color: #6b7280; margin-top: 0.5rem;">
+          ℹ️ O token fica salvo apenas no seu dispositivo
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="salvarTokenGitHub()">
+        💾 Salvar Token
+      </button>
+    </div>
+
+    <div class="section">
       <div class="section-title">👤 Perfil de Usuário</div>
       <div class="info-box">
         Selecione quem está fazendo as ações
@@ -839,7 +903,7 @@
   <div class="footer-space"></div>
 
   <script>
-    // CONFIGURAÇÃO DO REPOSITÓRIO (FIXO)
+    // CONFIGURAÇÃO DO REPOSITÓRIO
     const GITHUB_REPO = 'lg1811/S-tio_Ipiranga';
     const GITHUB_BRANCH = 'main';
     const GEOJSON_FILE = 'dados.geojson';
@@ -852,6 +916,7 @@
     let filtroAcoesAtual = 'todas';
     let filtroHistoricoAtual = '7';
     let proximoId = 1;
+    let githubToken = null;
     
     let config = {
       Mangabeira: { rega: 7, poda: 180, colheita: 90 },
@@ -884,6 +949,48 @@
 
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
+
+    // VERIFICAR E CARREGAR TOKEN DO GITHUB
+    function carregarTokenGitHub() {
+      const token = localStorage.getItem('sitio-github-token');
+      if (token) {
+        githubToken = token;
+        document.getElementById('githubToken').value = token;
+        atualizarStatusGitHub(true);
+        return true;
+      }
+      atualizarStatusGitHub(false);
+      return false;
+    }
+
+    function atualizarStatusGitHub(configurado) {
+      const statusDiv = document.getElementById('githubConfigStatus');
+      if (configurado) {
+        statusDiv.className = 'success-box';
+        statusDiv.innerHTML = '✅ Token do GitHub configurado! Sincronização automática ativa.';
+      } else {
+        statusDiv.className = 'error-box';
+        statusDiv.innerHTML = '⚠️ Token do GitHub não configurado! As alterações não serão enviadas automaticamente.';
+      }
+    }
+
+    function salvarTokenGitHub() {
+      const token = document.getElementById('githubToken').value.trim();
+      if (!token) {
+        alert('Digite o token do GitHub!');
+        return;
+      }
+      
+      if (!token.startsWith('ghp_') && !token.startsWith('github_pat_')) {
+        alert('Token inválido! Deve começar com "ghp_" ou "github_pat_"');
+        return;
+      }
+      
+      localStorage.setItem('sitio-github-token', token);
+      githubToken = token;
+      atualizarStatusGitHub(true);
+      showToast('✅ Token salvo! Sincronização ativa.');
+    }
 
     // CARREGAR DADOS DO GITHUB (API PÚBLICA)
     async function carregarDadosDoGitHub() {
@@ -925,8 +1032,13 @@
       }
     }
 
-    // SINCRONIZAR COM GITHUB (VIA GIST PÚBLICO COMO BRIDGE)
+    // SINCRONIZAR COM GITHUB (COMMIT DIRETO VIA API)
     async function sincronizarComGitHub() {
+      if (!githubToken) {
+        showToast('⚠️ Configure o token do GitHub na aba Config');
+        return false;
+      }
+
       const syncInfo = document.getElementById('autoSyncInfo');
       const statusDot = document.getElementById('statusDot');
       
@@ -936,39 +1048,60 @@
 
       try {
         const geojson = gerarGeoJSON();
+        const content = JSON.stringify(geojson, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(content)));
         
-        // Salvar no localStorage como trigger para GitHub Actions detectar
-        localStorage.setItem('sitio-last-sync', new Date().toISOString());
-        localStorage.setItem('sitio-pending-sync', JSON.stringify(geojson));
+        // 1. Obter SHA atual do arquivo
+        const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GEOJSON_FILE}?ref=${GITHUB_BRANCH}`;
+        const getResponse = await fetch(getFileUrl, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
         
-        // Notificar via webhook (se configurado no GitHub)
-        const webhookUrl = localStorage.getItem('github-webhook-url');
-        if (webhookUrl) {
-          await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              event: 'data_updated',
-              timestamp: new Date().toISOString(),
-              total_plantas: plantas.length
-            })
-          });
+        let sha = null;
+        if (getResponse.ok) {
+          const fileData = await getResponse.json();
+          sha = fileData.sha;
+        }
+        
+        // 2. Fazer commit
+        const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GEOJSON_FILE}`;
+        const updateResponse = await fetch(updateUrl, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            message: `[PWA] Atualização automática - ${plantas.length} plantas - ${new Date().toLocaleString('pt-BR')}`,
+            content: encodedContent,
+            branch: GITHUB_BRANCH,
+            sha: sha
+          })
+        });
+        
+        if (!updateResponse.ok) {
+          const errorData = await updateResponse.json();
+          throw new Error(errorData.message || 'Erro ao fazer commit');
         }
         
         syncInfo.className = 'sync-indicator success';
         syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast('✅ Dados salvos! GitHub Actions atualizará o Telegram Bot');
+        showToast('✅ Dados enviados para o GitHub!');
         return true;
         
       } catch (error) {
         console.error('Erro ao sincronizar:', error);
         syncInfo.className = 'sync-indicator error';
-        syncInfo.innerHTML = '<span>❌</span><span>Erro na sincronização</span>';
+        syncInfo.innerHTML = `<span>❌</span><span>Erro: ${error.message}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast('⚠️ Erro ao sincronizar');
+        showToast(`⚠️ Erro ao sincronizar: ${error.message}`);
         return false;
       }
     }
@@ -1247,7 +1380,7 @@
         historico,
         proximoId,
         dataSalvamento: new Date().toISOString(),
-        versao: '6.0'
+        versao: '6.1'
       };
       localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
     }
@@ -1612,6 +1745,7 @@
     window.addEventListener('load', async () => {
       updateOnlineStatus();
       loadPerfis();
+      carregarTokenGitHub();
       
       const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
       if (perfilSalvo) {
@@ -1628,7 +1762,7 @@
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
       
-      showToast('✅ App carregado - Sincronização automática ativa!');
+      showToast('✅ App carregado!');
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
