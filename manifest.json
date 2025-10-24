@@ -1,18 +1,22 @@
 {
-  "name": "Sítio Ipiranga - Gestão de Frutíferas",
+  "name": "Sítio Ipiranga",
   "short_name": "Sítio Ipiranga",
-  "description": "App para gestão e monitoramento das frutíferas do Sítio Ipiranga",
-  "start_url": "/S-tio_Ipiranga/",
+  "description": "Gestão de frutíferas do Sítio Ipiranga",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#10b981",
+  "background_color": "#ffffff",
   "theme_color": "#10b981",
-  "orientation": "portrait-primary",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%2310b981'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🌿%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2310b981'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🌿%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%2310b981'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🌿%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "type": "image/svg+xml"
     }
   ]
 }
