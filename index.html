@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v7.0 - Sync Total</title>
+  <title>Sítio Ipiranga v7.1 - Sync Total</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -605,7 +605,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v7.0 Sync Total</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v7.1 Fixed</div>
   </div>
 
   <div class="header">
@@ -794,7 +794,7 @@
   <!-- ABA CONFIG -->
   <div id="config" class="tab-content">
     <div class="section">
-      <div class="section-title">🔐 Configuração do GitHub (OBRIGATÓRIO)</div>
+      <div class="section-title">🔑 Configuração do GitHub (OBRIGATÓRIO)</div>
       
       <div id="githubConfigStatus" class="error-box" style="margin-bottom: 1rem;">
         ⚠️ Token do GitHub não configurado! Configure para compartilhar dados entre dispositivos.
@@ -914,17 +914,6 @@
 
       <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Intervalos</button>
     </div>
-
-    <div class="section">
-      <div class="section-title">🌳 Outras Espécies Personalizadas</div>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
-        Adicione intervalos para outras espécies de plantas (sincronizado automaticamente)
-      </p>
-      
-      <div id="customSpeciesList"></div>
-      
-      <button class="btn btn-primary" onclick="openCustomSpeciesModal()">➕ Adicionar Nova Espécie</button>
-    </div>
   </div>
 
   <!-- MODAL PERFIL -->
@@ -935,41 +924,6 @@
       <div style="display: flex; gap: 0.75rem;">
         <button class="btn btn-primary" onclick="createProfile()" style="margin: 0;">Criar</button>
         <button class="btn btn-secondary" onclick="closeProfileModal()" style="margin: 0;">Cancelar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL ESPÉCIE PERSONALIZADA -->
-  <div id="customSpeciesModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-title">Nova Espécie Personalizada</div>
-      
-      <div class="form-group">
-        <label>🌿 Nome da Espécie</label>
-        <input type="text" id="customSpeciesName" placeholder="Ex: Goiabeira, Mangueira, Abacateiro..." class="search-box">
-      </div>
-
-      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: #1f2937;">⏱️ Intervalos de Manutenção (dias)</h3>
-        <div class="config-grid">
-          <div class="config-item">
-            <label>💧 Rega</label>
-            <input type="number" id="customRega" value="7" min="1">
-          </div>
-          <div class="config-item">
-            <label>✂️ Poda</label>
-            <input type="number" id="customPoda" value="180" min="1">
-          </div>
-          <div class="config-item">
-            <label>🍊 Colheita</label>
-            <input type="number" id="customColheita" value="90" min="1">
-          </div>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 0.75rem;">
-        <button class="btn btn-primary" onclick="saveCustomSpecies()" style="margin: 0;">💾 Salvar Espécie</button>
-        <button class="btn btn-secondary" onclick="closeCustomSpeciesModal()" style="margin: 0;">Cancelar</button>
       </div>
     </div>
   </div>
@@ -997,7 +951,7 @@
       },
       perfilAtual: null,
       proximoId: 1,
-      versao: '7.0',
+      versao: '7.1',
       ultimaAtualizacao: null
     };
     
@@ -1005,6 +959,7 @@
     let filtroAcoesAtual = 'todas';
     let filtroHistoricoAtual = '7';
     let isSyncing = false;
+    let syncInterval = null;
 
     // TOAST
     function showToast(message, duration = 3000) {
@@ -1027,8 +982,16 @@
       }
     }
 
-    window.addEventListener('online', updateOnlineStatus);
-    window.addEventListener('offline', updateOnlineStatus);
+    window.addEventListener('online', () => {
+      updateOnlineStatus();
+      showToast('🌐 Conectado! Sincronizando...');
+      sincronizarComGitHub();
+    });
+    
+    window.addEventListener('offline', () => {
+      updateOnlineStatus();
+      showToast('📡 Offline - Dados salvos localmente');
+    });
 
     // VERIFICAR E CARREGAR TOKEN DO GITHUB
     function carregarTokenGitHub() {
@@ -1070,21 +1033,41 @@
       githubToken = token;
       atualizarStatusGitHub(true);
       showToast('✅ Token salvo! Sincronizando...');
+      
+      // Iniciar sync automático
+      iniciarSyncAutomatico();
       sincronizarComGitHub();
     }
 
     // CARREGAR DADOS COMPLETOS DO GITHUB
     async function carregarDadosDoGitHub() {
+      if (!githubToken) {
+        console.log('⚠️ Token não configurado, usando dados locais');
+        return false;
+      }
+
       try {
-        const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${APP_DATA_FILE}`;
-        const response = await fetch(url);
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
         
         if (!response.ok) {
-          console.log('Arquivo app-data.json não existe ainda, será criado na primeira sincronização');
-          return false;
+          if (response.status === 404) {
+            console.log('📝 Arquivo app-data.json não existe, será criado na primeira sincronização');
+            return false;
+          }
+          throw new Error(`Erro HTTP ${response.status}`);
         }
         
-        const dados = await response.json();
+        const fileData = await response.json();
+        const content = atob(fileData.content);
+        const dados = JSON.parse(content);
+        
+        console.log('📥 Dados carregados do GitHub:', dados);
         
         // Merge inteligente dos dados
         appData = mergeAppData(appData, dados);
@@ -1093,7 +1076,7 @@
         return true;
         
       } catch (error) {
-        console.error('Erro ao carregar do GitHub:', error);
+        console.error('❌ Erro ao carregar do GitHub:', error);
         return false;
       }
     }
@@ -1102,8 +1085,10 @@
     function mergeAppData(local, remoto) {
       const plantasMap = new Map();
       
+      // Adicionar plantas locais
       local.plantas.forEach(p => plantasMap.set(p.nomeId, p));
       
+      // Adicionar/atualizar com plantas remotas (mais recentes ganham)
       remoto.plantas.forEach(p => {
         const existing = plantasMap.get(p.nomeId);
         if (!existing) {
@@ -1117,14 +1102,17 @@
         }
       });
       
+      // Merge histórico
       const historicoMap = new Map();
       local.historico.forEach(h => historicoMap.set(h.id, h));
       remoto.historico.forEach(h => historicoMap.set(h.id, h));
       
+      // Merge perfis
       const perfisMap = new Map();
       local.perfis.forEach(p => perfisMap.set(p.id, p));
       remoto.perfis.forEach(p => perfisMap.set(p.id, p));
       
+      // Config: usar o mais recente
       const config = remoto.ultimaAtualizacao > local.ultimaAtualizacao ? 
         remoto.config : local.config;
       
@@ -1137,7 +1125,7 @@
         config: config,
         perfilAtual: remoto.perfilAtual || local.perfilAtual,
         proximoId: Math.max(local.proximoId, remoto.proximoId),
-        versao: '7.0',
+        versao: '7.1',
         ultimaAtualizacao: new Date().toISOString()
       };
     }
@@ -1145,11 +1133,17 @@
     // SINCRONIZAR COM GITHUB
     async function sincronizarComGitHub() {
       if (!githubToken) {
-        showToast('⚠️ Configure o token do GitHub na aba Config');
+        console.log('⚠️ Token não configurado');
         return false;
       }
 
       if (isSyncing) {
+        console.log('⏳ Sincronização já em andamento...');
+        return false;
+      }
+
+      if (!navigator.onLine) {
+        console.log('📡 Offline - sincronização adiada');
         return false;
       }
 
@@ -1162,12 +1156,17 @@
       statusDot.classList.add('syncing');
 
       try {
+        // Primeiro, carregar dados remotos
         await carregarDadosDoGitHub();
         
+        // Atualizar timestamp
         appData.ultimaAtualizacao = new Date().toISOString();
+        
+        // Preparar conteúdo
         const content = JSON.stringify(appData, null, 2);
         const encodedContent = btoa(unescape(encodeURIComponent(content)));
         
+        // Obter SHA do arquivo existente
         const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
         const getResponse = await fetch(getFileUrl, {
           headers: {
@@ -1182,6 +1181,7 @@
           sha = fileData.sha;
         }
         
+        // Fazer commit
         const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}`;
         const updateResponse = await fetch(updateUrl, {
           method: 'PUT',
@@ -1191,7 +1191,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: `[PWA v7.0] Sincronização - ${appData.plantas.length} plantas, ${appData.perfis.length} perfis - ${new Date().toLocaleString('pt-BR')}`,
+            message: `[PWA v7.1] Sync - ${appData.plantas.length} plantas, ${appData.perfis.length} perfis - ${new Date().toLocaleString('pt-BR')}`,
             content: encodedContent,
             branch: GITHUB_BRANCH,
             sha: sha
@@ -1203,20 +1203,21 @@
           throw new Error(errorData.message || 'Erro ao fazer commit');
         }
         
+        salvarDadosLocal();
+        
         syncInfo.className = 'sync-indicator success';
         syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast('✅ Dados sincronizados!');
+        console.log('✅ Sincronização concluída!');
         return true;
         
       } catch (error) {
-        console.error('Erro ao sincronizar:', error);
+        console.error('❌ Erro ao sincronizar:', error);
         syncInfo.className = 'sync-indicator error';
         syncInfo.innerHTML = `<span>❌</span><span>Erro: ${error.message}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast(`⚠️ Erro: ${error.message}`);
         return false;
       } finally {
         isSyncing = false;
@@ -1228,6 +1229,28 @@
       const sucesso = await sincronizarComGitHub();
       if (sucesso) {
         renderAll();
+        showToast('✅ Dados sincronizados!');
+      } else {
+        showToast('⚠️ Erro na sincronização');
+      }
+    }
+
+    // SYNC AUTOMÁTICO
+    function iniciarSyncAutomatico() {
+      if (syncInterval) {
+        clearInterval(syncInterval);
+      }
+      
+      if (githubToken && navigator.onLine) {
+        // Sincronizar a cada 5 minutos
+        syncInterval = setInterval(async () => {
+          if (!isSyncing && navigator.onLine) {
+            console.log('🔄 Sincronização automática...');
+            await sincronizarComGitHub();
+          }
+        }, 300000); // 5 minutos
+        
+        console.log('✅ Sync automático iniciado (5 min)');
       }
     }
 
@@ -1487,23 +1510,31 @@
       showToast(`✅ ${especie} #${nomeId} cadastrada!`);
       await sincronizarComGitHub();
       
-      document.getElementById('novaEspecie').value = '';
-      document.getElementById('novoId').value = '';
-      document.getElementById('coordenadas').value = '';
+      event.target.reset();
       document.getElementById('coordDisplay').style.display = 'none';
       document.querySelector('.tab[onclick*="plantas"]').click();
     }
 
     // PERSISTÊNCIA LOCAL
     function salvarDadosLocal() {
-      localStorage.setItem('sitio-app-data', JSON.stringify(appData));
+      try {
+        localStorage.setItem('sitio-app-data', JSON.stringify(appData));
+        console.log('💾 Dados salvos localmente');
+      } catch (error) {
+        console.error('❌ Erro ao salvar dados locais:', error);
+      }
     }
 
     function carregarDadosLocal() {
-      const saved = localStorage.getItem('sitio-app-data');
-      if (saved) {
-        appData = JSON.parse(saved);
-        return true;
+      try {
+        const saved = localStorage.getItem('sitio-app-data');
+        if (saved) {
+          appData = JSON.parse(saved);
+          console.log('📂 Dados carregados do localStorage');
+          return true;
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados locais:', error);
       }
       return false;
     }
@@ -1852,47 +1883,66 @@
 
     // INICIALIZAÇÃO
     window.addEventListener('load', async () => {
+      console.log('🚀 Iniciando PWA v7.1...');
+      
       updateOnlineStatus();
-      carregarTokenGitHub();
       
+      // 1. Carregar token
+      const tokenConfigurado = carregarTokenGitHub();
+      
+      // 2. Carregar dados locais primeiro
       const temDadosLocal = carregarDadosLocal();
+      console.log('📂 Dados locais:', temDadosLocal ? 'Encontrados' : 'Não encontrados');
       
-      if (githubToken) {
-        showToast('🔄 Sincronizando com GitHub...');
-        await carregarDadosDoGitHub();
-      } else if (!temDadosLocal) {
-        await carregarDadosDoGitHub();
+      // 3. Renderizar dados locais imediatamente
+      if (temDadosLocal) {
+        loadConfig();
+        renderAll();
+        console.log('✅ Interface renderizada com dados locais');
       }
       
-      loadConfig();
-      renderAll();
-      renderCustomSpecies();
+      // 4. Se tem token, sincronizar com GitHub em segundo plano
+      if (tokenConfigurado && navigator.onLine) {
+        console.log('🔄 Iniciando sincronização com GitHub...');
+        const sincronizado = await carregarDadosDoGitHub();
+        
+        if (sincronizado) {
+          loadConfig();
+          renderAll();
+          console.log('✅ Dados sincronizados do GitHub');
+          showToast('✅ Dados sincronizados!');
+        }
+        
+        // Iniciar sync automático
+        iniciarSyncAutomatico();
+      } else if (!tokenConfigurado) {
+        console.log('⚠️ Token não configurado - modo offline');
+        showToast('⚠️ Configure o token do GitHub para sincronizar');
+      }
       
+      // 5. Configurar data padrão
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
       
-      showToast('✅ App carregado!');
+      // 6. Auto-save periódico
+      setInterval(salvarDadosLocal, 30000); // 30 segundos
       
-      if (githubToken) {
-        setInterval(async () => {
-          if (!isSyncing && navigator.onLine) {
-            await sincronizarComGitHub();
-          }
-        }, 300000);
-      }
-      
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('✅ Service Worker registrado:', reg))
-          .catch(err => console.error('❌ Erro ao registrar SW:', err));
-      }
+      console.log('✅ PWA v7.1 inicializado!');
     });
 
-    setInterval(salvarDadosLocal, 30000);
-    
+    // Fechar modal ao clicar fora
     window.onclick = function(event) {
       if (event.target.classList.contains('modal')) {
         event.target.classList.remove('active');
       }
+    }
+
+    // Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(reg => console.log('✅ Service Worker registrado:', reg.scope))
+          .catch(err => console.error('❌ Erro ao registrar SW:', err));
+      });
     }
   </script>
 </body>
