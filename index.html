@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v6.1 - Auto Sync Real</title>
+  <title>Sítio Ipiranga v7.0 - Sync Total</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -568,6 +568,35 @@
       border-radius: 3px;
       font-size: 0.8rem;
     }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .config-item {
+      background: #f9fafb;
+      padding: 0.75rem;
+      border-radius: 6px;
+    }
+
+    .config-item label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #4b5563;
+    }
+
+    .config-item input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 <body>
@@ -576,7 +605,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v6.1 Auto-Sync</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v7.0 Sync Total</div>
   </div>
 
   <div class="header">
@@ -584,7 +613,7 @@
     <div class="header-stats">
       <span id="plantCount">📊 0 plantas</span>
       <span id="actionCount">📋 0 ações</span>
-      <span id="syncBadge" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">✅ Auto-Sync</span>
+      <span id="syncBadge" style="background: rgba(255,255,255,0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">✅ Sync Total</span>
     </div>
   </div>
   
@@ -604,7 +633,7 @@
       
       <div id="autoSyncInfo" class="sync-indicator success">
         <span>✅</span>
-        <span>Sincronização automática ativa com GitHub</span>
+        <span>Sincronização total ativa - Todos os dados compartilhados</span>
       </div>
 
       <div class="filter-group">
@@ -626,7 +655,7 @@
       <div class="section-title">➕ Cadastrar Nova Planta</div>
       
       <div class="success-box">
-        ✅ Plantas são enviadas automaticamente para o GitHub!
+        ✅ Todas as alterações são sincronizadas automaticamente entre dispositivos!
       </div>
 
       <form onsubmit="cadastrarPlanta(event)">
@@ -692,7 +721,7 @@
       <div class="section-title">🌱 Minhas Plantas</div>
       
       <div class="info-box">
-        💾 Sincronização automática com GitHub ativa
+        💾 Sincronização automática ativa - Dados compartilhados entre todos os dispositivos
       </div>
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
@@ -705,8 +734,8 @@
         </button>
       </div>
       
-      <button class="btn btn-primary" onclick="recarregarDoGitHub()" style="margin-bottom: 1rem;">
-        🔄 Recarregar do GitHub
+      <button class="btn btn-primary" onclick="sincronizarAgora()" style="margin-bottom: 1rem;">
+        🔄 Sincronizar Agora
       </button>
       
       <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)" style="display: none;">
@@ -768,7 +797,7 @@
       <div class="section-title">🔐 Configuração do GitHub (OBRIGATÓRIO)</div>
       
       <div id="githubConfigStatus" class="error-box" style="margin-bottom: 1rem;">
-        ⚠️ Token do GitHub não configurado! As alterações não serão enviadas automaticamente.
+        ⚠️ Token do GitHub não configurado! Configure para compartilhar dados entre dispositivos.
       </div>
 
       <div class="github-token-setup">
@@ -799,7 +828,7 @@
     <div class="section">
       <div class="section-title">👤 Perfil de Usuário</div>
       <div class="info-box">
-        Selecione quem está fazendo as ações
+        Selecione quem está fazendo as ações. Perfis são compartilhados entre dispositivos!
       </div>
       <div id="profileSelector"></div>
       <button class="btn btn-primary" onclick="openProfileModal()">➕ Adicionar Perfil</button>
@@ -807,83 +836,94 @@
 
     <div class="section">
       <div class="section-title">📋 Intervalos por Espécie (dias)</div>
-      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1.5rem;">
-        Ajuste os intervalos de manutenção para cada tipo de planta
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+        Ajuste os intervalos de manutenção para cada tipo de planta (sincronizado automaticamente)
       </p>
       
       <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥭 Mangabeira</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-            <input type="number" id="mang_rega" value="7" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #1f2937;">🥭 Mangabeira</h3>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>💧 Rega</label>
+            <input type="number" id="mang_rega" value="7">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-            <input type="number" id="mang_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>✂️ Poda</label>
+            <input type="number" id="mang_poda" value="180">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-            <input type="number" id="mang_colh" value="90" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-        </div>
-      </div>
-
-      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🌰 Cajueiro</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-            <input type="number" id="caju_rega" value="10" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-            <input type="number" id="caju_poda" value="365" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
-          </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-            <input type="number" id="caju_colh" value="60" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>🍊 Colheita</label>
+            <input type="number" id="mang_colh" value="90">
           </div>
         </div>
       </div>
 
       <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🥥 Coqueiro</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-            <input type="number" id="coq_rega" value="5" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #1f2937;">🌰 Cajueiro</h3>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>💧 Rega</label>
+            <input type="number" id="caju_rega" value="10">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-            <input type="number" id="coq_poda" value="730" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>✂️ Poda</label>
+            <input type="number" id="caju_poda" value="365">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-            <input type="number" id="coq_colh" value="30" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>🍊 Colheita</label>
+            <input type="number" id="caju_colh" value="60">
           </div>
         </div>
       </div>
 
       <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 1rem;">🍫 Cacau</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">💧 Rega</label>
-            <input type="number" id="cac_rega" value="3" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #1f2937;">🥥 Coqueiro</h3>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>💧 Rega</label>
+            <input type="number" id="coq_rega" value="5">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">✂️ Poda</label>
-            <input type="number" id="cac_poda" value="180" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>✂️ Poda</label>
+            <input type="number" id="coq_poda" value="730">
           </div>
-          <div>
-            <label style="font-size: 0.75rem; display: block; margin-bottom: 0.25rem;">🍊 Colheita</label>
-            <input type="number" id="cac_colh" value="120" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+          <div class="config-item">
+            <label>🍊 Colheita</label>
+            <input type="number" id="coq_colh" value="30">
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 0.75rem 0; font-size: 1rem; color: #1f2937;">🍫 Cacau</h3>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>💧 Rega</label>
+            <input type="number" id="cac_rega" value="3">
+          </div>
+          <div class="config-item">
+            <label>✂️ Poda</label>
+            <input type="number" id="cac_poda" value="180">
+          </div>
+          <div class="config-item">
+            <label>🍊 Colheita</label>
+            <input type="number" id="cac_colh" value="120">
           </div>
         </div>
       </div>
 
       <button class="btn btn-primary" onclick="saveConfig()">💾 Salvar Intervalos</button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">🌳 Outras Espécies Personalizadas</div>
+      <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+        Adicione intervalos para outras espécies de plantas (sincronizado automaticamente)
+      </p>
+      
+      <div id="customSpeciesList"></div>
+      
+      <button class="btn btn-primary" onclick="openCustomSpeciesModal()">➕ Adicionar Nova Espécie</button>
     </div>
   </div>
 
@@ -899,6 +939,41 @@
     </div>
   </div>
 
+  <!-- MODAL ESPÉCIE PERSONALIZADA -->
+  <div id="customSpeciesModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-title">Nova Espécie Personalizada</div>
+      
+      <div class="form-group">
+        <label>🌿 Nome da Espécie</label>
+        <input type="text" id="customSpeciesName" placeholder="Ex: Goiabeira, Mangueira, Abacateiro..." class="search-box">
+      </div>
+
+      <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+        <h3 style="margin: 0 0 0.75rem 0; font-size: 0.95rem; color: #1f2937;">⏱️ Intervalos de Manutenção (dias)</h3>
+        <div class="config-grid">
+          <div class="config-item">
+            <label>💧 Rega</label>
+            <input type="number" id="customRega" value="7" min="1">
+          </div>
+          <div class="config-item">
+            <label>✂️ Poda</label>
+            <input type="number" id="customPoda" value="180" min="1">
+          </div>
+          <div class="config-item">
+            <label>🍊 Colheita</label>
+            <input type="number" id="customColheita" value="90" min="1">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-primary" onclick="saveCustomSpecies()" style="margin: 0;">💾 Salvar Espécie</button>
+        <button class="btn btn-secondary" onclick="closeCustomSpeciesModal()" style="margin: 0;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast"></div>
   <div class="footer-space"></div>
 
@@ -906,25 +981,30 @@
     // CONFIGURAÇÃO DO REPOSITÓRIO
     const GITHUB_REPO = 'lg1811/S-tio_Ipiranga';
     const GITHUB_BRANCH = 'main';
-    const GEOJSON_FILE = 'dados.geojson';
+    const APP_DATA_FILE = 'app-data.json';
     
     // VARIÁVEIS GLOBAIS
-    let plantas = [];
-    let historico = [];
-    let perfis = [];
-    let perfilAtual = null;
+    let appData = {
+      plantas: [],
+      historico: [],
+      perfis: [],
+      config: {
+        Mangabeira: { rega: 7, poda: 180, colheita: 90 },
+        Cajueiro: { rega: 10, poda: 365, colheita: 60 },
+        Coqueiro: { rega: 5, poda: 730, colheita: 30 },
+        Cacau: { rega: 3, poda: 180, colheita: 120 },
+        default: { rega: 7, poda: 180, colheita: 90 }
+      },
+      perfilAtual: null,
+      proximoId: 1,
+      versao: '7.0',
+      ultimaAtualizacao: null
+    };
+    
+    let githubToken = null;
     let filtroAcoesAtual = 'todas';
     let filtroHistoricoAtual = '7';
-    let proximoId = 1;
-    let githubToken = null;
-    
-    let config = {
-      Mangabeira: { rega: 7, poda: 180, colheita: 90 },
-      Cajueiro: { rega: 10, poda: 365, colheita: 60 },
-      Coqueiro: { rega: 5, poda: 730, colheita: 30 },
-      Cacau: { rega: 3, poda: 180, colheita: 120 },
-      default: { rega: 7, poda: 180, colheita: 90 }
-    };
+    let isSyncing = false;
 
     // TOAST
     function showToast(message, duration = 3000) {
@@ -967,10 +1047,10 @@
       const statusDiv = document.getElementById('githubConfigStatus');
       if (configurado) {
         statusDiv.className = 'success-box';
-        statusDiv.innerHTML = '✅ Token do GitHub configurado! Sincronização automática ativa.';
+        statusDiv.innerHTML = '✅ Token do GitHub configurado! Sincronização total ativa entre dispositivos.';
       } else {
         statusDiv.className = 'error-box';
-        statusDiv.innerHTML = '⚠️ Token do GitHub não configurado! As alterações não serão enviadas automaticamente.';
+        statusDiv.innerHTML = '⚠️ Token do GitHub não configurado! Configure para compartilhar dados entre dispositivos.';
       }
     }
 
@@ -989,41 +1069,27 @@
       localStorage.setItem('sitio-github-token', token);
       githubToken = token;
       atualizarStatusGitHub(true);
-      showToast('✅ Token salvo! Sincronização ativa.');
+      showToast('✅ Token salvo! Sincronizando...');
+      sincronizarComGitHub();
     }
 
-    // CARREGAR DADOS DO GITHUB (API PÚBLICA)
+    // CARREGAR DADOS COMPLETOS DO GITHUB
     async function carregarDadosDoGitHub() {
       try {
-        const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GEOJSON_FILE}`;
+        const url = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${APP_DATA_FILE}`;
         const response = await fetch(url);
         
         if (!response.ok) {
-          throw new Error('Arquivo não encontrado');
+          console.log('Arquivo app-data.json não existe ainda, será criado na primeira sincronização');
+          return false;
         }
         
-        const geojson = await response.json();
+        const dados = await response.json();
         
-        proximoId = 1;
-        plantas = geojson.features.map((f, index) => {
-          const p = f.properties;
-          const coords = f.geometry?.coordinates;
-          
-          return {
-            id: proximoId++,
-            nome: p.NOME_POPULAR || p.nome_popular || 'Planta',
-            nomeId: p.ID || p.fid || `P${index + 1}`,
-            ultRega: p.ULTIMA_REGA || null,
-            ultPoda: p.ULTIMA_PODA || null,
-            ultColh: p.ULTIMA_COLHEITA || null,
-            dataPlantio: p.DATA_PLANTIO || null,
-            coordenadas: coords ? `${coords[1].toFixed(6)}, ${coords[0].toFixed(6)}` : null,
-            observacoes: p.OBSERVACOES || '',
-            cadastradoEm: new Date().toISOString()
-          };
-        });
+        // Merge inteligente dos dados
+        appData = mergeAppData(appData, dados);
         
-        salvarDados();
+        salvarDadosLocal();
         return true;
         
       } catch (error) {
@@ -1032,13 +1098,62 @@
       }
     }
 
-    // SINCRONIZAR COM GITHUB (COMMIT DIRETO VIA API)
+    // MERGE INTELIGENTE DE DADOS
+    function mergeAppData(local, remoto) {
+      const plantasMap = new Map();
+      
+      local.plantas.forEach(p => plantasMap.set(p.nomeId, p));
+      
+      remoto.plantas.forEach(p => {
+        const existing = plantasMap.get(p.nomeId);
+        if (!existing) {
+          plantasMap.set(p.nomeId, p);
+        } else {
+          const existingDate = new Date(existing.cadastradoEm || 0);
+          const remoteDate = new Date(p.cadastradoEm || 0);
+          if (remoteDate > existingDate) {
+            plantasMap.set(p.nomeId, p);
+          }
+        }
+      });
+      
+      const historicoMap = new Map();
+      local.historico.forEach(h => historicoMap.set(h.id, h));
+      remoto.historico.forEach(h => historicoMap.set(h.id, h));
+      
+      const perfisMap = new Map();
+      local.perfis.forEach(p => perfisMap.set(p.id, p));
+      remoto.perfis.forEach(p => perfisMap.set(p.id, p));
+      
+      const config = remoto.ultimaAtualizacao > local.ultimaAtualizacao ? 
+        remoto.config : local.config;
+      
+      return {
+        plantas: Array.from(plantasMap.values()),
+        historico: Array.from(historicoMap.values()).sort((a, b) => 
+          new Date(b.data) - new Date(a.data)
+        ),
+        perfis: Array.from(perfisMap.values()),
+        config: config,
+        perfilAtual: remoto.perfilAtual || local.perfilAtual,
+        proximoId: Math.max(local.proximoId, remoto.proximoId),
+        versao: '7.0',
+        ultimaAtualizacao: new Date().toISOString()
+      };
+    }
+
+    // SINCRONIZAR COM GITHUB
     async function sincronizarComGitHub() {
       if (!githubToken) {
         showToast('⚠️ Configure o token do GitHub na aba Config');
         return false;
       }
 
+      if (isSyncing) {
+        return false;
+      }
+
+      isSyncing = true;
       const syncInfo = document.getElementById('autoSyncInfo');
       const statusDot = document.getElementById('statusDot');
       
@@ -1047,12 +1162,13 @@
       statusDot.classList.add('syncing');
 
       try {
-        const geojson = gerarGeoJSON();
-        const content = JSON.stringify(geojson, null, 2);
+        await carregarDadosDoGitHub();
+        
+        appData.ultimaAtualizacao = new Date().toISOString();
+        const content = JSON.stringify(appData, null, 2);
         const encodedContent = btoa(unescape(encodeURIComponent(content)));
         
-        // 1. Obter SHA atual do arquivo
-        const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GEOJSON_FILE}?ref=${GITHUB_BRANCH}`;
+        const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
         const getResponse = await fetch(getFileUrl, {
           headers: {
             'Authorization': `token ${githubToken}`,
@@ -1066,8 +1182,7 @@
           sha = fileData.sha;
         }
         
-        // 2. Fazer commit
-        const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${GEOJSON_FILE}`;
+        const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}`;
         const updateResponse = await fetch(updateUrl, {
           method: 'PUT',
           headers: {
@@ -1076,7 +1191,7 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            message: `[PWA] Atualização automática - ${plantas.length} plantas - ${new Date().toLocaleString('pt-BR')}`,
+            message: `[PWA v7.0] Sincronização - ${appData.plantas.length} plantas, ${appData.perfis.length} perfis - ${new Date().toLocaleString('pt-BR')}`,
             content: encodedContent,
             branch: GITHUB_BRANCH,
             sha: sha
@@ -1092,7 +1207,7 @@
         syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast('✅ Dados enviados para o GitHub!');
+        showToast('✅ Dados sincronizados!');
         return true;
         
       } catch (error) {
@@ -1101,11 +1216,22 @@
         syncInfo.innerHTML = `<span>❌</span><span>Erro: ${error.message}</span>`;
         statusDot.classList.remove('syncing');
         
-        showToast(`⚠️ Erro ao sincronizar: ${error.message}`);
+        showToast(`⚠️ Erro: ${error.message}`);
         return false;
+      } finally {
+        isSyncing = false;
       }
     }
 
+    async function sincronizarAgora() {
+      showToast('🔄 Sincronizando...');
+      const sucesso = await sincronizarComGitHub();
+      if (sucesso) {
+        renderAll();
+      }
+    }
+
+    // EXPORTAR GEOJSON
     function gerarGeoJSON() {
       return {
         type: "FeatureCollection",
@@ -1114,7 +1240,7 @@
           type: "name",
           properties: { name: "urn:ogc:def:crs:OGC:1.3:CRS84" }
         },
-        features: plantas.map(p => {
+        features: appData.plantas.map(p => {
           const coords = p.coordenadas ? p.coordenadas.split(',').map(c => parseFloat(c.trim())) : [0, 0];
           
           return {
@@ -1151,23 +1277,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('📥 GeoJSON exportado para QField!');
-    }
-
-    async function recarregarDoGitHub() {
-      if (!confirm('⚠️ Isso vai substituir TODOS os dados locais pelos dados do GitHub.\n\nTem certeza?')) {
-        return;
-      }
-      
-      showToast('🔄 Recarregando do GitHub...');
-      const sucesso = await carregarDadosDoGitHub();
-      
-      if (sucesso) {
-        renderAll();
-        showToast(`✅ ${plantas.length} plantas recarregadas do GitHub!`);
-      } else {
-        alert('❌ Erro ao recarregar do GitHub. Verifique sua conexão.');
-      }
+      showToast('📥 GeoJSON exportado!');
     }
 
     function importGeoJSON(event) {
@@ -1183,14 +1293,18 @@
             throw new Error('Arquivo GeoJSON inválido');
           }
           
-          plantas = geojson.features.map((f, index) => {
+          geojson.features.forEach((f, index) => {
             const p = f.properties;
             const coords = f.geometry?.coordinates;
             
-            return {
-              id: proximoId++,
+            const nomeId = p.ID || p.fid || p.id || `P${index + 1}`;
+            
+            const existingIndex = appData.plantas.findIndex(pl => pl.nomeId === nomeId);
+            
+            const plantaData = {
+              id: existingIndex >= 0 ? appData.plantas[existingIndex].id : appData.proximoId++,
               nome: p.NOME_POPULAR || p.nome_popular || p.especie || 'Sem nome',
-              nomeId: p.ID || p.fid || p.id || `P${index + 1}`,
+              nomeId: nomeId,
               ultRega: p.ULTIMA_REGA || p.ultima_rega || null,
               ultPoda: p.ULTIMA_PODA || p.ultima_poda || null,
               ultColh: p.ULTIMA_COLHEITA || p.ultima_colheita || null,
@@ -1199,11 +1313,17 @@
               observacoes: p.OBSERVACOES || p.observacoes || '',
               cadastradoEm: p.CADASTRADO_EM || new Date().toISOString()
             };
+            
+            if (existingIndex >= 0) {
+              appData.plantas[existingIndex] = plantaData;
+            } else {
+              appData.plantas.push(plantaData);
+            }
           });
           
-          salvarDados();
+          salvarDadosLocal();
           renderAll();
-          showToast(`✅ ${plantas.length} plantas importadas do QField!`);
+          showToast(`✅ ${geojson.features.length} plantas importadas!`);
           sincronizarComGitHub();
           
         } catch (err) {
@@ -1215,40 +1335,39 @@
 
     // PERFIS
     function loadPerfis() {
-      const saved = localStorage.getItem('sitio-perfis');
-      perfis = saved ? JSON.parse(saved) : [];
       renderPerfis();
     }
 
     function renderPerfis() {
       const selector = document.getElementById('profileSelector');
-      selector.innerHTML = perfis.map(p => `
-        <div class="profile-item ${perfilAtual?.id === p.id ? 'active' : ''}" onclick="selectProfile(${p.id})">
+      selector.innerHTML = appData.perfis.map(p => `
+        <div class="profile-item ${appData.perfilAtual === p.id ? 'active' : ''}" onclick="selectProfile(${p.id})">
           <span>${p.nome}</span>
           <button class="profile-delete" onclick="event.stopPropagation(); deleteProfile(${p.id})" title="Excluir perfil">×</button>
         </div>
       `).join('');
     }
 
-    function selectProfile(id) {
-      perfilAtual = perfis.find(p => p.id === id);
-      localStorage.setItem('sitio-perfil-atual', id);
+    async function selectProfile(id) {
+      appData.perfilAtual = id;
+      salvarDadosLocal();
       renderPerfis();
+      await sincronizarComGitHub();
     }
 
-    function deleteProfile(id) {
+    async function deleteProfile(id) {
       if (!confirm('Excluir este perfil?')) return;
       
-      perfis = perfis.filter(p => p.id !== id);
-      localStorage.setItem('sitio-perfis', JSON.stringify(perfis));
+      appData.perfis = appData.perfis.filter(p => p.id !== id);
       
-      if (perfilAtual?.id === id) {
-        perfilAtual = null;
-        localStorage.removeItem('sitio-perfil-atual');
+      if (appData.perfilAtual === id) {
+        appData.perfilAtual = null;
       }
       
+      salvarDadosLocal();
       renderPerfis();
       showToast('🗑️ Perfil excluído!');
+      await sincronizarComGitHub();
     }
 
     function openProfileModal() {
@@ -1259,18 +1378,19 @@
       document.getElementById('profileModal').classList.remove('active');
     }
 
-    function createProfile() {
+    async function createProfile() {
       const nome = document.getElementById('newProfileName').value.trim();
       if (!nome) return alert('Digite um nome');
       
-      const id = Math.max(...perfis.map(p => p.id), 0) + 1;
-      perfis.push({ id, nome, cor: '#10b981' });
-      localStorage.setItem('sitio-perfis', JSON.stringify(perfis));
+      const id = Math.max(...appData.perfis.map(p => p.id), 0) + 1;
+      appData.perfis.push({ id, nome, cor: '#10b981' });
       
+      salvarDadosLocal();
       renderPerfis();
       document.getElementById('newProfileName').value = '';
       closeProfileModal();
       showToast(`✅ Perfil "${nome}" criado!`);
+      await sincronizarComGitHub();
     }
 
     // CADASTRO
@@ -1281,7 +1401,7 @@
 
     function obterLocalizacao() {
       if (!navigator.geolocation) {
-        alert('GPS não disponível no seu dispositivo');
+        alert('GPS não disponível');
         return;
       }
 
@@ -1328,12 +1448,14 @@
       
       const nomeId = document.getElementById('novoId').value.trim();
       
-      if (plantas.some(p => p.nomeId === nomeId)) {
+      if (appData.plantas.some(p => p.nomeId === nomeId)) {
         return alert('⚠️ ID já existe!');
       }
 
+      const perfilSelecionado = appData.perfis.find(p => p.id === appData.perfilAtual);
+
       const novaPlanta = {
-        id: proximoId++,
+        id: appData.proximoId++,
         nome: especie,
         nomeId: nomeId,
         ultRega: null,
@@ -1343,23 +1465,23 @@
         idadeMeses: document.getElementById('idadePlanta').value || 0,
         coordenadas: document.getElementById('coordenadas').value || null,
         observacoes: '',
-        responsavelPlantio: document.getElementById('responsavel').value.trim() || perfilAtual?.nome || 'Sistema',
+        responsavelPlantio: document.getElementById('responsavel').value.trim() || perfilSelecionado?.nome || 'Sistema',
         cadastradoEm: new Date().toISOString()
       };
 
-      plantas.push(novaPlanta);
+      appData.plantas.push(novaPlanta);
       
-      historico.push({
-        id: Math.random(),
+      appData.historico.push({
+        id: Date.now() + Math.random(),
         tipo: 'cadastro',
         planta: especie,
         plantaId: nomeId,
-        perfil: perfilAtual?.nome || 'Sistema',
+        perfil: perfilSelecionado?.nome || 'Sistema',
         data: new Date().toISOString(),
         observacao: 'Planta cadastrada'
       });
       
-      salvarDados();
+      salvarDadosLocal();
       renderAll();
       
       showToast(`✅ ${especie} #${nomeId} cadastrada!`);
@@ -1372,27 +1494,15 @@
       document.querySelector('.tab[onclick*="plantas"]').click();
     }
 
-    // PERSISTÊNCIA
-    function salvarDados() {
-      const backup = {
-        plantas,
-        config,
-        historico,
-        proximoId,
-        dataSalvamento: new Date().toISOString(),
-        versao: '6.1'
-      };
-      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
+    // PERSISTÊNCIA LOCAL
+    function salvarDadosLocal() {
+      localStorage.setItem('sitio-app-data', JSON.stringify(appData));
     }
 
-    function carregarDados() {
-      const saved = localStorage.getItem('sitio-ipiranga-backup');
+    function carregarDadosLocal() {
+      const saved = localStorage.getItem('sitio-app-data');
       if (saved) {
-        const backup = JSON.parse(saved);
-        plantas = backup.plantas || [];
-        config = backup.config || config;
-        historico = backup.historico || [];
-        proximoId = backup.proximoId || plantas.length + 1;
+        appData = JSON.parse(saved);
         return true;
       }
       return false;
@@ -1400,70 +1510,65 @@
 
     // CONFIGURAÇÕES
     function loadConfig() {
-      const saved = localStorage.getItem('sitio-config');
-      if (saved) {
-        config = JSON.parse(saved);
-      }
+      document.getElementById('mang_rega').value = appData.config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = appData.config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = appData.config.Mangabeira.colheita;
       
-      document.getElementById('mang_rega').value = config.Mangabeira.rega;
-      document.getElementById('mang_poda').value = config.Mangabeira.poda;
-      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      document.getElementById('caju_rega').value = appData.config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = appData.config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = appData.config.Cajueiro.colheita;
       
-      document.getElementById('caju_rega').value = config.Cajueiro.rega;
-      document.getElementById('caju_poda').value = config.Cajueiro.poda;
-      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      document.getElementById('coq_rega').value = appData.config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = appData.config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = appData.config.Coqueiro.colheita;
       
-      document.getElementById('coq_rega').value = config.Coqueiro.rega;
-      document.getElementById('coq_poda').value = config.Coqueiro.poda;
-      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
-      
-      document.getElementById('cac_rega').value = config.Cacau.rega;
-      document.getElementById('cac_poda').value = config.Cacau.poda;
-      document.getElementById('cac_colh').value = config.Cacau.colheita;
+      document.getElementById('cac_rega').value = appData.config.Cacau.rega;
+      document.getElementById('cac_poda').value = appData.config.Cacau.poda;
+      document.getElementById('cac_colh').value = appData.config.Cacau.colheita;
     }
 
-    function saveConfig() {
-      config.Mangabeira = {
+    async function saveConfig() {
+      appData.config.Mangabeira = {
         rega: parseInt(document.getElementById('mang_rega').value),
         poda: parseInt(document.getElementById('mang_poda').value),
         colheita: parseInt(document.getElementById('mang_colh').value)
       };
       
-      config.Cajueiro = {
+      appData.config.Cajueiro = {
         rega: parseInt(document.getElementById('caju_rega').value),
         poda: parseInt(document.getElementById('caju_poda').value),
         colheita: parseInt(document.getElementById('caju_colh').value)
       };
       
-      config.Coqueiro = {
+      appData.config.Coqueiro = {
         rega: parseInt(document.getElementById('coq_rega').value),
         poda: parseInt(document.getElementById('coq_poda').value),
         colheita: parseInt(document.getElementById('coq_colh').value)
       };
       
-      config.Cacau = {
+      appData.config.Cacau = {
         rega: parseInt(document.getElementById('cac_rega').value),
         poda: parseInt(document.getElementById('cac_poda').value),
         colheita: parseInt(document.getElementById('cac_colh').value)
       };
       
-      localStorage.setItem('sitio-config', JSON.stringify(config));
-      salvarDados();
+      salvarDadosLocal();
       showToast('✅ Intervalos salvos!');
       renderAll();
+      await sincronizarComGitHub();
     }
 
     function getIntervalos(nome) {
       const n = nome.toLowerCase();
       
-      if (config[nome]) return config[nome];
+      if (appData.config[nome]) return appData.config[nome];
       
-      if (n.includes('mangabeira')) return config.Mangabeira;
-      if (n.includes('caju')) return config.Cajueiro;
-      if (n.includes('coq')) return config.Coqueiro;
-      if (n.includes('cacau')) return config.Cacau;
+      if (n.includes('mangabeira')) return appData.config.Mangabeira;
+      if (n.includes('caju')) return appData.config.Cajueiro;
+      if (n.includes('coq')) return appData.config.Coqueiro;
+      if (n.includes('cacau')) return appData.config.Cacau;
       
-      return config.default;
+      return appData.config.default;
     }
 
     // NAVEGAÇÃO
@@ -1508,7 +1613,7 @@
       const container = document.getElementById('acoesHoje');
       const acoes = [];
       
-      plantas.forEach(p => {
+      appData.plantas.forEach(p => {
         const int = getIntervalos(p.nome);
         
         const dR = diasDesde(p.ultRega);
@@ -1570,6 +1675,8 @@
         return (b.dias || 0) - (a.dias || 0);
       });
       
+      const perfilSelecionado = appData.perfis.find(p => p.id === appData.perfilAtual);
+      
       container.innerHTML = acoesFiltradas.map(a => `
         <div class="action-item ${a.urg}">
           <div class="action-title">
@@ -1577,7 +1684,7 @@
             ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
           </div>
           <div class="action-desc">${a.msg}</div>
-          <div class="action-meta">Por: ${perfilAtual?.nome || '⚠️ Selecione perfil'}</div>
+          <div class="action-meta">Por: ${perfilSelecionado?.nome || '⚠️ Selecione perfil'}</div>
           <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
             ✓ Marcar como feito
           </button>
@@ -1588,32 +1695,33 @@
     }
 
     async function marcarFeito(pid, tipo) {
-      const p = plantas.find(pl => pl.id === pid);
+      const p = appData.plantas.find(pl => pl.id === pid);
       if (!p) return alert('Planta não encontrada');
       
-      if (!perfilAtual) {
+      if (!appData.perfilAtual) {
         alert('⚠️ Selecione um perfil na aba Config');
         return;
       }
       
+      const perfilSelecionado = appData.perfis.find(pf => pf.id === appData.perfilAtual);
       const hoje = new Date().toISOString().split('T')[0];
       
       if (tipo === 'rega') p.ultRega = hoje;
       if (tipo === 'poda') p.ultPoda = hoje;
       if (tipo === 'colheita') p.ultColh = hoje;
       
-      historico.push({
-        id: Math.random(),
+      appData.historico.push({
+        id: Date.now() + Math.random(),
         tipo,
         planta: p.nome,
         plantaId: p.nomeId,
-        perfil: perfilAtual.nome,
+        perfil: perfilSelecionado.nome,
         data: new Date().toISOString()
       });
       
-      salvarDados();
+      salvarDadosLocal();
       renderAll();
-      showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
+      showToast(`✅ ${tipo} registrada por ${perfilSelecionado.nome}`);
       
       await sincronizarComGitHub();
     }
@@ -1627,13 +1735,13 @@
       const container = document.getElementById('plantasList');
       const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
       
-      if (plantas.length === 0) {
+      if (appData.plantas.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada</p></div>';
         document.getElementById('plantCount').textContent = '📊 0 plantas';
         return;
       }
       
-      let pFilt = plantas.filter(p => 
+      let pFilt = appData.plantas.filter(p => 
         p.nome.toLowerCase().includes(searchTerm) || 
         p.nomeId.toLowerCase().includes(searchTerm)
       );
@@ -1653,14 +1761,14 @@
         </div>
       `).join('');
       
-      document.getElementById('plantCount').textContent = `📊 ${plantas.length} plantas`;
+      document.getElementById('plantCount').textContent = `📊 ${appData.plantas.length} plantas`;
     }
 
     // RENDERIZAR HISTÓRICO
     function renderHistorico() {
       const container = document.getElementById('historicoList');
       
-      if (historico.length === 0) {
+      if (appData.historico.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
         return;
       }
@@ -1671,11 +1779,11 @@
       }
       
       const agora = new Date();
-      const historicoFiltrado = historico.filter(h => {
+      const historicoFiltrado = appData.historico.filter(h => {
         const hData = new Date(h.data);
         const diff = Math.floor((agora - hData) / (1000 * 60 * 60 * 24));
         return diff <= dias;
-      }).reverse();
+      }).slice(0, 100);
       
       if (historicoFiltrado.length === 0) {
         container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação neste período</p></div>';
@@ -1700,10 +1808,10 @@
 
     // RENDERIZAR STATS
     function renderStats() {
-      document.getElementById('statTotal').textContent = plantas.length;
+      document.getElementById('statTotal').textContent = appData.plantas.length;
       
       let pend = 0, urg = 0;
-      plantas.forEach(p => {
+      appData.plantas.forEach(p => {
         const int = getIntervalos(p.nome);
         const dR = diasDesde(p.ultRega);
         const dP = diasDesde(p.ultPoda);
@@ -1720,7 +1828,7 @@
       document.getElementById('statPend').textContent = pend;
       document.getElementById('statUrg').textContent = urg;
       
-      const esp = [...new Set(plantas.map(p => p.nome))];
+      const esp = [...new Set(appData.plantas.map(p => p.nome))];
       document.getElementById('statEsp').textContent = esp.length;
 
       const speciesSummary = document.getElementById('speciesSummary');
@@ -1728,7 +1836,7 @@
         speciesSummary.innerHTML = '<div class="info-box">Nenhuma planta</div>';
       } else {
         speciesSummary.innerHTML = esp.map(e => {
-          const count = plantas.filter(p => p.nome === e).length;
+          const count = appData.plantas.filter(p => p.nome === e).length;
           return `<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between;"><strong>${e}</strong> <span>${count}</span></div>`;
         }).join('');
       }
@@ -1739,30 +1847,38 @@
       renderPlantas();
       renderHistorico();
       renderStats();
+      loadPerfis();
     }
 
     // INICIALIZAÇÃO
     window.addEventListener('load', async () => {
       updateOnlineStatus();
-      loadPerfis();
       carregarTokenGitHub();
       
-      const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
-      if (perfilSalvo) {
-        selectProfile(parseInt(perfilSalvo));
-      }
+      const temDadosLocal = carregarDadosLocal();
       
-      const temDados = carregarDados();
-      if (!temDados) {
+      if (githubToken) {
+        showToast('🔄 Sincronizando com GitHub...');
+        await carregarDadosDoGitHub();
+      } else if (!temDadosLocal) {
         await carregarDadosDoGitHub();
       }
       
       loadConfig();
       renderAll();
+      renderCustomSpecies();
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
       
       showToast('✅ App carregado!');
+      
+      if (githubToken) {
+        setInterval(async () => {
+          if (!isSyncing && navigator.onLine) {
+            await sincronizarComGitHub();
+          }
+        }, 300000);
+      }
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
@@ -1771,10 +1887,8 @@
       }
     });
 
-    // Auto-save
-    setInterval(salvarDados, 30000);
+    setInterval(salvarDadosLocal, 30000);
     
-    // Fechar modal ao clicar fora
     window.onclick = function(event) {
       if (event.target.classList.contains('modal')) {
         event.target.classList.remove('active');
