@@ -618,6 +618,9 @@
         <button class="btn btn-primary" onclick="sincronizarComGitHub()" style="flex: 1; margin: 0;">
           🔄 Sincronizar Agora
         </button>
+        <button class="btn btn-secondary" onclick="testarConexaoGitHub()" style="flex: 1; margin: 0;">
+          🔍 Testar Conexão
+        </button>
       </div>
 
       <div class="filter-group">
@@ -1255,6 +1258,10 @@
         syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
+        // Limpar sincronizações pendentes
+        localStorage.removeItem('sync-pendente');
+        verificarSincPendentes();
+        
         showToast('✅ Todos os dados enviados para o GitHub!');
         return true;
         
@@ -1417,7 +1424,7 @@
       renderPerfis();
       showToast('🗑️ Perfil excluído!');
       
-      await sincronizarComGitHub();
+      sincronizarEmBackground();
     }
 
     function openProfileModal() {
@@ -1441,7 +1448,7 @@
       closeProfileModal();
       showToast(`✅ Perfil "${nome}" criado!`);
       
-      await sincronizarComGitHub();
+      sincronizarEmBackground();
     }
 
     // CADASTRO
@@ -1534,7 +1541,7 @@
       renderAll();
       
       showToast(`✅ ${especie} #${nomeId} cadastrada!`);
-      await sincronizarComGitHub();
+      sincronizarEmBackground();
       
       document.getElementById('novaEspecie').value = '';
       document.getElementById('novoId').value = '';
@@ -1623,7 +1630,7 @@
       showToast('✅ Intervalos salvos!');
       renderAll();
       
-      await sincronizarComGitHub();
+      sincronizarEmBackground();
     }
 
     function getIntervalos(nome) {
@@ -1784,28 +1791,41 @@
         data: new Date().toISOString()
       });
       
+      // SEMPRE salvar localmente primeiro
       salvarDados();
       renderAll();
       showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
       
-      // Tentar sincronizar, mas continuar mesmo se falhar
+      // Tentar sincronizar em background (não bloqueia a ação)
+      if (!githubToken) {
+        showToast('⚠️ Token não configurado - Configure na aba Config', 3000);
+        marcarPendente();
+        return;
+      }
+      
+      if (!navigator.onLine) {
+        showToast('📴 Offline - Será sincronizado quando conectar', 3000);
+        marcarPendente();
+        return;
+      }
+      
+      // Sincronizar em background sem bloquear
+      sincronizarEmBackground();
+    }
+    
+    function marcarPendente() {
+      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
+      pendentes.push({ tipo: 'acao', timestamp: Date.now() });
+      localStorage.setItem('sync-pendente', JSON.stringify(pendentes));
+      verificarSincPendentes();
+    }
+    
+    async function sincronizarEmBackground() {
       try {
-        if (navigator.onLine && githubToken) {
-          await sincronizarComGitHub();
-        } else {
-          showToast('📴 Offline - Sincronizará quando conectar', 5000);
-          // Marcar para sincronização posterior
-          const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
-          pendentes.push({ tipo: 'acao', timestamp: Date.now() });
-          localStorage.setItem('sync-pendente', JSON.stringify(pendentes));
-        }
+        await sincronizarComGitHub();
       } catch (error) {
-        console.error('Erro ao sincronizar:', error);
-        showToast('⚠️ Salvo localmente - Sincronize depois', 5000);
-        // Marcar para sincronização posterior
-        const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
-        pendentes.push({ tipo: 'acao', timestamp: Date.now() });
-        localStorage.setItem('sync-pendente', JSON.stringify(pendentes));
+        console.error('Erro ao sincronizar em background:', error);
+        marcarPendente();
       }
     }
 
@@ -1930,6 +1950,80 @@
       renderPlantas();
       renderHistorico();
       renderStats();
+      verificarSincPendentes();
+    }
+
+    function verificarSincPendentes() {
+      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
+      const alertDiv = document.getElementById('pendingSyncAlert');
+      if (alertDiv) {
+        alertDiv.style.display = pendentes.length > 0 ? 'block' : 'none';
+      }
+    }
+
+    // TESTE DE CONEXÃO
+    async function testarConexaoGitHub() {
+      if (!githubToken) {
+        alert('❌ Token não configurado!\n\nConfigure o token primeiro na seção acima.');
+        return;
+      }
+
+      showToast('🔍 Testando conexão...');
+
+      try {
+        // Teste 1: Verificar token
+        const userResp = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!userResp.ok) {
+          alert(`❌ Token inválido!\n\nStatus: ${userResp.status}\n\nGere um novo token em:\ngithub.com/settings/tokens`);
+          return;
+        }
+
+        const userData = await userResp.json();
+
+        // Teste 2: Verificar acesso ao repositório
+        const repoResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!repoResp.ok) {
+          alert(`❌ Sem acesso ao repositório!\n\nStatus: ${repoResp.status}\n\nVerifique se o token tem permissão 'repo'.`);
+          return;
+        }
+
+        // Teste 3: Verificar arquivos
+        const arquivos = ['dados.geojson', 'perfis.json', 'historico.json', 'config.json'];
+        const resultados = [];
+
+        for (const arquivo of arquivos) {
+          const fileResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${arquivo}`, {
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          resultados.push({ arquivo, existe: fileResp.ok });
+        }
+
+        const faltando = resultados.filter(r => !r.existe).map(r => r.arquivo);
+
+        if (faltando.length > 0) {
+          alert(`⚠️ Arquivos faltando no GitHub:\n\n${faltando.join('\n')}\n\nCrie esses arquivos no repositório primeiro!`);
+        } else {
+          alert(`✅ Conexão OK!\n\nUsuário: ${userData.login}\nRepositório: ${GITHUB_REPO}\n\nTodos os 4 arquivos existem.`);
+        }
+
+      } catch (error) {
+        alert(`❌ Erro de conexão!\n\n${error.message}\n\nVerifique:\n- Conexão com internet\n- Token configurado\n- Arquivos JSON no GitHub`);
+      }
     }
 
     // INICIALIZAÇÃO
