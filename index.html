@@ -606,6 +606,12 @@
         <span>✅</span>
         <span>Sincronização completa ativa (plantas + perfis + histórico + config)</span>
       </div>
+      
+      <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+        <button class="btn btn-primary" onclick="sincronizarComGitHub()" style="flex: 1; margin: 0;">
+          🔄 Sincronizar Agora
+        </button>
+      </div>
 
       <div class="filter-group">
         <button class="filter-btn active" onclick="filterAcoes(event, 'todas')">Todas</button>
@@ -1092,48 +1098,68 @@
       statusDot.classList.add('syncing');
 
       try {
-        // Função auxiliar para commit de arquivo
-        async function commitFile(filename, content, message) {
-          const encodedContent = btoa(unescape(encodeURIComponent(content)));
-          
-          // Obter SHA atual
-          const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
-          const getResp = await fetch(getUrl, {
-            headers: {
-              'Authorization': `token ${githubToken}`,
-              'Accept': 'application/vnd.github.v3+json'
+        // Função auxiliar para commit de arquivo COM RETRY
+        async function commitFile(filename, content, message, maxRetries = 3) {
+          for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
+            try {
+              const encodedContent = btoa(unescape(encodeURIComponent(content)));
+              
+              // SEMPRE obter SHA mais recente antes de commitar
+              const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}&_=${Date.now()}`;
+              const getResp = await fetch(getUrl, {
+                headers: {
+                  'Authorization': `token ${githubToken}`,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Cache-Control': 'no-cache'
+                }
+              });
+              
+              let sha = null;
+              if (getResp.ok) {
+                const fileData = await getResp.json();
+                sha = fileData.sha;
+              }
+              
+              // Fazer commit com SHA atualizado
+              const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
+              const updateResp = await fetch(updateUrl, {
+                method: 'PUT',
+                headers: {
+                  'Authorization': `token ${githubToken}`,
+                  'Accept': 'application/vnd.github.v3+json',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  message: message,
+                  content: encodedContent,
+                  branch: GITHUB_BRANCH,
+                  sha: sha
+                })
+              });
+              
+              if (!updateResp.ok) {
+                const errorData = await updateResp.json();
+                
+                // Se for erro de SHA, tentar novamente
+                if (errorData.message && errorData.message.includes('does not match') && tentativa < maxRetries) {
+                  console.log(`Conflito de SHA em ${filename}, tentando novamente (${tentativa}/${maxRetries})...`);
+                  await new Promise(resolve => setTimeout(resolve, 1000)); // Espera 1 segundo
+                  continue;
+                }
+                
+                throw new Error(`${filename}: ${errorData.message || 'Erro ao fazer commit'}`);
+              }
+              
+              return true; // Sucesso!
+              
+            } catch (error) {
+              if (tentativa === maxRetries) {
+                throw error; // Última tentativa falhou
+              }
+              console.log(`Erro na tentativa ${tentativa}, tentando novamente...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
             }
-          });
-          
-          let sha = null;
-          if (getResp.ok) {
-            const fileData = await getResp.json();
-            sha = fileData.sha;
           }
-          
-          // Fazer commit
-          const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
-          const updateResp = await fetch(updateUrl, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `token ${githubToken}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              message: message,
-              content: encodedContent,
-              branch: GITHUB_BRANCH,
-              sha: sha
-            })
-          });
-          
-          if (!updateResp.ok) {
-            const errorData = await updateResp.json();
-            throw new Error(`${filename}: ${errorData.message || 'Erro ao fazer commit'}`);
-          }
-          
-          return true;
         }
         
         // 1. Sincronizar plantas (dados.geojson)
