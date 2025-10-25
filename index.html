@@ -823,6 +823,10 @@
       <button class="btn btn-primary" onclick="salvarTokenGitHub()">
         💾 Salvar Token
       </button>
+      
+      <button class="btn btn-secondary" onclick="forcarSyncCompleta()" style="margin-top: 0.5rem;">
+        🔄 Forçar Sync Completa (resolver conflitos)
+      </button>
     </div>
 
     <div class="section">
@@ -1039,7 +1043,7 @@
       sincronizarComGitHub();
     }
 
-    // CARREGAR DADOS COMPLETOS DO GITHUB
+    // CARREGAR DADOS COMPLETOS DO GITHUB (SEM COMMIT)
     async function carregarDadosDoGitHub() {
       if (!githubToken) {
         console.log('⚠️ Token não configurado, usando dados locais');
@@ -1051,7 +1055,8 @@
         const response = await fetch(url, {
           headers: {
             'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json'
+            'Accept': 'application/vnd.github.v3+json',
+            'Cache-Control': 'no-cache' // Forçar dados frescos
           }
         });
         
@@ -1067,9 +1072,14 @@
         const content = atob(fileData.content);
         const dados = JSON.parse(content);
         
-        console.log('📥 Dados carregados do GitHub:', dados);
+        console.log('📥 Dados carregados do GitHub:', {
+          plantas: dados.plantas?.length || 0,
+          historico: dados.historico?.length || 0,
+          perfis: dados.perfis?.length || 0,
+          ultimaAtualizacao: dados.ultimaAtualizacao
+        });
         
-        // Merge inteligente dos dados
+        // Merge inteligente dos dados (NÃO sobrescrever tudo)
         appData = mergeAppData(appData, dados);
         
         salvarDadosLocal();
@@ -1130,8 +1140,8 @@
       };
     }
 
-    // SINCRONIZAR COM GITHUB
-    async function sincronizarComGitHub() {
+    // SINCRONIZAR COM GITHUB (COM RETRY E RESOLUÇÃO DE CONFLITOS)
+    async function sincronizarComGitHub(tentativa = 1, maxTentativas = 3) {
       if (!githubToken) {
         console.log('⚠️ Token não configurado');
         return false;
@@ -1152,21 +1162,11 @@
       const statusDot = document.getElementById('statusDot');
       
       syncInfo.className = 'sync-indicator syncing';
-      syncInfo.innerHTML = '<span>🔄</span><span>Sincronizando com GitHub...</span>';
+      syncInfo.innerHTML = `<span>🔄</span><span>Sincronizando ${tentativa > 1 ? `(tentativa ${tentativa})` : ''}...</span>`;
       statusDot.classList.add('syncing');
 
       try {
-        // Primeiro, carregar dados remotos
-        await carregarDadosDoGitHub();
-        
-        // Atualizar timestamp
-        appData.ultimaAtualizacao = new Date().toISOString();
-        
-        // Preparar conteúdo
-        const content = JSON.stringify(appData, null, 2);
-        const encodedContent = btoa(unescape(encodeURIComponent(content)));
-        
-        // Obter SHA do arquivo existente
+        // PASSO 1: Obter SHA e dados mais recentes do GitHub
         const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
         const getResponse = await fetch(getFileUrl, {
           headers: {
@@ -1176,12 +1176,38 @@
         });
         
         let sha = null;
+        let dadosRemotos = null;
+        
         if (getResponse.ok) {
           const fileData = await getResponse.json();
           sha = fileData.sha;
+          
+          // Decodificar e parsear dados remotos
+          try {
+            const content = atob(fileData.content);
+            dadosRemotos = JSON.parse(content);
+            console.log('📥 Dados remotos carregados para merge');
+          } catch (e) {
+            console.error('Erro ao parsear dados remotos:', e);
+          }
+        } else if (getResponse.status === 404) {
+          console.log('📝 Arquivo não existe, será criado');
+        } else {
+          throw new Error(`Erro ao obter arquivo: ${getResponse.status}`);
         }
         
-        // Fazer commit
+        // PASSO 2: Merge inteligente se houver dados remotos
+        if (dadosRemotos) {
+          console.log('🔀 Fazendo merge dos dados...');
+          appData = mergeAppData(appData, dadosRemotos);
+        }
+        
+        // PASSO 3: Atualizar timestamp e preparar conteúdo
+        appData.ultimaAtualizacao = new Date().toISOString();
+        const content = JSON.stringify(appData, null, 2);
+        const encodedContent = btoa(unescape(encodeURIComponent(content)));
+        
+        // PASSO 4: Fazer commit com SHA atualizado
         const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}`;
         const updateResponse = await fetch(updateUrl, {
           method: 'PUT',
@@ -1200,9 +1226,19 @@
         
         if (!updateResponse.ok) {
           const errorData = await updateResponse.json();
+          
+          // Se for conflito de SHA e ainda tem tentativas, retry
+          if (errorData.message && errorData.message.includes('does not match') && tentativa < maxTentativas) {
+            console.log(`⚠️ Conflito de versão detectado, tentando novamente (${tentativa}/${maxTentativas})...`);
+            isSyncing = false;
+            await new Promise(resolve => setTimeout(resolve, 1000 * tentativa)); // Backoff exponencial
+            return sincronizarComGitHub(tentativa + 1, maxTentativas);
+          }
+          
           throw new Error(errorData.message || 'Erro ao fazer commit');
         }
         
+        // PASSO 5: Salvar localmente e atualizar UI
         salvarDadosLocal();
         
         syncInfo.className = 'sync-indicator success';
@@ -1231,7 +1267,58 @@
         renderAll();
         showToast('✅ Dados sincronizados!');
       } else {
-        showToast('⚠️ Erro na sincronização');
+        showToast('⚠️ Erro na sincronização - tente "Forçar Sync Completa"');
+      }
+    }
+
+    // FORÇAR SINCRONIZAÇÃO COMPLETA (RESOLVER CONFLITOS)
+    async function forcarSyncCompleta() {
+      if (!githubToken) {
+        alert('⚠️ Configure o token primeiro!');
+        return;
+      }
+      
+      if (!confirm('⚠️ Isso irá sobrescrever os dados locais com os dados do GitHub. Continuar?')) {
+        return;
+      }
+      
+      showToast('🔄 Forçando sincronização completa...');
+      
+      try {
+        // Limpar estado de sync
+        isSyncing = false;
+        
+        // Baixar dados do GitHub (sobrescrever locais)
+        const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Erro ao carregar: ${response.status}`);
+        }
+        
+        const fileData = await response.json();
+        const content = atob(fileData.content);
+        appData = JSON.parse(content);
+        
+        // Salvar localmente
+        salvarDadosLocal();
+        
+        // Renderizar tudo
+        loadConfig();
+        renderAll();
+        
+        showToast('✅ Sincronização completa realizada!');
+        console.log('✅ Dados sincronizados completamente do GitHub');
+        
+      } catch (error) {
+        console.error('❌ Erro na sync completa:', error);
+        showToast('❌ Erro: ' + error.message);
       }
     }
 
