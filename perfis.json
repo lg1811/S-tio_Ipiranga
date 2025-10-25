@@ -1,0 +1,16 @@
+{
+  "versao": "6.1",
+  "ultimaAtualizacao": "2025-10-24T00:00:00.000Z",
+  "perfis": [
+    {
+      "id": 1,
+      "nome": "João Silva",
+      "cor": "#10b981"
+    },
+    {
+      "id": 2,
+      "nome": "Maria Santos",
+      "cor": "#10b981"
+    }
+  ]
+}
