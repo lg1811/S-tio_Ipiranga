@@ -1,0 +1,31 @@
+{
+  "versao": "6.1",
+  "ultimaAtualizacao": "2025-10-24T00:00:00.000Z",
+  "intervalos": {
+    "Mangabeira": {
+      "rega": 7,
+      "poda": 180,
+      "colheita": 90
+    },
+    "Cajueiro": {
+      "rega": 10,
+      "poda": 365,
+      "colheita": 60
+    },
+    "Coqueiro": {
+      "rega": 5,
+      "poda": 730,
+      "colheita": 30
+    },
+    "Cacau": {
+      "rega": 3,
+      "poda": 180,
+      "colheita": 120
+    },
+    "default": {
+      "rega": 7,
+      "poda": 180,
+      "colheita": 90
+    }
+  }
+}
