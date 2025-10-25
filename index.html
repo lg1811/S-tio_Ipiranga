@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="App para gestão e monitoramento das frutíferas do Sítio Ipiranga">
   <meta name="theme-color" content="#10b981">
-  <title>Sítio Ipiranga v6.1 - Sync Completo</title>
+  <title>Sítio Ipiranga v7.1 - Sync Completo</title>
   
   <link rel="manifest" href="manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -576,7 +576,7 @@
       <span class="status-dot" id="statusDot"></span>
       <span id="statusText">Carregando...</span>
     </div>
-    <div id="syncStatus" style="font-size: 0.75rem;">v6.1 Sync Completo</div>
+    <div id="syncStatus" style="font-size: 0.75rem;">v7.1 Sync Completo</div>
   </div>
 
   <div class="header">
@@ -728,7 +728,7 @@
       
       <input type="file" id="fileInput" accept=".geojson,.json" onchange="importGeoJSON(event)" style="display: none;">
       
-      <input type="text" class="search-box" id="searchPlanta" placeholder="🔍 Buscar planta..." onkeyup="filtrarPlantas()">
+      <input type="text" class="search-box" id="searchPlanta" placeholder="🔎 Buscar planta..." onkeyup="filtrarPlantas()">
       
       <div style="margin-top: 1rem;" id="plantasList"></div>
     </div>
@@ -1093,7 +1093,7 @@
       }
     }
 
-    // SINCRONIZAR COM GITHUB (COMMIT DIRETO VIA API) - TODOS OS ARQUIVOS
+    // SINCRONIZAR COM GITHUB (COMMIT DIRETO VIA API) - TODOS OS ARQUIVOS - CORRIGIDO
     async function sincronizarComGitHub() {
       if (!githubToken) {
         showToast('⚠️ Configure o token do GitHub na aba Config');
@@ -1114,21 +1114,26 @@
       statusDot.classList.add('syncing');
 
       try {
-        // Função auxiliar para commit de arquivo COM RETRY e timeout
+        // Função auxiliar para commit de arquivo COM RETRY e timeout - CORRIGIDA
         async function commitFile(filename, content, message, maxRetries = 3) {
           for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
             try {
-              const encodedContent = btoa(unescape(encodeURIComponent(content)));
+              // CORREÇÃO 1: Encoding base64 correto
+              const encoder = new TextEncoder();
+              const data = encoder.encode(content);
+              const encodedContent = btoa(String.fromCharCode(...data));
               
               // SEMPRE obter SHA mais recente antes de commitar
-              const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}&_=${Date.now()}`;
+              const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
               
               const getController = new AbortController();
-              const getTimeout = setTimeout(() => getController.abort(), 10000); // 10 segundos timeout
+              // CORREÇÃO 2: Timeout aumentado para 30 segundos
+              const getTimeout = setTimeout(() => getController.abort(), 30000);
               
               const getResp = await fetch(getUrl, {
                 headers: {
-                  'Authorization': `token ${githubToken}`,
+                  // CORREÇÃO 3: Authorization com Bearer
+                  'Authorization': `Bearer ${githubToken}`,
                   'Accept': 'application/vnd.github.v3+json',
                   'Cache-Control': 'no-cache'
                 },
@@ -1154,12 +1159,14 @@
               const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
               
               const updateController = new AbortController();
-              const updateTimeout = setTimeout(() => updateController.abort(), 15000); // 15 segundos timeout
+              // CORREÇÃO 2: Timeout aumentado para 45 segundos
+              const updateTimeout = setTimeout(() => updateController.abort(), 45000);
               
               const updateResp = await fetch(updateUrl, {
                 method: 'PUT',
                 headers: {
-                  'Authorization': `token ${githubToken}`,
+                  // CORREÇÃO 3: Authorization com Bearer
+                  'Authorization': `Bearer ${githubToken}`,
                   'Accept': 'application/vnd.github.v3+json',
                   'Content-Type': 'application/json'
                 },
@@ -1195,11 +1202,14 @@
               return true; // Sucesso!
               
             } catch (error) {
+              // CORREÇÃO 4: Tratamento de erro CORS
               if (error.name === 'AbortError') {
                 console.log(`Timeout na tentativa ${tentativa} para ${filename}`);
                 if (tentativa === maxRetries) {
                   throw new Error(`Timeout: Servidor GitHub não respondeu`);
                 }
+              } else if (error.message && error.message.includes('CORS')) {
+                throw new Error('Erro de CORS - Verifique as permissões do token');
               } else if (tentativa === maxRetries) {
                 throw error; // Última tentativa falhou
               }
@@ -1220,7 +1230,7 @@
         
         // 2. Sincronizar perfis (perfis.json)
         const perfisData = {
-          versao: '6.1',
+          versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
           perfis: perfis
         };
@@ -1232,7 +1242,7 @@
         
         // 3. Sincronizar histórico (historico.json)
         const histData = {
-          versao: '6.1',
+          versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
           historico: historico
         };
@@ -1244,7 +1254,7 @@
         
         // 4. Sincronizar configurações (config.json)
         const configData = {
-          versao: '6.1',
+          versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
           intervalos: config
         };
@@ -1475,596 +1485,3 @@
           
           const display = document.getElementById('coordDisplay');
           display.innerHTML = `
-            <strong>📍 Localização obtida:</strong><br>
-            Latitude: ${lat}<br>
-            Longitude: ${lon}<br>
-            Precisão: ±${accuracy}m
-          `;
-          display.style.display = 'block';
-          
-          showToast('✅ Localização obtida!');
-        },
-        (error) => {
-          alert('Erro ao obter localização: ' + error.message);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
-    }
-
-    async function cadastrarPlanta(event) {
-      event.preventDefault();
-      
-      let especie = document.getElementById('novaEspecie').value;
-      if (especie === 'Outra') {
-        especie = document.getElementById('outraEspecieNome').value.trim();
-        if (!especie) return alert('Digite o nome da espécie');
-      }
-      
-      const nomeId = document.getElementById('novoId').value.trim();
-      
-      if (plantas.some(p => p.nomeId === nomeId)) {
-        return alert('⚠️ ID já existe!');
-      }
-
-      const novaPlanta = {
-        id: proximoId++,
-        nome: especie,
-        nomeId: nomeId,
-        ultRega: null,
-        ultPoda: null,
-        ultColh: null,
-        dataPlantio: document.getElementById('dataPlantio').value,
-        idadeMeses: document.getElementById('idadePlanta').value || 0,
-        coordenadas: document.getElementById('coordenadas').value || null,
-        observacoes: '',
-        responsavelPlantio: document.getElementById('responsavel').value.trim() || perfilAtual?.nome || 'Sistema',
-        cadastradoEm: new Date().toISOString()
-      };
-
-      plantas.push(novaPlanta);
-      
-      historico.push({
-        id: Math.random(),
-        tipo: 'cadastro',
-        planta: especie,
-        plantaId: nomeId,
-        perfil: perfilAtual?.nome || 'Sistema',
-        data: new Date().toISOString(),
-        observacao: 'Planta cadastrada'
-      });
-      
-      salvarDados();
-      renderAll();
-      
-      showToast(`✅ ${especie} #${nomeId} cadastrada!`);
-      sincronizarEmBackground();
-      
-      document.getElementById('novaEspecie').value = '';
-      document.getElementById('novoId').value = '';
-      document.getElementById('coordenadas').value = '';
-      document.getElementById('coordDisplay').style.display = 'none';
-      document.querySelector('.tab[onclick*="plantas"]').click();
-    }
-
-    // PERSISTÊNCIA
-    function salvarDados() {
-      const backup = {
-        plantas,
-        config,
-        historico,
-        proximoId,
-        dataSalvamento: new Date().toISOString(),
-        versao: '6.1'
-      };
-      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
-    }
-
-    function carregarDados() {
-      const saved = localStorage.getItem('sitio-ipiranga-backup');
-      if (saved) {
-        const backup = JSON.parse(saved);
-        plantas = backup.plantas || [];
-        config = backup.config || config;
-        historico = backup.historico || [];
-        proximoId = backup.proximoId || plantas.length + 1;
-        return true;
-      }
-      return false;
-    }
-
-    // CONFIGURAÇÕES
-    function loadConfig() {
-      const saved = localStorage.getItem('sitio-config');
-      if (saved) {
-        config = JSON.parse(saved);
-      }
-      
-      document.getElementById('mang_rega').value = config.Mangabeira.rega;
-      document.getElementById('mang_poda').value = config.Mangabeira.poda;
-      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
-      
-      document.getElementById('caju_rega').value = config.Cajueiro.rega;
-      document.getElementById('caju_poda').value = config.Cajueiro.poda;
-      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
-      
-      document.getElementById('coq_rega').value = config.Coqueiro.rega;
-      document.getElementById('coq_poda').value = config.Coqueiro.poda;
-      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
-      
-      document.getElementById('cac_rega').value = config.Cacau.rega;
-      document.getElementById('cac_poda').value = config.Cacau.poda;
-      document.getElementById('cac_colh').value = config.Cacau.colheita;
-    }
-
-    async function saveConfig() {
-      config.Mangabeira = {
-        rega: parseInt(document.getElementById('mang_rega').value),
-        poda: parseInt(document.getElementById('mang_poda').value),
-        colheita: parseInt(document.getElementById('mang_colh').value)
-      };
-      
-      config.Cajueiro = {
-        rega: parseInt(document.getElementById('caju_rega').value),
-        poda: parseInt(document.getElementById('caju_poda').value),
-        colheita: parseInt(document.getElementById('caju_colh').value)
-      };
-      
-      config.Coqueiro = {
-        rega: parseInt(document.getElementById('coq_rega').value),
-        poda: parseInt(document.getElementById('coq_poda').value),
-        colheita: parseInt(document.getElementById('coq_colh').value)
-      };
-      
-      config.Cacau = {
-        rega: parseInt(document.getElementById('cac_rega').value),
-        poda: parseInt(document.getElementById('cac_poda').value),
-        colheita: parseInt(document.getElementById('cac_colh').value)
-      };
-      
-      localStorage.setItem('sitio-config', JSON.stringify(config));
-      salvarDados();
-      showToast('✅ Intervalos salvos!');
-      renderAll();
-      
-      sincronizarEmBackground();
-    }
-
-    function getIntervalos(nome) {
-      const n = nome.toLowerCase();
-      
-      if (config[nome]) return config[nome];
-      
-      if (n.includes('mangabeira')) return config.Mangabeira;
-      if (n.includes('caju')) return config.Cajueiro;
-      if (n.includes('coq')) return config.Coqueiro;
-      if (n.includes('cacau')) return config.Cacau;
-      
-      return config.default;
-    }
-
-    // NAVEGAÇÃO
-    function switchTab(event, tabName) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-      event.target.classList.add('active');
-      document.getElementById(tabName).classList.add('active');
-    }
-
-    function diasDesde(dataStr) {
-      if (!dataStr) return null;
-      return Math.floor((new Date() - new Date(dataStr)) / (1000 * 60 * 60 * 24));
-    }
-
-    function filterAcoes(event, tipo) {
-      document.querySelectorAll('#acoes .filter-btn').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      filtroAcoesAtual = tipo;
-      renderAcoes();
-    }
-
-    function filterHistorico(event, dias) {
-      document.querySelectorAll('#historico .filter-btn').forEach(b => b.classList.remove('active'));
-      event.target.classList.add('active');
-      filtroHistoricoAtual = dias;
-      renderHistorico();
-    }
-
-    function getTipoIcon(tipo) {
-      const icons = { 
-        rega: '💧', 
-        poda: '✂️', 
-        colheita: '🍊',
-        cadastro: '🌱'
-      };
-      return icons[tipo] || '📌';
-    }
-
-    // RENDERIZAR AÇÕES
-    function renderAcoes() {
-      const container = document.getElementById('acoesHoje');
-      const acoes = [];
-      
-      plantas.forEach(p => {
-        const int = getIntervalos(p.nome);
-        
-        const dR = diasDesde(p.ultRega);
-        if (dR === null || dR >= int.rega) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'rega',
-            icon: '💧',
-            urg: dR === null ? 'warning' : dR >= int.rega + 2 ? 'urgent' : 'normal',
-            msg: dR === null ? 'Nunca foi regada' : dR >= int.rega + 2 ? `Atrasada ${dR - int.rega} dias!` : 'Hora de regar',
-            pid: p.id,
-            dias: dR
-          });
-        }
-        
-        const dP = diasDesde(p.ultPoda);
-        if (dP === null || dP >= int.poda) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'poda',
-            icon: '✂️',
-            urg: dP === null ? 'normal' : dP > int.poda + 30 ? 'warning' : 'normal',
-            msg: dP === null ? 'Nunca foi podada' : `Há ${dP} dias sem poda`,
-            pid: p.id,
-            dias: dP
-          });
-        }
-        
-        const dC = diasDesde(p.ultColh);
-        if (dC === null || dC >= int.colheita) {
-          acoes.push({
-            planta: `${p.nome} #${p.nomeId}`,
-            tipo: 'colheita',
-            icon: '🍊',
-            urg: 'normal',
-            msg: dC === null ? 'Verificar frutos' : `Última colheita há ${dC} dias`,
-            pid: p.id,
-            dias: dC
-          });
-        }
-      });
-      
-      let acoesFiltradas = acoes;
-      if (filtroAcoesAtual === 'urgente') {
-        acoesFiltradas = acoes.filter(a => a.urg === 'urgent');
-      } else if (filtroAcoesAtual !== 'todas') {
-        acoesFiltradas = acoes.filter(a => a.tipo === filtroAcoesAtual);
-      }
-      
-      if (acoesFiltradas.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!</p></div>';
-        document.getElementById('actionCount').textContent = '📋 0 ações';
-        return;
-      }
-      
-      acoesFiltradas.sort((a, b) => {
-        const ord = { urgent: 0, warning: 1, normal: 2 };
-        if (ord[a.urg] !== ord[b.urg]) return ord[a.urg] - ord[b.urg];
-        return (b.dias || 0) - (a.dias || 0);
-      });
-      
-      container.innerHTML = acoesFiltradas.map(a => `
-        <div class="action-item ${a.urg}">
-          <div class="action-title">
-            ${a.icon} ${a.planta}
-            ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
-          </div>
-          <div class="action-desc">${a.msg}</div>
-          <div class="action-meta">Por: ${perfilAtual?.nome || '⚠️ Selecione perfil'}</div>
-          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
-            ✓ Marcar como feito
-          </button>
-        </div>
-      `).join('');
-      
-      document.getElementById('actionCount').textContent = `📋 ${acoes.length} ações`;
-    }
-
-    async function marcarFeito(pid, tipo) {
-      const p = plantas.find(pl => pl.id === pid);
-      if (!p) return alert('Planta não encontrada');
-      
-      if (!perfilAtual) {
-        alert('⚠️ Selecione um perfil na aba Config');
-        return;
-      }
-      
-      const hoje = new Date().toISOString().split('T')[0];
-      
-      if (tipo === 'rega') p.ultRega = hoje;
-      if (tipo === 'poda') p.ultPoda = hoje;
-      if (tipo === 'colheita') p.ultColh = hoje;
-      
-      historico.push({
-        id: Math.random(),
-        tipo,
-        planta: p.nome,
-        plantaId: p.nomeId,
-        perfil: perfilAtual.nome,
-        data: new Date().toISOString()
-      });
-      
-      // SEMPRE salvar localmente primeiro
-      salvarDados();
-      renderAll();
-      showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
-      
-      // Tentar sincronizar em background (não bloqueia a ação)
-      if (!githubToken) {
-        showToast('⚠️ Token não configurado - Configure na aba Config', 3000);
-        marcarPendente();
-        return;
-      }
-      
-      if (!navigator.onLine) {
-        showToast('📴 Offline - Será sincronizado quando conectar', 3000);
-        marcarPendente();
-        return;
-      }
-      
-      // Sincronizar em background sem bloquear
-      sincronizarEmBackground();
-    }
-    
-    function marcarPendente() {
-      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
-      pendentes.push({ tipo: 'acao', timestamp: Date.now() });
-      localStorage.setItem('sync-pendente', JSON.stringify(pendentes));
-      verificarSincPendentes();
-    }
-    
-    async function sincronizarEmBackground() {
-      try {
-        await sincronizarComGitHub();
-      } catch (error) {
-        console.error('Erro ao sincronizar em background:', error);
-        marcarPendente();
-      }
-    }
-
-    // RENDERIZAR PLANTAS
-    function filtrarPlantas() {
-      renderPlantas();
-    }
-
-    function renderPlantas() {
-      const container = document.getElementById('plantasList');
-      const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
-      
-      if (plantas.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada</p></div>';
-        document.getElementById('plantCount').textContent = '📊 0 plantas';
-        return;
-      }
-      
-      let pFilt = plantas.filter(p => 
-        p.nome.toLowerCase().includes(searchTerm) || 
-        p.nomeId.toLowerCase().includes(searchTerm)
-      );
-      
-      container.innerHTML = pFilt.map(p => `
-        <div class="plant-card">
-          <div class="plant-header">
-            <div class="plant-name">🌿 ${p.nome}</div>
-            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
-          </div>
-          <div class="plant-info">
-            <div>💧 Rega: ${p.ultRega ? `${new Date(p.ultRega).toLocaleDateString('pt-BR')} (${diasDesde(p.ultRega)} dias)` : '❌ Não registrada'}</div>
-            <div>✂️ Poda: ${p.ultPoda ? `${new Date(p.ultPoda).toLocaleDateString('pt-BR')} (${diasDesde(p.ultPoda)} dias)` : '❌ Não registrada'}</div>
-            <div>🍊 Colheita: ${p.ultColh ? `${new Date(p.ultColh).toLocaleDateString('pt-BR')} (${diasDesde(p.ultColh)} dias)` : '❌ Não registrada'}</div>
-            ${p.dataPlantio ? `<div>🌱 Plantio: ${new Date(p.dataPlantio).toLocaleDateString('pt-BR')}</div>` : ''}
-          </div>
-        </div>
-      `).join('');
-      
-      document.getElementById('plantCount').textContent = `📊 ${plantas.length} plantas`;
-    }
-
-    // RENDERIZAR HISTÓRICO
-    function renderHistorico() {
-      const container = document.getElementById('historicoList');
-      
-      if (historico.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
-        return;
-      }
-      
-      let dias = 999;
-      if (filtroHistoricoAtual !== 'todos') {
-        dias = parseInt(filtroHistoricoAtual);
-      }
-      
-      const agora = new Date();
-      const historicoFiltrado = historico.filter(h => {
-        const hData = new Date(h.data);
-        const diff = Math.floor((agora - hData) / (1000 * 60 * 60 * 24));
-        return diff <= dias;
-      }).reverse();
-      
-      if (historicoFiltrado.length === 0) {
-        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação neste período</p></div>';
-        return;
-      }
-      
-      container.innerHTML = historicoFiltrado.map(h => {
-        const isToday = Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24)) === 0;
-        return `
-          <div style="background: ${isToday ? '#f0fdf4' : '#f9fafb'}; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid ${isToday ? '#10b981' : '#d1d5db'};">
-            <div style="font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem;">
-              ${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId}
-            </div>
-            <div style="color: #6b7280; font-size: 0.75rem;">
-              👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
-            </div>
-            ${h.observacao ? `<div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">📝 ${h.observacao}</div>` : ''}
-          </div>
-        `;
-      }).join('');
-    }
-
-    // RENDERIZAR STATS
-    function renderStats() {
-      document.getElementById('statTotal').textContent = plantas.length;
-      
-      let pend = 0, urg = 0;
-      plantas.forEach(p => {
-        const int = getIntervalos(p.nome);
-        const dR = diasDesde(p.ultRega);
-        const dP = diasDesde(p.ultPoda);
-        const dC = diasDesde(p.ultColh);
-        
-        if (dR === null || dR >= int.rega) {
-          pend++;
-          if (dR !== null && dR >= int.rega + 2) urg++;
-        }
-        if (dP === null || dP >= int.poda) pend++;
-        if (dC === null || dC >= int.colheita) pend++;
-      });
-      
-      document.getElementById('statPend').textContent = pend;
-      document.getElementById('statUrg').textContent = urg;
-      
-      const esp = [...new Set(plantas.map(p => p.nome))];
-      document.getElementById('statEsp').textContent = esp.length;
-
-      const speciesSummary = document.getElementById('speciesSummary');
-      if (esp.length === 0) {
-        speciesSummary.innerHTML = '<div class="info-box">Nenhuma planta</div>';
-      } else {
-        speciesSummary.innerHTML = esp.map(e => {
-          const count = plantas.filter(p => p.nome === e).length;
-          return `<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between;"><strong>${e}</strong> <span>${count}</span></div>`;
-        }).join('');
-      }
-    }
-
-    function renderAll() {
-      renderAcoes();
-      renderPlantas();
-      renderHistorico();
-      renderStats();
-      verificarSincPendentes();
-    }
-
-    function verificarSincPendentes() {
-      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
-      const alertDiv = document.getElementById('pendingSyncAlert');
-      if (alertDiv) {
-        alertDiv.style.display = pendentes.length > 0 ? 'block' : 'none';
-      }
-    }
-
-    // TESTE DE CONEXÃO
-    async function testarConexaoGitHub() {
-      if (!githubToken) {
-        alert('❌ Token não configurado!\n\nConfigure o token primeiro na seção acima.');
-        return;
-      }
-
-      showToast('🔍 Testando conexão...');
-
-      try {
-        // Teste 1: Verificar token
-        const userResp = await fetch('https://api.github.com/user', {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-
-        if (!userResp.ok) {
-          alert(`❌ Token inválido!\n\nStatus: ${userResp.status}\n\nGere um novo token em:\ngithub.com/settings/tokens`);
-          return;
-        }
-
-        const userData = await userResp.json();
-
-        // Teste 2: Verificar acesso ao repositório
-        const repoResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
-          headers: {
-            'Authorization': `token ${githubToken}`,
-            'Accept': 'application/vnd.github.v3+json'
-          }
-        });
-
-        if (!repoResp.ok) {
-          alert(`❌ Sem acesso ao repositório!\n\nStatus: ${repoResp.status}\n\nVerifique se o token tem permissão 'repo'.`);
-          return;
-        }
-
-        // Teste 3: Verificar arquivos
-        const arquivos = ['dados.geojson', 'perfis.json', 'historico.json', 'config.json'];
-        const resultados = [];
-
-        for (const arquivo of arquivos) {
-          const fileResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${arquivo}`, {
-            headers: {
-              'Authorization': `token ${githubToken}`,
-              'Accept': 'application/vnd.github.v3+json'
-            }
-          });
-          resultados.push({ arquivo, existe: fileResp.ok });
-        }
-
-        const faltando = resultados.filter(r => !r.existe).map(r => r.arquivo);
-
-        if (faltando.length > 0) {
-          alert(`⚠️ Arquivos faltando no GitHub:\n\n${faltando.join('\n')}\n\nCrie esses arquivos no repositório primeiro!`);
-        } else {
-          alert(`✅ Conexão OK!\n\nUsuário: ${userData.login}\nRepositório: ${GITHUB_REPO}\n\nTodos os 4 arquivos existem.`);
-        }
-
-      } catch (error) {
-        alert(`❌ Erro de conexão!\n\n${error.message}\n\nVerifique:\n- Conexão com internet\n- Token configurado\n- Arquivos JSON no GitHub`);
-      }
-    }
-
-    // INICIALIZAÇÃO
-    window.addEventListener('load', async () => {
-      updateOnlineStatus();
-      loadPerfis();
-      carregarTokenGitHub();
-      
-      const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
-      if (perfilSalvo) {
-        selectProfile(parseInt(perfilSalvo));
-      }
-      
-      const temDados = carregarDados();
-      if (!temDados) {
-        await carregarDadosDoGitHub();
-      }
-      
-      loadConfig();
-      renderAll();
-      
-      document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
-      
-      showToast('✅ App carregado!');
-      
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('✅ Service Worker registrado:', reg))
-          .catch(err => console.error('❌ Erro ao registrar SW:', err));
-      }
-    });
-
-    // Auto-save
-    setInterval(salvarDados, 30000);
-    
-    // Fechar modal ao clicar fora
-    window.onclick = function(event) {
-      if (event.target.classList.contains('modal')) {
-        event.target.classList.remove('active');
-      }
-    }
-  </script>
-</body>
-</html>
