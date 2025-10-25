@@ -1,0 +1,33 @@
+{
+  "versao": "6.1",
+  "ultimaAtualizacao": "2025-10-24T00:00:00.000Z",
+  "historico": [
+    {
+      "id": 0.123456789,
+      "tipo": "rega",
+      "planta": "Mangabeira",
+      "plantaId": "1",
+      "perfil": "João Silva",
+      "data": "2025-10-23T14:30:00.000Z",
+      "observacao": "Rega realizada após poda"
+    },
+    {
+      "id": 0.987654321,
+      "tipo": "poda",
+      "planta": "Mangabeira",
+      "plantaId": "1",
+      "perfil": "Maria Santos",
+      "data": "2025-10-23T10:15:00.000Z",
+      "observacao": "Poda de manutenção"
+    },
+    {
+      "id": 0.456789123,
+      "tipo": "cadastro",
+      "planta": "Cacau",
+      "plantaId": "2",
+      "perfil": "João Silva",
+      "data": "2025-10-23T08:00:00.000Z",
+      "observacao": "Planta cadastrada"
+    }
+  ]
+}
