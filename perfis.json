@@ -1,6 +1,6 @@
 {
   "versao": "6.1",
-  "ultimaAtualizacao": "2025-10-24T00:00:00.000Z",
+  "ultimaAtualizacao": "2025-10-25T00:42:23.965Z",
   "perfis": [
     {
       "id": 1,
@@ -10,6 +10,11 @@
     {
       "id": 2,
       "nome": "Maria Santos",
+      "cor": "#10b981"
+    },
+    {
+      "id": 3,
+      "nome": "Leticia",
       "cor": "#10b981"
     }
   ]
