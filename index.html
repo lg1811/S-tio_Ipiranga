@@ -827,6 +827,12 @@
       <button class="btn btn-secondary" onclick="forcarSyncCompleta()" style="margin-top: 0.5rem;">
         🔄 Forçar Sync Completa (resolver conflitos)
       </button>
+
+      <button class="btn btn-secondary" onclick="diagnosticarConexao()" style="margin-top: 0.5rem;">
+        🔍 Diagnosticar Conexão
+      </button>
+
+      <div id="diagnosticoResult" style="margin-top: 1rem; display: none;"></div>
     </div>
 
     <div class="section">
@@ -1036,11 +1042,76 @@
       localStorage.setItem('sitio-github-token', token);
       githubToken = token;
       atualizarStatusGitHub(true);
-      showToast('✅ Token salvo! Sincronizando...');
+      showToast('✅ Token salvo! Testando conexão...');
       
-      // Iniciar sync automático
-      iniciarSyncAutomatico();
-      sincronizarComGitHub();
+      // Testar token imediatamente
+      testarConexaoGitHub();
+    }
+
+    // TESTAR CONEXÃO COM GITHUB
+    async function testarConexaoGitHub() {
+      if (!githubToken) {
+        return;
+      }
+
+      showToast('🔍 Testando conexão com GitHub...');
+
+      try {
+        // Testar autenticação
+        const authTest = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!authTest.ok) {
+          if (authTest.status === 401) {
+            throw new Error('Token inválido ou expirado');
+          } else if (authTest.status === 403) {
+            throw new Error('Token sem permissões necessárias (precisa da permissão "repo")');
+          }
+          throw new Error(`Erro de autenticação: ${authTest.status}`);
+        }
+
+        const userData = await authTest.json();
+        console.log('✅ Autenticado como:', userData.login);
+
+        // Testar acesso ao repositório
+        const repoTest = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+          headers: {
+            'Authorization': `token ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!repoTest.ok) {
+          if (repoTest.status === 404) {
+            throw new Error(`Repositório ${GITHUB_REPO} não encontrado ou sem acesso`);
+          }
+          throw new Error(`Erro ao acessar repositório: ${repoTest.status}`);
+        }
+
+        console.log('✅ Acesso ao repositório OK');
+        showToast('✅ Conexão OK! Sincronizando...');
+        
+        // Iniciar sync automático
+        iniciarSyncAutomatico();
+        sincronizarComGitHub();
+
+      } catch (error) {
+        console.error('❌ Erro no teste de conexão:', error);
+        showToast(`❌ ${error.message}`, 5000);
+        
+        const statusDiv = document.getElementById('githubConfigStatus');
+        statusDiv.className = 'error-box';
+        statusDiv.innerHTML = `❌ Erro: ${error.message}<br><br>
+          <strong>Verifique:</strong><br>
+          • Token está correto?<br>
+          • Token tem permissão "repo"?<br>
+          • Repositório ${GITHUB_REPO} existe?<br>
+          • Você tem acesso ao repositório?`;
+      }
     }
 
     // CARREGAR DADOS COMPLETOS DO GITHUB (SEM COMMIT)
@@ -1154,6 +1225,7 @@
 
       if (!navigator.onLine) {
         console.log('📡 Offline - sincronização adiada');
+        showToast('📡 Sem conexão - dados salvos localmente');
         return false;
       }
 
@@ -1167,12 +1239,15 @@
 
       try {
         // PASSO 1: Obter SHA e dados mais recentes do GitHub
+        console.log('📡 Obtendo dados do GitHub...');
         const getFileUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}?ref=${GITHUB_BRANCH}`;
+        
         const getResponse = await fetch(getFileUrl, {
           headers: {
             'Authorization': `token ${githubToken}`,
             'Accept': 'application/vnd.github.v3+json'
-          }
+          },
+          signal: AbortSignal.timeout(10000) // Timeout de 10s
         });
         
         let sha = null;
@@ -1181,19 +1256,30 @@
         if (getResponse.ok) {
           const fileData = await getResponse.json();
           sha = fileData.sha;
+          console.log('✅ SHA obtido:', sha);
           
           // Decodificar e parsear dados remotos
           try {
             const content = atob(fileData.content);
             dadosRemotos = JSON.parse(content);
-            console.log('📥 Dados remotos carregados para merge');
+            console.log('📥 Dados remotos:', {
+              plantas: dadosRemotos.plantas?.length || 0,
+              historico: dadosRemotos.historico?.length || 0,
+              perfis: dadosRemotos.perfis?.length || 0
+            });
           } catch (e) {
-            console.error('Erro ao parsear dados remotos:', e);
+            console.error('❌ Erro ao parsear dados remotos:', e);
           }
         } else if (getResponse.status === 404) {
           console.log('📝 Arquivo não existe, será criado');
+        } else if (getResponse.status === 401) {
+          throw new Error('Token inválido ou expirado. Reconfigure na aba Config.');
+        } else if (getResponse.status === 403) {
+          throw new Error('Sem permissão. Verifique se o token tem acesso "repo".');
+        } else if (getResponse.status === 404) {
+          throw new Error(`Repositório ${GITHUB_REPO} não encontrado.`);
         } else {
-          throw new Error(`Erro ao obter arquivo: ${getResponse.status}`);
+          throw new Error(`Erro ao obter arquivo: HTTP ${getResponse.status}`);
         }
         
         // PASSO 2: Merge inteligente se houver dados remotos
@@ -1206,6 +1292,8 @@
         appData.ultimaAtualizacao = new Date().toISOString();
         const content = JSON.stringify(appData, null, 2);
         const encodedContent = btoa(unescape(encodeURIComponent(content)));
+        
+        console.log('📤 Enviando dados para GitHub...');
         
         // PASSO 4: Fazer commit com SHA atualizado
         const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${APP_DATA_FILE}`;
@@ -1221,7 +1309,8 @@
             content: encodedContent,
             branch: GITHUB_BRANCH,
             sha: sha
-          })
+          }),
+          signal: AbortSignal.timeout(15000) // Timeout de 15s
         });
         
         if (!updateResponse.ok) {
@@ -1235,8 +1324,18 @@
             return sincronizarComGitHub(tentativa + 1, maxTentativas);
           }
           
-          throw new Error(errorData.message || 'Erro ao fazer commit');
+          if (updateResponse.status === 401) {
+            throw new Error('Token inválido. Reconfigure na aba Config.');
+          } else if (updateResponse.status === 403) {
+            throw new Error('Sem permissão de escrita. Verifique o token.');
+          } else if (updateResponse.status === 422) {
+            throw new Error('Dados inválidos. Tente "Forçar Sync Completa".');
+          }
+          
+          throw new Error(errorData.message || `Erro ao fazer commit: HTTP ${updateResponse.status}`);
         }
+        
+        console.log('✅ Commit realizado com sucesso!');
         
         // PASSO 5: Salvar localmente e atualizar UI
         salvarDadosLocal();
@@ -1250,8 +1349,18 @@
         
       } catch (error) {
         console.error('❌ Erro ao sincronizar:', error);
+        
+        let mensagemErro = error.message;
+        
+        // Diagnosticar erros de rede
+        if (error.name === 'TypeError' && error.message === 'Failed to fetch') {
+          mensagemErro = 'Erro de conexão. Verifique sua internet.';
+        } else if (error.name === 'AbortError') {
+          mensagemErro = 'Timeout - conexão muito lenta.';
+        }
+        
         syncInfo.className = 'sync-indicator error';
-        syncInfo.innerHTML = `<span>❌</span><span>Erro: ${error.message}</span>`;
+        syncInfo.innerHTML = `<span>❌</span><span>${mensagemErro}</span>`;
         statusDot.classList.remove('syncing');
         
         return false;
