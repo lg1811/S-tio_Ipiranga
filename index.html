@@ -1098,56 +1098,32 @@
         async function commitFile(filename, content, message, maxRetries = 3) {
           for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
             try {
-              // CORREÇÃO 1: Encoding base64 correto (sem estourar stack)
-              const encoder = new TextEncoder();
-              const data = encoder.encode(content);
-              let binary = '';
-              for (let i = 0; i < data.length; i++) {
-                binary += String.fromCharCode(data[i]);
-              }
-              const encodedContent = btoa(binary);
+              // Encoding base64 simples e confiável
+              const encodedContent = btoa(unescape(encodeURIComponent(content)));
               
               const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
               
-              const getController = new AbortController();
-              // CORREÇÃO 2: Timeout aumentado
-              const getTimeout = setTimeout(() => getController.abort(), 30000);
-              
               const getResp = await fetch(getUrl, {
                 headers: {
-                  // CORREÇÃO 3: Bearer em vez de token
-                  'Authorization': `Bearer ${githubToken}`,
-                  'Accept': 'application/vnd.github.v3+json',
-                  'Cache-Control': 'no-cache'
-                },
-                signal: getController.signal
+                  'Authorization': `token ${githubToken}`,
+                  'Accept': 'application/vnd.github.v3+json'
+                }
               });
-              
-              clearTimeout(getTimeout);
               
               let sha = null;
               if (getResp.ok) {
                 const fileData = await getResp.json();
                 sha = fileData.sha;
-              } else if (getResp.status === 404) {
-                sha = null;
-              } else if (getResp.status === 401) {
-                throw new Error('Token inválido ou expirado');
-              } else {
+              } else if (getResp.status !== 404) {
                 throw new Error(`Erro ao buscar arquivo: ${getResp.status}`);
               }
               
               const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
               
-              const updateController = new AbortController();
-              // CORREÇÃO 2: Timeout aumentado
-              const updateTimeout = setTimeout(() => updateController.abort(), 45000);
-              
               const updateResp = await fetch(updateUrl, {
                 method: 'PUT',
                 headers: {
-                  // CORREÇÃO 3: Bearer em vez de token
-                  'Authorization': `Bearer ${githubToken}`,
+                  'Authorization': `token ${githubToken}`,
                   'Accept': 'application/vnd.github.v3+json',
                   'Content-Type': 'application/json'
                 },
@@ -1156,43 +1132,28 @@
                   content: encodedContent,
                   branch: GITHUB_BRANCH,
                   sha: sha
-                }),
-                signal: updateController.signal
+                })
               });
-              
-              clearTimeout(updateTimeout);
               
               if (!updateResp.ok) {
                 const errorData = await updateResp.json();
                 
                 if (errorData.message && errorData.message.includes('does not match') && tentativa < maxRetries) {
-                  console.log(`Conflito de SHA em ${filename}, tentando novamente (${tentativa}/${maxRetries})...`);
-                  await new Promise(resolve => setTimeout(resolve, 2000));
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                   continue;
-                }
-                
-                if (updateResp.status === 401) {
-                  throw new Error('Token inválido ou sem permissão');
                 }
                 
                 throw new Error(`${filename}: ${errorData.message || 'Erro ao fazer commit'}`);
               }
               
-              console.log(`✅ ${filename} sincronizado com sucesso`);
+              console.log(`✅ ${filename} sincronizado`);
               return true;
               
             } catch (error) {
-              if (error.name === 'AbortError') {
-                console.log(`Timeout na tentativa ${tentativa} para ${filename}`);
-                if (tentativa === maxRetries) {
-                  throw new Error(`Timeout: Servidor GitHub não respondeu`);
-                }
-              } else if (tentativa === maxRetries) {
+              if (tentativa === maxRetries) {
                 throw error;
               }
-              
-              console.log(`Erro na tentativa ${tentativa}, tentando novamente...`);
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, 1000));
             }
           }
         }
