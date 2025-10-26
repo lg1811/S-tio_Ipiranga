@@ -1,6 +1,6 @@
 {
   "versao": "7.1",
-  "ultimaAtualizacao": "2025-10-26T22:52:04.750Z",
+  "ultimaAtualizacao": "2025-10-26T23:23:13.082Z",
   "historico": [
     {
       "id": 0.123456789,
@@ -28,6 +28,22 @@
       "perfil": "João Silva",
       "data": "2025-10-23T08:00:00.000Z",
       "observacao": "Planta cadastrada"
+    },
+    {
+      "id": 0.8060198077055606,
+      "tipo": "rega",
+      "planta": "Mangabeira",
+      "plantaId": "16",
+      "perfil": "Leticia",
+      "data": "2025-10-26T22:52:16.914Z"
+    },
+    {
+      "id": 0.6646716056061919,
+      "tipo": "rega",
+      "planta": "Mangabeira",
+      "plantaId": "17",
+      "perfil": "Leticia",
+      "data": "2025-10-26T23:23:10.493Z"
     }
   ]
 }
