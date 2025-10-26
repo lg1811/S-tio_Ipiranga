@@ -1077,37 +1077,154 @@
     }
 
     async function sincronizarComGitHub() {
-      if (!githubToken) {
-        showToast('⚠️ Configure o token do GitHub na aba Config');
-        return false;
+      async function sincronizarComGitHub() {
+  if (!githubToken) {
+    showToast('⚠️ Configure o token do GitHub na aba Config');
+    return false;
+  }
+
+  if (!navigator.onLine) {
+    showToast('❌ Sem conexão com internet');
+    return false;
+  }
+
+  const syncInfo = document.getElementById('autoSyncInfo');
+  const statusDot = document.getElementById('statusDot');
+  
+  syncInfo.className = 'sync-indicator syncing';
+  syncInfo.innerHTML = '<span>🔄</span><span>Sincronizando com GitHub...</span>';
+  statusDot.classList.add('syncing');
+
+  try {
+    async function commitFile(filename, content, message, maxRetries = 3) {
+      for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
+        try {
+          const encodedContent = btoa(unescape(encodeURIComponent(content)));
+          
+          // SEMPRE pega SHA atualizado em cada tentativa
+          const timestamp = Date.now();
+          const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}&t=${timestamp}`;
+          
+          const getResp = await fetch(getUrl, {
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            },
+            cache: 'no-store' // Força não usar cache
+          });
+          
+          let sha = null;
+          if (getResp.ok) {
+            const fileData = await getResp.json();
+            sha = fileData.sha;
+            console.log(`📌 SHA obtido para ${filename}: ${sha.substring(0, 8)}...`);
+          } else if (getResp.status !== 404) {
+            throw new Error(`Erro ao buscar arquivo: ${getResp.status}`);
+          }
+          
+          const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
+          
+          const updateResp = await fetch(updateUrl, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `token ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              message: message,
+              content: encodedContent,
+              branch: GITHUB_BRANCH,
+              sha: sha
+            })
+          });
+          
+          if (!updateResp.ok) {
+            const errorData = await updateResp.json();
+            
+            // Se der erro de SHA e ainda tem tentativas, aguarda e tenta de novo
+            if (errorData.message && errorData.message.includes('does not match') && tentativa < maxRetries) {
+              console.log(`⚠️ SHA conflito na tentativa ${tentativa}, tentando novamente...`);
+              await new Promise(resolve => setTimeout(resolve, 1500)); // Aguarda 1.5s
+              continue;
+            }
+            
+            throw new Error(`${filename}: ${errorData.message || 'Erro ao fazer commit'}`);
+          }
+          
+          console.log(`✅ ${filename} sincronizado com sucesso`);
+          return true;
+          
+        } catch (error) {
+          if (tentativa === maxRetries) {
+            throw error;
+          }
+          console.log(`⚠️ Erro na tentativa ${tentativa}, tentando novamente...`);
+          await new Promise(resolve => setTimeout(resolve, 1500)); // Aguarda 1.5s entre tentativas
+        }
       }
-
-      if (!navigator.onLine) {
-        showToast('❌ Sem conexão com internet');
-        return false;
-      }
-
-      const syncInfo = document.getElementById('autoSyncInfo');
-      const statusDot = document.getElementById('statusDot');
-      
-      syncInfo.className = 'sync-indicator syncing';
-      syncInfo.innerHTML = '<span>🔄</span><span>Sincronizando com GitHub...</span>';
-      statusDot.classList.add('syncing');
-
-      try {
-        async function commitFile(filename, content, message, maxRetries = 3) {
-          for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
-            try {
-              // Encoding base64 simples e confiável
-              const encodedContent = btoa(unescape(encodeURIComponent(content)));
-              
-              const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
-              
-              const getResp = await fetch(getUrl, {
-                headers: {
-                  'Authorization': `token ${githubToken}`,
-                  'Accept': 'application/vnd.github.v3+json'
-                }
+    }
+    
+    const geojson = gerarGeoJSON();
+    await commitFile(
+      GEOJSON_FILE, 
+      JSON.stringify(geojson, null, 2),
+      `[PWA] Atualização de plantas - ${plantas.length} plantas - ${new Date().toLocaleString('pt-BR')}`
+    );
+    
+    const perfisData = {
+      versao: '7.1',
+      ultimaAtualizacao: new Date().toISOString(),
+      perfis: perfis
+    };
+    await commitFile(
+      'perfis.json',
+      JSON.stringify(perfisData, null, 2),
+      `[PWA] Atualização de perfis - ${perfis.length} perfis`
+    );
+    
+    const histData = {
+      versao: '7.1',
+      ultimaAtualizacao: new Date().toISOString(),
+      historico: historico
+    };
+    await commitFile(
+      'historico.json',
+      JSON.stringify(histData, null, 2),
+      `[PWA] Atualização de histórico - ${historico.length} registros`
+    );
+    
+    const configData = {
+      versao: '7.1',
+      ultimaAtualizacao: new Date().toISOString(),
+      intervalos: config
+    };
+    await commitFile(
+      'config.json',
+      JSON.stringify(configData, null, 2),
+      `[PWA] Atualização de configurações`
+    );
+    
+    syncInfo.className = 'sync-indicator success';
+    syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
+    statusDot.classList.remove('syncing');
+    
+    localStorage.removeItem('sync-pendente');
+    verificarSincPendentes();
+    
+    showToast('✅ Todos os dados enviados para o GitHub!');
+    return true;
+    
+  } catch (error) {
+    console.error('Erro ao sincronizar:', error);
+    syncInfo.className = 'sync-indicator error';
+    syncInfo.innerHTML = `<span>❌</span><span>Erro: ${error.message}</span>`;
+    statusDot.classList.remove('syncing');
+    
+    showToast(`⚠️ Erro ao sincronizar: ${error.message}`);
+    return false;
+  }
+} }
               });
               
               let sha = null;
