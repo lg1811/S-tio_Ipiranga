@@ -597,7 +597,6 @@
     <button class="tab" onclick="switchTab(event, 'config')">⚙️ Config</button>
   </div>
   
-  <!-- ABA AÇÕES -->
   <div id="acoes" class="tab-content active">
     <div class="section">
       <div class="section-title">📋 Ações Necessárias Hoje</div>
@@ -636,7 +635,6 @@
     </div>
   </div>
 
-  <!-- ABA CADASTRO -->
   <div id="cadastro" class="tab-content">
     <div class="section">
       <div class="section-title">➕ Cadastrar Nova Planta</div>
@@ -702,7 +700,6 @@
     </div>
   </div>
   
-  <!-- ABA PLANTAS -->
   <div id="plantas" class="tab-content">
     <div class="section">
       <div class="section-title">🌱 Minhas Plantas</div>
@@ -734,7 +731,6 @@
     </div>
   </div>
 
-  <!-- ABA HISTÓRICO -->
   <div id="historico" class="tab-content">
     <div class="section">
       <div class="section-title">📜 Histórico de Ações</div>
@@ -749,7 +745,6 @@
     </div>
   </div>
 
-  <!-- ABA STATS -->
   <div id="stats" class="tab-content">
     <div class="section">
       <div class="section-title">📊 Estatísticas Gerais</div>
@@ -779,7 +774,6 @@
     </div>
   </div>
   
-  <!-- ABA CONFIG -->
   <div id="config" class="tab-content">
     <div class="section">
       <div class="section-title">🔐 Configuração do GitHub (OBRIGATÓRIO)</div>
@@ -911,7 +905,6 @@
     </div>
   </div>
 
-  <!-- MODAL PERFIL -->
   <div id="profileModal" class="modal">
     <div class="modal-content">
       <div class="modal-title">Novo Perfil</div>
@@ -927,12 +920,10 @@
   <div class="footer-space"></div>
 
   <script>
-    // CONFIGURAÇÃO DO REPOSITÓRIO
     const GITHUB_REPO = 'lg1811/S-tio_Ipiranga';
     const GITHUB_BRANCH = 'main';
     const GEOJSON_FILE = 'dados.geojson';
     
-    // VARIÁVEIS GLOBAIS
     let plantas = [];
     let historico = [];
     let perfis = [];
@@ -950,7 +941,6 @@
       default: { rega: 7, poda: 180, colheita: 90 }
     };
 
-    // TOAST
     function showToast(message, duration = 3000) {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -958,7 +948,6 @@
       setTimeout(() => toast.classList.remove('show'), duration);
     }
 
-    // STATUS ONLINE/OFFLINE
     function updateOnlineStatus() {
       const dot = document.getElementById('statusDot');
       const text = document.getElementById('statusText');
@@ -974,7 +963,6 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
 
-    // VERIFICAR E CARREGAR TOKEN DO GITHUB
     function carregarTokenGitHub() {
       const token = localStorage.getItem('sitio-github-token');
       if (token) {
@@ -1016,10 +1004,8 @@
       showToast('✅ Token salvo! Sincronização ativa.');
     }
 
-    // CARREGAR DADOS DO GITHUB (API PÚBLICA) - TODOS OS ARQUIVOS
     async function carregarDadosDoGitHub() {
       try {
-        // 1. Carregar plantas (dados.geojson)
         const plantasUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/${GEOJSON_FILE}`;
         const plantasResp = await fetch(plantasUrl);
         
@@ -1046,7 +1032,6 @@
           });
         }
         
-        // 2. Carregar perfis (perfis.json)
         try {
           const perfisUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/perfis.json`;
           const perfisResp = await fetch(perfisUrl);
@@ -1059,7 +1044,6 @@
           console.log('Perfis não encontrados, usando local');
         }
         
-        // 3. Carregar histórico (historico.json)
         try {
           const histUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/historico.json`;
           const histResp = await fetch(histUrl);
@@ -1071,7 +1055,6 @@
           console.log('Histórico não encontrado, usando local');
         }
         
-        // 4. Carregar configurações (config.json)
         try {
           const configUrl = `https://raw.githubusercontent.com/${GITHUB_REPO}/${GITHUB_BRANCH}/config.json`;
           const configResp = await fetch(configUrl);
@@ -1093,14 +1076,12 @@
       }
     }
 
-    // SINCRONIZAR COM GITHUB (COMMIT DIRETO VIA API) - TODOS OS ARQUIVOS - CORRIGIDO
     async function sincronizarComGitHub() {
       if (!githubToken) {
         showToast('⚠️ Configure o token do GitHub na aba Config');
         return false;
       }
 
-      // Verificar conectividade
       if (!navigator.onLine) {
         showToast('❌ Sem conexão com internet');
         return false;
@@ -1114,7 +1095,6 @@
       statusDot.classList.add('syncing');
 
       try {
-        // Função auxiliar para commit de arquivo COM RETRY e timeout - CORRIGIDA
         async function commitFile(filename, content, message, maxRetries = 3) {
           for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
             try {
@@ -1123,16 +1103,15 @@
               const data = encoder.encode(content);
               const encodedContent = btoa(String.fromCharCode(...data));
               
-              // SEMPRE obter SHA mais recente antes de commitar
               const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
               
               const getController = new AbortController();
-              // CORREÇÃO 2: Timeout aumentado para 30 segundos
+              // CORREÇÃO 2: Timeout aumentado
               const getTimeout = setTimeout(() => getController.abort(), 30000);
               
               const getResp = await fetch(getUrl, {
                 headers: {
-                  // CORREÇÃO 3: Authorization com Bearer
+                  // CORREÇÃO 3: Bearer em vez de token
                   'Authorization': `Bearer ${githubToken}`,
                   'Accept': 'application/vnd.github.v3+json',
                   'Cache-Control': 'no-cache'
@@ -1147,7 +1126,6 @@
                 const fileData = await getResp.json();
                 sha = fileData.sha;
               } else if (getResp.status === 404) {
-                // Arquivo não existe ainda, criar sem SHA
                 sha = null;
               } else if (getResp.status === 401) {
                 throw new Error('Token inválido ou expirado');
@@ -1155,17 +1133,16 @@
                 throw new Error(`Erro ao buscar arquivo: ${getResp.status}`);
               }
               
-              // Fazer commit com SHA atualizado
               const updateUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}`;
               
               const updateController = new AbortController();
-              // CORREÇÃO 2: Timeout aumentado para 45 segundos
+              // CORREÇÃO 2: Timeout aumentado
               const updateTimeout = setTimeout(() => updateController.abort(), 45000);
               
               const updateResp = await fetch(updateUrl, {
                 method: 'PUT',
                 headers: {
-                  // CORREÇÃO 3: Authorization com Bearer
+                  // CORREÇÃO 3: Bearer em vez de token
                   'Authorization': `Bearer ${githubToken}`,
                   'Accept': 'application/vnd.github.v3+json',
                   'Content-Type': 'application/json'
@@ -1184,10 +1161,9 @@
               if (!updateResp.ok) {
                 const errorData = await updateResp.json();
                 
-                // Se for erro de SHA, tentar novamente
                 if (errorData.message && errorData.message.includes('does not match') && tentativa < maxRetries) {
                   console.log(`Conflito de SHA em ${filename}, tentando novamente (${tentativa}/${maxRetries})...`);
-                  await new Promise(resolve => setTimeout(resolve, 2000)); // Espera 2 segundos
+                  await new Promise(resolve => setTimeout(resolve, 2000));
                   continue;
                 }
                 
@@ -1199,19 +1175,16 @@
               }
               
               console.log(`✅ ${filename} sincronizado com sucesso`);
-              return true; // Sucesso!
+              return true;
               
             } catch (error) {
-              // CORREÇÃO 4: Tratamento de erro CORS
               if (error.name === 'AbortError') {
                 console.log(`Timeout na tentativa ${tentativa} para ${filename}`);
                 if (tentativa === maxRetries) {
                   throw new Error(`Timeout: Servidor GitHub não respondeu`);
                 }
-              } else if (error.message && error.message.includes('CORS')) {
-                throw new Error('Erro de CORS - Verifique as permissões do token');
               } else if (tentativa === maxRetries) {
-                throw error; // Última tentativa falhou
+                throw error;
               }
               
               console.log(`Erro na tentativa ${tentativa}, tentando novamente...`);
@@ -1220,7 +1193,6 @@
           }
         }
         
-        // 1. Sincronizar plantas (dados.geojson)
         const geojson = gerarGeoJSON();
         await commitFile(
           GEOJSON_FILE, 
@@ -1228,7 +1200,6 @@
           `[PWA] Atualização de plantas - ${plantas.length} plantas - ${new Date().toLocaleString('pt-BR')}`
         );
         
-        // 2. Sincronizar perfis (perfis.json)
         const perfisData = {
           versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
@@ -1240,7 +1211,6 @@
           `[PWA] Atualização de perfis - ${perfis.length} perfis`
         );
         
-        // 3. Sincronizar histórico (historico.json)
         const histData = {
           versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
@@ -1252,7 +1222,6 @@
           `[PWA] Atualização de histórico - ${historico.length} registros`
         );
         
-        // 4. Sincronizar configurações (config.json)
         const configData = {
           versao: '7.1',
           ultimaAtualizacao: new Date().toISOString(),
@@ -1268,7 +1237,6 @@
         syncInfo.innerHTML = `<span>✅</span><span>Sincronizado às ${new Date().toLocaleTimeString('pt-BR')}</span>`;
         statusDot.classList.remove('syncing');
         
-        // Limpar sincronizações pendentes
         localStorage.removeItem('sync-pendente');
         verificarSincPendentes();
         
@@ -1397,7 +1365,6 @@
       reader.readAsText(file);
     }
 
-    // PERFIS
     function loadPerfis() {
       const saved = localStorage.getItem('sitio-perfis');
       perfis = saved ? JSON.parse(saved) : [];
@@ -1461,7 +1428,6 @@
       sincronizarEmBackground();
     }
 
-    // CADASTRO
     document.getElementById('novaEspecie')?.addEventListener('change', function() {
       document.getElementById('outraEspecieGroup').style.display = 
         this.value === 'Outra' ? 'block' : 'none';
@@ -1485,3 +1451,567 @@
           
           const display = document.getElementById('coordDisplay');
           display.innerHTML = `
+            <strong>📍 Localização obtida:</strong><br>
+            Latitude: ${lat}<br>
+            Longitude: ${lon}<br>
+            Precisão: ±${accuracy}m
+          `;
+          display.style.display = 'block';
+          
+          showToast('✅ Localização obtida!');
+        },
+        (error) => {
+          alert('Erro ao obter localização: ' + error.message);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    }
+
+    async function cadastrarPlanta(event) {
+      event.preventDefault();
+      
+      let especie = document.getElementById('novaEspecie').value;
+      if (especie === 'Outra') {
+        especie = document.getElementById('outraEspecieNome').value.trim();
+        if (!especie) return alert('Digite o nome da espécie');
+      }
+      
+      const nomeId = document.getElementById('novoId').value.trim();
+      
+      if (plantas.some(p => p.nomeId === nomeId)) {
+        return alert('⚠️ ID já existe!');
+      }
+
+      const novaPlanta = {
+        id: proximoId++,
+        nome: especie,
+        nomeId: nomeId,
+        ultRega: null,
+        ultPoda: null,
+        ultColh: null,
+        dataPlantio: document.getElementById('dataPlantio').value,
+        idadeMeses: document.getElementById('idadePlanta').value || 0,
+        coordenadas: document.getElementById('coordenadas').value || null,
+        observacoes: '',
+        responsavelPlantio: document.getElementById('responsavel').value.trim() || perfilAtual?.nome || 'Sistema',
+        cadastradoEm: new Date().toISOString()
+      };
+
+      plantas.push(novaPlanta);
+      
+      historico.push({
+        id: Math.random(),
+        tipo: 'cadastro',
+        planta: especie,
+        plantaId: nomeId,
+        perfil: perfilAtual?.nome || 'Sistema',
+        data: new Date().toISOString(),
+        observacao: 'Planta cadastrada'
+      });
+      
+      salvarDados();
+      renderAll();
+      
+      showToast(`✅ ${especie} #${nomeId} cadastrada!`);
+      sincronizarEmBackground();
+      
+      document.getElementById('novaEspecie').value = '';
+      document.getElementById('novoId').value = '';
+      document.getElementById('coordenadas').value = '';
+      document.getElementById('coordDisplay').style.display = 'none';
+      document.querySelector('.tab[onclick*="plantas"]').click();
+    }
+
+    function salvarDados() {
+      const backup = {
+        plantas,
+        config,
+        historico,
+        proximoId,
+        dataSalvamento: new Date().toISOString(),
+        versao: '7.1'
+      };
+      localStorage.setItem('sitio-ipiranga-backup', JSON.stringify(backup));
+    }
+
+    function carregarDados() {
+      const saved = localStorage.getItem('sitio-ipiranga-backup');
+      if (saved) {
+        const backup = JSON.parse(saved);
+        plantas = backup.plantas || [];
+        config = backup.config || config;
+        historico = backup.historico || [];
+        proximoId = backup.proximoId || plantas.length + 1;
+        return true;
+      }
+      return false;
+    }
+
+    function loadConfig() {
+      const saved = localStorage.getItem('sitio-config');
+      if (saved) {
+        config = JSON.parse(saved);
+      }
+      
+      document.getElementById('mang_rega').value = config.Mangabeira.rega;
+      document.getElementById('mang_poda').value = config.Mangabeira.poda;
+      document.getElementById('mang_colh').value = config.Mangabeira.colheita;
+      
+      document.getElementById('caju_rega').value = config.Cajueiro.rega;
+      document.getElementById('caju_poda').value = config.Cajueiro.poda;
+      document.getElementById('caju_colh').value = config.Cajueiro.colheita;
+      
+      document.getElementById('coq_rega').value = config.Coqueiro.rega;
+      document.getElementById('coq_poda').value = config.Coqueiro.poda;
+      document.getElementById('coq_colh').value = config.Coqueiro.colheita;
+      
+      document.getElementById('cac_rega').value = config.Cacau.rega;
+      document.getElementById('cac_poda').value = config.Cacau.poda;
+      document.getElementById('cac_colh').value = config.Cacau.colheita;
+    }
+
+    async function saveConfig() {
+      config.Mangabeira = {
+        rega: parseInt(document.getElementById('mang_rega').value),
+        poda: parseInt(document.getElementById('mang_poda').value),
+        colheita: parseInt(document.getElementById('mang_colh').value)
+      };
+      
+      config.Cajueiro = {
+        rega: parseInt(document.getElementById('caju_rega').value),
+        poda: parseInt(document.getElementById('caju_poda').value),
+        colheita: parseInt(document.getElementById('caju_colh').value)
+      };
+      
+      config.Coqueiro = {
+        rega: parseInt(document.getElementById('coq_rega').value),
+        poda: parseInt(document.getElementById('coq_poda').value),
+        colheita: parseInt(document.getElementById('coq_colh').value)
+      };
+      
+      config.Cacau = {
+        rega: parseInt(document.getElementById('cac_rega').value),
+        poda: parseInt(document.getElementById('cac_poda').value),
+        colheita: parseInt(document.getElementById('cac_colh').value)
+      };
+      
+      localStorage.setItem('sitio-config', JSON.stringify(config));
+      salvarDados();
+      showToast('✅ Intervalos salvos!');
+      renderAll();
+      
+      sincronizarEmBackground();
+    }
+
+    function getIntervalos(nome) {
+      const n = nome.toLowerCase();
+      
+      if (config[nome]) return config[nome];
+      
+      if (n.includes('mangabeira')) return config.Mangabeira;
+      if (n.includes('caju')) return config.Cajueiro;
+      if (n.includes('coq')) return config.Coqueiro;
+      if (n.includes('cacau')) return config.Cacau;
+      
+      return config.default;
+    }
+
+    function switchTab(event, tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById(tabName).classList.add('active');
+    }
+
+    function diasDesde(dataStr) {
+      if (!dataStr) return null;
+      return Math.floor((new Date() - new Date(dataStr)) / (1000 * 60 * 60 * 24));
+    }
+
+    function filterAcoes(event, tipo) {
+      document.querySelectorAll('#acoes .filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      filtroAcoesAtual = tipo;
+      renderAcoes();
+    }
+
+    function filterHistorico(event, dias) {
+      document.querySelectorAll('#historico .filter-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      filtroHistoricoAtual = dias;
+      renderHistorico();
+    }
+
+    function getTipoIcon(tipo) {
+      const icons = { 
+        rega: '💧', 
+        poda: '✂️', 
+        colheita: '🍊',
+        cadastro: '🌱'
+      };
+      return icons[tipo] || '📌';
+    }
+
+    function renderAcoes() {
+      const container = document.getElementById('acoesHoje');
+      const acoes = [];
+      
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        
+        const dR = diasDesde(p.ultRega);
+        if (dR === null || dR >= int.rega) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'rega',
+            icon: '💧',
+            urg: dR === null ? 'warning' : dR >= int.rega + 2 ? 'urgent' : 'normal',
+            msg: dR === null ? 'Nunca foi regada' : dR >= int.rega + 2 ? `Atrasada ${dR - int.rega} dias!` : 'Hora de regar',
+            pid: p.id,
+            dias: dR
+          });
+        }
+        
+        const dP = diasDesde(p.ultPoda);
+        if (dP === null || dP >= int.poda) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'poda',
+            icon: '✂️',
+            urg: dP === null ? 'normal' : dP > int.poda + 30 ? 'warning' : 'normal',
+            msg: dP === null ? 'Nunca foi podada' : `Há ${dP} dias sem poda`,
+            pid: p.id,
+            dias: dP
+          });
+        }
+        
+        const dC = diasDesde(p.ultColh);
+        if (dC === null || dC >= int.colheita) {
+          acoes.push({
+            planta: `${p.nome} #${p.nomeId}`,
+            tipo: 'colheita',
+            icon: '🍊',
+            urg: 'normal',
+            msg: dC === null ? 'Verificar frutos' : `Última colheita há ${dC} dias`,
+            pid: p.id,
+            dias: dC
+          });
+        }
+      });
+      
+      let acoesFiltradas = acoes;
+      if (filtroAcoesAtual === 'urgente') {
+        acoesFiltradas = acoes.filter(a => a.urg === 'urgent');
+      } else if (filtroAcoesAtual !== 'todas') {
+        acoesFiltradas = acoes.filter(a => a.tipo === filtroAcoesAtual);
+      }
+      
+      if (acoesFiltradas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✅</div><p>Nenhuma ação pendente!</p></div>';
+        document.getElementById('actionCount').textContent = '📋 0 ações';
+        return;
+      }
+      
+      acoesFiltradas.sort((a, b) => {
+        const ord = { urgent: 0, warning: 1, normal: 2 };
+        if (ord[a.urg] !== ord[b.urg]) return ord[a.urg] - ord[b.urg];
+        return (b.dias || 0) - (a.dias || 0);
+      });
+      
+      container.innerHTML = acoesFiltradas.map(a => `
+        <div class="action-item ${a.urg}">
+          <div class="action-title">
+            ${a.icon} ${a.planta}
+            ${a.urg !== 'normal' ? `<span class="badge ${a.urg}">${a.urg === 'urgent' ? 'URGENTE' : 'ATENÇÃO'}</span>` : ''}
+          </div>
+          <div class="action-desc">${a.msg}</div>
+          <div class="action-meta">Por: ${perfilAtual?.nome || '⚠️ Selecione perfil'}</div>
+          <button class="btn btn-primary" onclick="marcarFeito(${a.pid}, '${a.tipo}')">
+            ✓ Marcar como feito
+          </button>
+        </div>
+      `).join('');
+      
+      document.getElementById('actionCount').textContent = `📋 ${acoes.length} ações`;
+    }
+
+    async function marcarFeito(pid, tipo) {
+      const p = plantas.find(pl => pl.id === pid);
+      if (!p) return alert('Planta não encontrada');
+      
+      if (!perfilAtual) {
+        alert('⚠️ Selecione um perfil na aba Config');
+        return;
+      }
+      
+      const hoje = new Date().toISOString().split('T')[0];
+      
+      if (tipo === 'rega') p.ultRega = hoje;
+      if (tipo === 'poda') p.ultPoda = hoje;
+      if (tipo === 'colheita') p.ultColh = hoje;
+      
+      historico.push({
+        id: Math.random(),
+        tipo,
+        planta: p.nome,
+        plantaId: p.nomeId,
+        perfil: perfilAtual.nome,
+        data: new Date().toISOString()
+      });
+      
+      salvarDados();
+      renderAll();
+      showToast(`✅ ${tipo} registrada por ${perfilAtual.nome}`);
+      
+      sincronizarEmBackground();
+    }
+    
+    function marcarPendente() {
+      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
+      pendentes.push({ tipo: 'acao', timestamp: Date.now() });
+      localStorage.setItem('sync-pendente', JSON.stringify(pendentes));
+      verificarSincPendentes();
+    }
+    
+    async function sincronizarEmBackground() {
+      try {
+        await sincronizarComGitHub();
+      } catch (error) {
+        console.error('Erro ao sincronizar em background:', error);
+        marcarPendente();
+      }
+    }
+
+    function filtrarPlantas() {
+      renderPlantas();
+    }
+
+    function renderPlantas() {
+      const container = document.getElementById('plantasList');
+      const searchTerm = document.getElementById('searchPlanta').value.toLowerCase();
+      
+      if (plantas.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🌱</div><p>Nenhuma planta cadastrada</p></div>';
+        document.getElementById('plantCount').textContent = '📊 0 plantas';
+        return;
+      }
+      
+      let pFilt = plantas.filter(p => 
+        p.nome.toLowerCase().includes(searchTerm) || 
+        p.nomeId.toLowerCase().includes(searchTerm)
+      );
+      
+      container.innerHTML = pFilt.map(p => `
+        <div class="plant-card">
+          <div class="plant-header">
+            <div class="plant-name">🌿 ${p.nome}</div>
+            <div style="color: #10b981; font-weight: 600;">#${p.nomeId}</div>
+          </div>
+          <div class="plant-info">
+            <div>💧 Rega: ${p.ultRega ? `${new Date(p.ultRega).toLocaleDateString('pt-BR')} (${diasDesde(p.ultRega)} dias)` : '❌ Não registrada'}</div>
+            <div>✂️ Poda: ${p.ultPoda ? `${new Date(p.ultPoda).toLocaleDateString('pt-BR')} (${diasDesde(p.ultPoda)} dias)` : '❌ Não registrada'}</div>
+            <div>🍊 Colheita: ${p.ultColh ? `${new Date(p.ultColh).toLocaleDateString('pt-BR')} (${diasDesde(p.ultColh)} dias)` : '❌ Não registrada'}</div>
+            ${p.dataPlantio ? `<div>🌱 Plantio: ${new Date(p.dataPlantio).toLocaleDateString('pt-BR')}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('plantCount').textContent = `📊 ${plantas.length} plantas`;
+    }
+
+    function renderHistorico() {
+      const container = document.getElementById('historicoList');
+      
+      if (historico.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação registrada ainda</p></div>';
+        return;
+      }
+      
+      let dias = 999;
+      if (filtroHistoricoAtual !== 'todos') {
+        dias = parseInt(filtroHistoricoAtual);
+      }
+      
+      const agora = new Date();
+      const historicoFiltrado = historico.filter(h => {
+        const hData = new Date(h.data);
+        const diff = Math.floor((agora - hData) / (1000 * 60 * 60 * 24));
+        return diff <= dias;
+      }).reverse();
+      
+      if (historicoFiltrado.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><p>Nenhuma ação neste período</p></div>';
+        return;
+      }
+      
+      container.innerHTML = historicoFiltrado.map(h => {
+        const isToday = Math.floor((agora - new Date(h.data)) / (1000 * 60 * 60 * 24)) === 0;
+        return `
+          <div style="background: ${isToday ? '#f0fdf4' : '#f9fafb'}; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; border-left: 3px solid ${isToday ? '#10b981' : '#d1d5db'};">
+            <div style="font-weight: 600; margin-bottom: 0.25rem; font-size: 0.9rem;">
+              ${getTipoIcon(h.tipo)} ${h.planta} #${h.plantaId}
+            </div>
+            <div style="color: #6b7280; font-size: 0.75rem;">
+              👤 ${h.perfil} | 📅 ${new Date(h.data).toLocaleDateString('pt-BR')} às ${new Date(h.data).toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}
+            </div>
+            ${h.observacao ? `<div style="color: #6b7280; font-size: 0.75rem; margin-top: 0.25rem;">📝 ${h.observacao}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderStats() {
+      document.getElementById('statTotal').textContent = plantas.length;
+      
+      let pend = 0, urg = 0;
+      plantas.forEach(p => {
+        const int = getIntervalos(p.nome);
+        const dR = diasDesde(p.ultRega);
+        const dP = diasDesde(p.ultPoda);
+        const dC = diasDesde(p.ultColh);
+        
+        if (dR === null || dR >= int.rega) {
+          pend++;
+          if (dR !== null && dR >= int.rega + 2) urg++;
+        }
+        if (dP === null || dP >= int.poda) pend++;
+        if (dC === null || dC >= int.colheita) pend++;
+      });
+      
+      document.getElementById('statPend').textContent = pend;
+      document.getElementById('statUrg').textContent = urg;
+      
+      const esp = [...new Set(plantas.map(p => p.nome))];
+      document.getElementById('statEsp').textContent = esp.length;
+
+      const speciesSummary = document.getElementById('speciesSummary');
+      if (esp.length === 0) {
+        speciesSummary.innerHTML = '<div class="info-box">Nenhuma planta</div>';
+      } else {
+        speciesSummary.innerHTML = esp.map(e => {
+          const count = plantas.filter(p => p.nome === e).length;
+          return `<div style="background: #f9fafb; padding: 0.75rem; border-radius: 6px; margin-bottom: 0.5rem; display: flex; justify-content: space-between;"><strong>${e}</strong> <span>${count}</span></div>`;
+        }).join('');
+      }
+    }
+
+    function renderAll() {
+      renderAcoes();
+      renderPlantas();
+      renderHistorico();
+      renderStats();
+      verificarSincPendentes();
+    }
+
+    function verificarSincPendentes() {
+      const pendentes = JSON.parse(localStorage.getItem('sync-pendente') || '[]');
+      const alertDiv = document.getElementById('pendingSyncAlert');
+      if (alertDiv) {
+        alertDiv.style.display = pendentes.length > 0 ? 'block' : 'none';
+      }
+    }
+
+    async function testarConexaoGitHub() {
+      if (!githubToken) {
+        alert('❌ Token não configurado!\n\nConfigure o token primeiro na seção acima.');
+        return;
+      }
+
+      showToast('🔍 Testando conexão...');
+
+      try {
+        const userResp = await fetch('https://api.github.com/user', {
+          headers: {
+            'Authorization': `Bearer ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!userResp.ok) {
+          alert(`❌ Token inválido!\n\nStatus: ${userResp.status}\n\nGere um novo token em:\ngithub.com/settings/tokens`);
+          return;
+        }
+
+        const userData = await userResp.json();
+
+        const repoResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, {
+          headers: {
+            'Authorization': `Bearer ${githubToken}`,
+            'Accept': 'application/vnd.github.v3+json'
+          }
+        });
+
+        if (!repoResp.ok) {
+          alert(`❌ Sem acesso ao repositório!\n\nStatus: ${repoResp.status}\n\nVerifique se o token tem permissão 'repo'.`);
+          return;
+        }
+
+        const arquivos = ['dados.geojson', 'perfis.json', 'historico.json', 'config.json'];
+        const resultados = [];
+
+        for (const arquivo of arquivos) {
+          const fileResp = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/contents/${arquivo}`, {
+            headers: {
+              'Authorization': `Bearer ${githubToken}`,
+              'Accept': 'application/vnd.github.v3+json'
+            }
+          });
+          resultados.push({ arquivo, existe: fileResp.ok });
+        }
+
+        const faltando = resultados.filter(r => !r.existe).map(r => r.arquivo);
+
+        if (faltando.length > 0) {
+          alert(`⚠️ Arquivos faltando no GitHub:\n\n${faltando.join('\n')}\n\nCrie esses arquivos no repositório primeiro!`);
+        } else {
+          alert(`✅ Conexão OK!\n\nUsuário: ${userData.login}\nRepositório: ${GITHUB_REPO}\n\nTodos os 4 arquivos existem.`);
+        }
+
+      } catch (error) {
+        alert(`❌ Erro de conexão!\n\n${error.message}\n\nVerifique:\n- Conexão com internet\n- Token configurado\n- Arquivos JSON no GitHub`);
+      }
+    }
+
+    window.addEventListener('load', async () => {
+      updateOnlineStatus();
+      loadPerfis();
+      carregarTokenGitHub();
+      
+      const perfilSalvo = localStorage.getItem('sitio-perfil-atual');
+      if (perfilSalvo) {
+        selectProfile(parseInt(perfilSalvo));
+      }
+      
+      const temDados = carregarDados();
+      if (!temDados) {
+        await carregarDadosDoGitHub();
+      }
+      
+      loadConfig();
+      renderAll();
+      
+      document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
+      
+      showToast('✅ App carregado!');
+      
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('service-worker.js')
+          .then(reg => console.log('✅ Service Worker registrado:', reg))
+          .catch(err => console.error('❌ Erro ao registrar SW:', err));
+      }
+    });
+
+    setInterval(salvarDados, 30000);
+    
+    window.onclick = function(event) {
+      if (event.target.classList.contains('modal')) {
+        event.target.classList.remove('active');
+      }
+    }
+  </script>
+</body>
+</html>
