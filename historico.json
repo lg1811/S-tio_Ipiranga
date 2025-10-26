@@ -1,6 +1,6 @@
 {
   "versao": "7.1",
-  "ultimaAtualizacao": "2025-10-26T23:54:55.502Z",
+  "ultimaAtualizacao": "2025-10-26T23:55:33.611Z",
   "historico": [
     {
       "id": 0.123456789,
@@ -52,14 +52,6 @@
       "plantaId": "18",
       "perfil": "Leticia",
       "data": "2025-10-26T23:48:15.696Z"
-    },
-    {
-      "id": 0.5393963341234703,
-      "tipo": "rega",
-      "planta": "Mangabeira",
-      "plantaId": "19",
-      "perfil": "Leticia",
-      "data": "2025-10-26T23:54:51.238Z"
     }
   ]
 }
