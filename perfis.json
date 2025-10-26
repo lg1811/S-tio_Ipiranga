@@ -1,9 +1,14 @@
 {
   "versao": "7.1",
-  "ultimaAtualizacao": "2025-10-26T23:23:12.126Z",
+  "ultimaAtualizacao": "2025-10-26T23:47:58.550Z",
   "perfis": [
     {
       "id": 4,
+      "nome": "Leticia",
+      "cor": "#10b981"
+    },
+    {
+      "id": 5,
       "nome": "Leticia",
       "cor": "#10b981"
     }
