@@ -1098,10 +1098,14 @@
         async function commitFile(filename, content, message, maxRetries = 3) {
           for (let tentativa = 1; tentativa <= maxRetries; tentativa++) {
             try {
-              // CORREÇÃO 1: Encoding base64 correto
+              // CORREÇÃO 1: Encoding base64 correto (sem estourar stack)
               const encoder = new TextEncoder();
               const data = encoder.encode(content);
-              const encodedContent = btoa(String.fromCharCode(...data));
+              let binary = '';
+              for (let i = 0; i < data.length; i++) {
+                binary += String.fromCharCode(data[i]);
+              }
+              const encodedContent = btoa(binary);
               
               const getUrl = `https://api.github.com/repos/${GITHUB_REPO}/contents/${filename}?ref=${GITHUB_BRANCH}`;
               
