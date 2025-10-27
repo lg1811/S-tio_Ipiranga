@@ -1956,17 +1956,26 @@
         selectProfile(parseInt(perfilSalvo));
       }
       
-      const temDados = carregarDados();
-      if (!temDados) {
-        await carregarDadosDoGitHub();
+      // SEMPRE tenta carregar do GitHub primeiro
+      showToast('🔄 Carregando dados do GitHub...');
+      const carregouGitHub = await carregarDadosDoGitHub();
+      
+      // Se não conseguiu carregar do GitHub, usa dados locais
+      if (!carregouGitHub) {
+        const temDadosLocais = carregarDados();
+        if (temDadosLocais) {
+          showToast('📱 Usando dados locais (offline)');
+        } else {
+          showToast('⚠️ Nenhum dado encontrado');
+        }
+      } else {
+        showToast(`✅ ${plantas.length} plantas carregadas do GitHub!`);
       }
       
       loadConfig();
       renderAll();
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
-      
-      showToast('✅ App carregado!');
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
