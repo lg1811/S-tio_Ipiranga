@@ -1956,33 +1956,24 @@
         selectProfile(parseInt(perfilSalvo));
       }
       
-      // Tenta carregar dados locais primeiro
-      const temDadosLocais = carregarDados();
+      // Carrega dados locais primeiro
+      carregarDados();
       
-      // Se estiver online, tenta atualizar do GitHub em background
+      // Tenta atualizar do GitHub SOMENTE se estiver online
       if (navigator.onLine) {
-        carregarDadosDoGitHub().then(sucesso => {
-          if (sucesso) {
-            loadConfig();
-            renderAll();
-            showToast(`✅ ${plantas.length} plantas sincronizadas!`);
-          }
-        }).catch(err => {
-          console.log('Erro ao sincronizar:', err);
-        });
+        try {
+          await carregarDadosDoGitHub();
+        } catch (error) {
+          console.log('Usando dados locais');
+        }
       }
       
-      // Renderiza dados (locais ou do GitHub)
       loadConfig();
       renderAll();
       
-      if (temDadosLocais || plantas.length > 0) {
-        showToast(`✅ ${plantas.length} plantas carregadas!`);
-      } else {
-        showToast('⚠️ Configure e sincronize na aba Config');
-      }
-      
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
+      
+      showToast('✅ App carregado!');
       
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('service-worker.js')
