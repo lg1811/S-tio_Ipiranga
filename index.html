@@ -1956,24 +1956,31 @@
         selectProfile(parseInt(perfilSalvo));
       }
       
-      // SEMPRE tenta carregar do GitHub primeiro
-      showToast('🔄 Carregando dados do GitHub...');
-      const carregouGitHub = await carregarDadosDoGitHub();
+      // Tenta carregar dados locais primeiro
+      const temDadosLocais = carregarDados();
       
-      // Se não conseguiu carregar do GitHub, usa dados locais
-      if (!carregouGitHub) {
-        const temDadosLocais = carregarDados();
-        if (temDadosLocais) {
-          showToast('📱 Usando dados locais (offline)');
-        } else {
-          showToast('⚠️ Nenhum dado encontrado');
-        }
-      } else {
-        showToast(`✅ ${plantas.length} plantas carregadas do GitHub!`);
+      // Se estiver online, tenta atualizar do GitHub em background
+      if (navigator.onLine) {
+        carregarDadosDoGitHub().then(sucesso => {
+          if (sucesso) {
+            loadConfig();
+            renderAll();
+            showToast(`✅ ${plantas.length} plantas sincronizadas!`);
+          }
+        }).catch(err => {
+          console.log('Erro ao sincronizar:', err);
+        });
       }
       
+      // Renderiza dados (locais ou do GitHub)
       loadConfig();
       renderAll();
+      
+      if (temDadosLocais || plantas.length > 0) {
+        showToast(`✅ ${plantas.length} plantas carregadas!`);
+      } else {
+        showToast('⚠️ Configure e sincronize na aba Config');
+      }
       
       document.getElementById('dataPlantio').value = new Date().toISOString().split('T')[0];
       
